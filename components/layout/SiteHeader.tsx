@@ -22,11 +22,11 @@ export default function SiteHeader() {
           Help
         </Link>
         <span className="text-border">|</span>
-        <Link href="#" className="hover:text-foreground transition-colors">
+        <Link href="/signup" className="hover:text-foreground transition-colors">
           Join Us
         </Link>
         <span className="text-border">|</span>
-        <Link href="#" className="hover:text-foreground transition-colors">
+        <Link href="/login" className="hover:text-foreground transition-colors">
           Sign In
         </Link>
       </div>
