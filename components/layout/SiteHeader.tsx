@@ -22,7 +22,14 @@ export default function SiteHeader() {
           Help
         </Link>
         <span className="text-border">|</span>
-        <Link href="/signup" className="hover:text-foreground transition-colors">
+        <Link href="/forum" className="hover:text-foreground transition-colors">
+          Forum
+        </Link>
+        <span className="text-border">|</span>
+        <Link
+          href="/signup"
+          className="hover:text-foreground transition-colors"
+        >
           Join Us
         </Link>
         <span className="text-border">|</span>
@@ -74,11 +81,18 @@ export default function SiteHeader() {
 
       {/* Promo banner */}
       <div className="flex h-9 items-center justify-center bg-muted text-xs font-medium">
-        <button className="mr-4" aria-label="Previous promotion">&lsaquo;</button>
-        <Link href="/products" className="underline underline-offset-2 hover:text-primary">
+        <button className="mr-4" aria-label="Previous promotion">
+          &lsaquo;
+        </button>
+        <Link
+          href="/products"
+          className="underline underline-offset-2 hover:text-primary"
+        >
           Shop New Arrivals
         </Link>
-        <button className="ml-4" aria-label="Next promotion">&rsaquo;</button>
+        <button className="ml-4" aria-label="Next promotion">
+          &rsaquo;
+        </button>
       </div>
     </header>
   );
