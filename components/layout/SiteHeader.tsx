@@ -36,6 +36,10 @@ export default function SiteHeader() {
         <Link href="/login" className="hover:text-foreground transition-colors">
           Sign In
         </Link>
+        <span className="text-border">|</span>
+        <Link href="/admin" className="hover:text-foreground transition-colors">
+          Admin
+        </Link>
       </div>
 
       {/* Main navigation */}

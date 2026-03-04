@@ -45,10 +45,12 @@ export function AdminSidebar() {
       <div className="flex h-full flex-col">
         {/* Logo */}
         <div className="flex h-16 items-center gap-2 border-b px-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500">
-            <span className="text-sm font-bold text-white">PP</span>
-          </div>
-          <span className="text-lg font-semibold">PeterParts</span>
+          <Link href="/" className="flex items-center gap-2 border-b px-6 py-4">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500">
+              <span className="text-sm font-bold text-white">PP</span>
+            </div>
+            <span className="text-lg font-semibold">PeterParts</span>
+          </Link>
         </div>
 
         {/* Main Navigation */}
@@ -64,7 +66,7 @@ export function AdminSidebar() {
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                   active
                     ? "bg-red-500 text-white"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
                 <Icon className="h-5 w-5" />
@@ -88,7 +90,7 @@ export function AdminSidebar() {
                     "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                     active
                       ? "bg-red-500 text-white"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
                   )}
                 >
                   <Icon className="h-5 w-5" />
