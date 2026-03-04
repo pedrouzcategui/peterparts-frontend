@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Search, Heart, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_LINKS = [
   { label: "Cuisinart", href: "/products?brand=Cuisinart" },
@@ -67,6 +68,7 @@ export default function SiteHeader() {
           <Button variant="ghost" size="icon" aria-label="Shopping bag">
             <ShoppingBag className="h-5 w-5" />
           </Button>
+          <ThemeToggle />
         </div>
       </div>
 
