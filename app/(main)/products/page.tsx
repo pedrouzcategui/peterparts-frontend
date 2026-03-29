@@ -1,21 +1,21 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { products, filterGroups } from "@/lib/data";
 import FilterSidebar from "@/components/products/FilterSidebar";
 import SortDropdown from "@/components/products/SortDropdown";
 import MobileFilterSheet from "@/components/products/MobileFilterSheet";
 import SearchInput from "@/components/products/SearchInput";
 import ProductsContent from "@/components/products/ProductsContent";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getFilterGroups, getProducts } from "@/lib/product-data";
 
 export const metadata: Metadata = {
-  title: "Kitchen Appliances & Gear | PeterParts",
+  title: "Electrodomesticos y accesorios de cocina | PeterParts",
   description:
-    "Browse premium kitchen appliances from Cuisinart, Whirlpool, and KitchenAid. Shop food processors, stand mixers, refrigerators, and more at PeterParts.",
+    "Explora electrodomesticos de cocina premium de Cuisinart, Whirlpool y KitchenAid. Compra procesadores de alimentos, batidoras de pedestal, refrigeradores y mas en PeterParts.",
   openGraph: {
-    title: "Kitchen Appliances & Gear | PeterParts",
+    title: "Electrodomesticos y accesorios de cocina | PeterParts",
     description:
-      "Browse premium kitchen appliances from Cuisinart, Whirlpool, and KitchenAid.",
+      "Explora electrodomesticos de cocina premium de Cuisinart, Whirlpool y KitchenAid.",
     type: "website",
   },
 };
@@ -25,31 +25,43 @@ export const metadata: Metadata = {
  * Product listing page with sidebar filters and a responsive grid.
  * Data is loaded server-side for SEO.
  */
-export default function ProductsPage() {
-  const totalProducts = products.length;
+export const dynamic = "force-dynamic";
+
+export default async function ProductsPage() {
+  const allProducts = await getProducts();
+  const filterGroups = await getFilterGroups();
+  const totalProducts = allProducts.length;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+    <div className="site-shell py-8 lg:py-10">
       {/* Page heading */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold">
-          Kitchen Appliances &amp; Gear ({totalProducts})
-        </h1>
+      <div className="flex flex-col gap-5 border-b border-[#ebe7e0] pb-6 sm:flex-row sm:items-end sm:justify-between dark:border-border">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
+            Catalogo PeterParts
+          </p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-[#1A1714] dark:text-foreground">
+            Electrodomesticos y accesorios ({totalProducts})
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            Explora electrodomesticos especializados de marcas confiables, con filtros por acabado, categoria, precio y ofertas vigentes.
+          </p>
+        </div>
         <div className="flex items-center gap-3">
           <Suspense fallback={<Skeleton className="h-10 w-24 lg:hidden" />}>
             <MobileFilterSheet filterGroups={filterGroups} />
           </Suspense>
-          <Suspense fallback={<Skeleton className="h-10 w-[180px]" />}>
+          <Suspense fallback={<Skeleton className="h-10 w-45" />}>
             <SortDropdown />
           </Suspense>
         </div>
       </div>
 
       {/* Body: sidebar + grid */}
-      <div className="mt-8 flex gap-8">
+      <div className="mt-8 flex gap-8 xl:gap-10">
         {/* Desktop sidebar - sticky */}
-        <div className="hidden lg:block w-[220px] shrink-0">
-          <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
+        <div className="hidden lg:block w-68 shrink-0 xl:w-72">
+          <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto px-2 pb-4 pr-3 pt-2">
             {/* Search input */}
             <div className="mb-4">
               <Suspense fallback={<Skeleton className="h-10 w-full" />}>
@@ -65,7 +77,7 @@ export default function ProductsPage() {
         {/* Product grid */}
         <div className="flex-1">
           <Suspense fallback={<ProductsContentSkeleton />}>
-            <ProductsContent allProducts={products} />
+            <ProductsContent allProducts={allProducts} />
           </Suspense>
         </div>
       </div>
@@ -75,7 +87,14 @@ export default function ProductsPage() {
 
 function FilterSidebarSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="rounded-[1.75rem] border border-[#ebe7e0] bg-[#fbfaf7] px-5 py-4 shadow-[0_10px_28px_rgba(26,23,20,0.05)] dark:border-border dark:bg-card dark:shadow-none">
+      <div className="mb-5 grid grid-cols-5 gap-3">
+        {Array.from({ length: 10 }).map((_, index) => (
+          <Skeleton key={index} className="h-10 w-10 rounded-full" />
+        ))}
+      </div>
+
+      <div className="space-y-6">
       {Array.from({ length: 4 }).map((_, groupIndex) => (
         <div key={groupIndex} className="space-y-3">
           <Skeleton className="h-5 w-24" />
@@ -89,30 +108,36 @@ function FilterSidebarSkeleton() {
           </div>
         </div>
       ))}
+      </div>
     </div>
   );
 }
 
 function ProductsContentSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 12 }).map((_, index) => (
         <div
           key={index}
-          className="group relative flex flex-col overflow-hidden rounded-lg border bg-card animate-pulse"
+          className="group relative flex flex-col overflow-hidden rounded-[1.75rem] border border-[#ebe7e0] bg-white animate-pulse dark:border-border dark:bg-card"
         >
-          <div className="aspect-square w-full bg-muted" />
-          <div className="flex flex-1 flex-col gap-2 p-4">
-            <div className="h-3 w-16 bg-muted rounded" />
-            <div className="h-5 w-full bg-muted rounded" />
-            <div className="h-5 w-3/4 bg-muted rounded" />
-            <div className="mt-auto flex items-baseline gap-2 pt-2">
-              <div className="h-6 w-20 bg-muted rounded" />
-              <div className="h-4 w-14 bg-muted rounded" />
+          <div className="aspect-square w-full bg-[#fcfaf7]" />
+          <div className="flex flex-1 flex-col gap-3 bg-[#f5f3ef] p-6 dark:bg-card">
+            <div className="h-3 w-24 rounded bg-muted" />
+            <div className="h-7 w-full rounded bg-muted" />
+            <div className="h-7 w-4/5 rounded bg-muted" />
+            <div className="h-18 w-full rounded bg-muted" />
+            <div className="flex gap-2">
+              {Array.from({ length: 4 }).map((_, swatchIndex) => (
+                <div key={swatchIndex} className="h-5 w-5 rounded-full bg-muted" />
+              ))}
             </div>
-            <div className="flex items-center gap-1">
-              <div className="h-4 w-24 bg-muted rounded" />
-              <div className="h-4 w-8 bg-muted rounded" />
+            <div className="mt-auto flex items-center justify-between pt-3">
+              <div className="space-y-2">
+                <div className="h-8 w-24 rounded bg-muted" />
+                <div className="h-4 w-20 rounded bg-muted" />
+              </div>
+              <div className="h-11 w-11 rounded-full bg-muted" />
             </div>
           </div>
         </div>

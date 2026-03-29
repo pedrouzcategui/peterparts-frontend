@@ -79,14 +79,14 @@ export default function ForumThreadCard({ thread }: ForumThreadCardProps) {
                 className="flex items-center gap-1.5 hover:bg-muted px-2 py-1 rounded transition-colors"
               >
                 <MessageSquare className="h-4 w-4" />
-                <span>{thread.commentCount} comments</span>
+                <span>{thread.commentCount} comentarios</span>
               </Link>
               <button
                 type="button"
                 className="flex items-center gap-1.5 hover:bg-muted px-2 py-1 rounded transition-colors"
               >
                 <Share2 className="h-4 w-4" />
-                <span>Share</span>
+                <span>Compartir</span>
               </button>
             </div>
           </div>

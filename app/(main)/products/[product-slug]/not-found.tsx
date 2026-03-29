@@ -3,13 +3,13 @@ import { Button } from "@/components/ui/button";
 
 export default function ProductNotFound() {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 text-center">
-      <h1 className="text-3xl font-bold">Product Not Found</h1>
+    <div className="site-shell py-20 text-center">
+      <h1 className="text-3xl font-bold">Producto no encontrado</h1>
       <p className="mt-3 text-muted-foreground">
-        The product you&apos;re looking for doesn&apos;t exist or has been removed.
+        El producto que buscas no existe o fue eliminado.
       </p>
       <Button asChild className="mt-6">
-        <Link href="/products">Browse All Products</Link>
+        <Link href="/products">Ver todos los productos</Link>
       </Button>
     </div>
   );

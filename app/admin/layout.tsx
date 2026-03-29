@@ -4,10 +4,10 @@ import { AdminHeader } from "@/components/admin/AdminHeader";
 
 export const metadata: Metadata = {
   title: {
-    default: "Admin Dashboard",
-    template: "%s | Admin - PeterParts",
+    default: "Panel de administracion",
+    template: "%s | Administracion - PeterParts",
   },
-  description: "PeterParts Admin Dashboard",
+  description: "Panel de administracion de PeterParts",
 };
 
 export default function AdminLayout({

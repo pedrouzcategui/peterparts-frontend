@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { CartProvider } from "@/components/providers/CartProvider";
+import { SonnerToaster } from "@/components/providers/SonnerToaster";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import "./globals.css";
 
@@ -15,12 +17,26 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "PeterParts — Kitchen Appliances & Gear",
+    default: "PeterParts — Electrodomesticos y accesorios de cocina",
     template: "%s | PeterParts",
   },
   description:
-    "Shop premium kitchen appliances from Cuisinart, Whirlpool, and KitchenAid at PeterParts.",
+    "Compra electrodomesticos de cocina premium de Cuisinart, Whirlpool y KitchenAid en PeterParts.",
   metadataBase: new URL("https://peterparts.com"),
+  icons: {
+    icon: [
+      {
+        media: "(prefers-color-scheme: light)",
+        url: "/images/icon.png",
+      },
+      {
+        media: "(prefers-color-scheme: dark)",
+        url: "/images/icon-dark.png",
+      },
+    ],
+    shortcut: "/images/icon.png",
+    apple: "/images/icon.png",
+  },
 };
 
 export default function RootLayout({
@@ -29,11 +45,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <CartProvider>
+            {children}
+            <SonnerToaster />
+          </CartProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -22,9 +22,14 @@ function getStatusBadge(status: AdminUser["status"]) {
     inactive: "secondary",
     suspended: "destructive",
   };
+  const labels: Record<AdminUser["status"], string> = {
+    active: "activo",
+    inactive: "inactivo",
+    suspended: "suspendido",
+  };
   return (
     <Badge variant={variants[status]} className="capitalize">
-      {status}
+      {labels[status]}
     </Badge>
   );
 }
@@ -35,15 +40,20 @@ function getRoleBadge(role: AdminUser["role"]) {
     moderator: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
     user: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
   };
+  const labels: Record<AdminUser["role"], string> = {
+    admin: "admin",
+    moderator: "moderador",
+    user: "usuario",
+  };
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium capitalize ${colors[role]}`}>
-      {role}
+      {labels[role]}
     </span>
   );
 }
 
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
+  return new Date(dateString).toLocaleDateString("es-VE", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -74,32 +84,32 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Customers</h1>
+        <h1 className="text-2xl font-bold">Clientes</h1>
       </div>
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Total Users</p>
+            <p className="text-sm text-muted-foreground">Usuarios totales</p>
             <p className="text-2xl font-bold">{stats.total}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Active</p>
+            <p className="text-sm text-muted-foreground">Activos</p>
             <p className="text-2xl font-bold text-green-600">{stats.active}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Inactive</p>
+            <p className="text-sm text-muted-foreground">Inactivos</p>
             <p className="text-2xl font-bold text-yellow-600">{stats.inactive}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Suspended</p>
+            <p className="text-sm text-muted-foreground">Suspendidos</p>
             <p className="text-2xl font-bold text-red-600">{stats.suspended}</p>
           </CardContent>
         </Card>
@@ -112,14 +122,14 @@ export default function AdminUsersPage() {
             <div className="relative flex-1 min-w-[200px] max-w-sm">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search users..."
+                placeholder="Buscar usuarios..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Status:</span>
+              <span className="text-sm text-muted-foreground">Estado:</span>
               <select
                 value={statusFilter}
                 onChange={(e) =>
@@ -127,14 +137,14 @@ export default function AdminUsersPage() {
                 }
                 className="h-10 rounded-md border border-input bg-background px-3 text-sm"
               >
-                <option value="all">All</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="suspended">Suspended</option>
+                <option value="all">Todos</option>
+                <option value="active">Activo</option>
+                <option value="inactive">Inactivo</option>
+                <option value="suspended">Suspendido</option>
               </select>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Role:</span>
+              <span className="text-sm text-muted-foreground">Rol:</span>
               <select
                 value={roleFilter}
                 onChange={(e) =>
@@ -142,10 +152,10 @@ export default function AdminUsersPage() {
                 }
                 className="h-10 rounded-md border border-input bg-background px-3 text-sm"
               >
-                <option value="all">All</option>
+                <option value="all">Todos</option>
                 <option value="admin">Admin</option>
-                <option value="moderator">Moderator</option>
-                <option value="user">User</option>
+                <option value="moderator">Moderador</option>
+                <option value="user">Usuario</option>
               </select>
             </div>
           </div>
@@ -158,12 +168,12 @@ export default function AdminUsersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Last Login</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Usuario</TableHead>
+                <TableHead>Rol</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Creado</TableHead>
+                <TableHead>Ultimo acceso</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -200,14 +210,14 @@ export default function AdminUsersPage() {
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        aria-label="Send email"
+                        aria-label="Enviar correo"
                       >
                         <Mail className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        aria-label="More options"
+                        aria-label="Mas opciones"
                       >
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
@@ -219,7 +229,7 @@ export default function AdminUsersPage() {
           </Table>
           {filteredUsers.length === 0 && (
             <div className="py-8 text-center text-muted-foreground">
-              No users found
+              No se encontraron usuarios
             </div>
           )}
         </CardContent>

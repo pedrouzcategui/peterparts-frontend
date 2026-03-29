@@ -80,14 +80,14 @@ export default function Pagination({
   return (
     <nav
       className={`mt-8 flex items-center justify-center gap-1 ${isPending ? "opacity-70 pointer-events-none" : ""}`}
-      aria-label="Pagination"
+      aria-label="Paginacion"
     >
       <Button
         variant="outline"
         size="icon"
         onClick={() => goToPage(currentPage - 1)}
         disabled={currentPage === 1}
-        aria-label="Previous page"
+        aria-label="Pagina anterior"
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
@@ -106,7 +106,7 @@ export default function Pagination({
             variant={currentPage === page ? "default" : "outline"}
             size="icon"
             onClick={() => goToPage(page)}
-            aria-label={`Page ${page}`}
+            aria-label={`Pagina ${page}`}
             aria-current={currentPage === page ? "page" : undefined}
           >
             {page}
@@ -119,7 +119,7 @@ export default function Pagination({
         size="icon"
         onClick={() => goToPage(currentPage + 1)}
         disabled={currentPage === totalPages}
-        aria-label="Next page"
+        aria-label="Pagina siguiente"
       >
         <ChevronRight className="h-4 w-4" />
       </Button>

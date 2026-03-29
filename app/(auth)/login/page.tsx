@@ -35,21 +35,21 @@ export default function LoginPage() {
         size="icon"
         className="mb-2"
         onClick={() => router.back()}
-        aria-label="Go back"
+        aria-label="Volver"
       >
         <ArrowLeft className="h-5 w-5" />
       </Button>
 
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Welcome Back</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Bienvenido de nuevo</h1>
         <p className="text-muted-foreground">
-          Don&apos;t have an account?{" "}
+          ¿No tienes una cuenta?{" "}
           <Link
             href="/signup"
             className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
           >
-            Sign up
+            Registrate
           </Link>
         </p>
       </div>
@@ -57,12 +57,12 @@ export default function LoginPage() {
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">Email Address</Label>
+          <Label htmlFor="email">Correo electronico</Label>
           <Input
             id="email"
             name="email"
             type="email"
-            placeholder="Email Address"
+            placeholder="Correo electronico"
             required
             disabled={isLoading}
           />
@@ -70,18 +70,18 @@ export default function LoginPage() {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Contrasena</Label>
             <Link
               href="/forgot-password"
               className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4"
             >
-              Forgot password?
+              ¿Olvidaste tu contrasena?
             </Link>
           </div>
           <PasswordInput
             id="password"
             name="password"
-            placeholder="Password"
+            placeholder="Contrasena"
             required
             disabled={isLoading}
           />
@@ -98,12 +98,12 @@ export default function LoginPage() {
             htmlFor="remember"
             className="text-sm text-muted-foreground cursor-pointer"
           >
-            Remember me
+            Recordarme
           </label>
         </div>
 
         <Button type="submit" className="w-full h-11" disabled={isLoading}>
-          {isLoading ? "Signing in..." : "Sign In"}
+          {isLoading ? "Iniciando sesion..." : "Iniciar sesion"}
         </Button>
       </form>
 
@@ -113,7 +113,7 @@ export default function LoginPage() {
           <span className="w-full border-t" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">or</span>
+          <span className="bg-background px-2 text-muted-foreground">o</span>
         </div>
       </div>
 

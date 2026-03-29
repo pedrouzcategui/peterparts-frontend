@@ -52,6 +52,7 @@ export function SocialButtons({
         className="h-11"
         disabled={isLoading}
         onClick={onGoogleClick}
+        aria-label="Continuar con Google"
       >
         <GoogleIcon />
         <span className="ml-2">Google</span>
@@ -62,6 +63,7 @@ export function SocialButtons({
         className="h-11"
         disabled={isLoading}
         onClick={onFacebookClick}
+        aria-label="Continuar con Facebook"
       >
         <FacebookIcon />
         <span className="ml-2">Facebook</span>

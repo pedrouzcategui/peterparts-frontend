@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { products, getProductBySlug } from "@/lib/data";
 import ProductImageGallery from "@/components/products/ProductImageGallery";
 import ProductInfo from "@/components/products/ProductInfo";
+import { getProductBySlug } from "@/lib/product-data";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,18 +13,10 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
+export const dynamic = "force-dynamic";
+
 interface ProductPageProps {
   params: Promise<{ "product-slug": string }>;
-}
-
-/**
- * Generate static params so all product pages can be statically generated.
- * This is great for SEO — pages are pre-rendered at build time.
- */
-export async function generateStaticParams() {
-  return products.map((product) => ({
-    "product-slug": product.slug,
-  }));
 }
 
 /**
@@ -35,10 +27,10 @@ export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
   const { "product-slug": slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
 
   if (!product) {
-    return { title: "Product Not Found | PeterParts" };
+    return { title: "Producto no encontrado | PeterParts" };
   }
 
   return {
@@ -61,7 +53,7 @@ export async function generateMetadata({
  */
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { "product-slug": slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     notFound();
@@ -101,19 +93,19 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+      <div className="site-shell py-6">
         {/* Breadcrumbs */}
         <Breadcrumb className="mb-6">
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/">Home</Link>
+                <Link href="/">Inicio</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/products">Products</Link>
+                <Link href="/products">Productos</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />

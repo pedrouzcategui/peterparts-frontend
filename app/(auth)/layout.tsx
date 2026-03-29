@@ -2,8 +2,8 @@ import { AuthLayout } from "@/components/auth/AuthLayout";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Account",
-  description: "Sign in or create an account at PeterParts",
+  title: "Cuenta",
+  description: "Inicia sesion o crea una cuenta en PeterParts",
 };
 
 export default function AuthLayoutWrapper({

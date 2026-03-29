@@ -82,7 +82,7 @@ export default function VoteButtons({
           buttonSize,
           voteState === "up" && "text-red-500"
         )}
-        aria-label="Upvote"
+        aria-label="Voto positivo"
       >
         <ChevronUp className={iconSize} />
       </button>
@@ -104,7 +104,7 @@ export default function VoteButtons({
           buttonSize,
           voteState === "down" && "text-blue-500"
         )}
-        aria-label="Downvote"
+        aria-label="Voto negativo"
       >
         <ChevronDown className={iconSize} />
       </button>

@@ -13,18 +13,18 @@ export default function ForumSidebar() {
   return (
     <aside className="space-y-4">
       {/* Create Thread CTA */}
-      <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-0">
+      <Card className="border-0 bg-linear-to-br from-[#d91e36] to-[#630e19] text-white">
         <CardContent className="p-4">
-          <h3 className="font-semibold mb-2">Have a question?</h3>
+          <h3 className="font-semibold mb-2">¿Tienes una pregunta?</h3>
           <p className="text-sm text-red-100 mb-3">
-            Ask the PeterParts community for help with your appliances.
+            Pide ayuda a la comunidad de PeterParts con tus electrodomesticos.
           </p>
           <Button
             variant="secondary"
-            className="w-full bg-white text-red-600 hover:bg-red-50"
+            className="w-full"
           >
             <PenSquare className="h-4 w-4 mr-2" />
-            Create Thread
+            Crear hilo
           </Button>
         </CardContent>
       </Card>
@@ -32,7 +32,7 @@ export default function ForumSidebar() {
       {/* Quick Filters */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Browse</CardTitle>
+          <CardTitle className="text-sm font-medium">Explorar</CardTitle>
         </CardHeader>
         <CardContent className="p-3 pt-0">
           <nav className="space-y-1">
@@ -41,14 +41,14 @@ export default function ForumSidebar() {
               className="flex items-center gap-2 text-sm px-3 py-2 rounded-lg bg-red-500 text-white"
             >
               <Flame className="h-4 w-4" />
-              Hot
+              Tendencias
             </Link>
             <Link
               href="/forum?sort=new"
               className="flex items-center gap-2 text-sm px-3 py-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground"
             >
               <Clock className="h-4 w-4" />
-              New
+              Nuevos
             </Link>
             <Link
               href="/forum?sort=top"
@@ -66,13 +66,13 @@ export default function ForumSidebar() {
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-medium">
-              Recent Publications
+              Publicaciones recientes
             </CardTitle>
             <button
               type="button"
               className="text-xs text-red-500 hover:underline"
             >
-              Clear
+              Limpiar
             </button>
           </div>
         </CardHeader>
@@ -103,7 +103,7 @@ export default function ForumSidebar() {
       {/* Popular Tags */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Popular Tags</CardTitle>
+          <CardTitle className="text-sm font-medium">Etiquetas populares</CardTitle>
         </CardHeader>
         <CardContent className="p-3 pt-0">
           <div className="flex flex-wrap gap-2">
@@ -111,11 +111,11 @@ export default function ForumSidebar() {
               "KitchenAid",
               "Whirlpool",
               "Samsung",
-              "Repair",
-              "Parts",
+              "Reparacion",
+              "Repuestos",
               "DIY",
-              "Refrigerator",
-              "Oven",
+              "Refrigerador",
+              "Horno",
             ].map((tag) => (
               <Link
                 key={tag}
@@ -133,22 +133,21 @@ export default function ForumSidebar() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium">
-            About PeterParts Forum
+            Sobre el foro de PeterParts
           </CardTitle>
         </CardHeader>
         <CardContent className="p-3 pt-0">
           <p className="text-sm text-muted-foreground mb-3">
-            A community for appliance enthusiasts to share tips, ask questions,
-            and help each other with repairs and maintenance.
+            Una comunidad para compartir consejos, hacer preguntas y ayudarse con reparaciones y mantenimiento.
           </p>
           <div className="grid grid-cols-2 gap-3 text-center">
             <div className="p-2 rounded-lg bg-muted">
               <p className="text-lg font-bold">2.4k</p>
-              <p className="text-xs text-muted-foreground">Members</p>
+              <p className="text-xs text-muted-foreground">Miembros</p>
             </div>
             <div className="p-2 rounded-lg bg-muted">
               <p className="text-lg font-bold">156</p>
-              <p className="text-xs text-muted-foreground">Online</p>
+              <p className="text-xs text-muted-foreground">En linea</p>
             </div>
           </div>
         </CardContent>

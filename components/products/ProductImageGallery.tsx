@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import type { ProductImage } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ProductImageWithFallback from "@/components/products/ProductImageWithFallback";
 
 interface ProductImageGalleryProps {
   images: ProductImage[];
@@ -47,14 +47,13 @@ export default function ProductImageGallery({
                 ? "border-foreground"
                 : "border-transparent hover:border-muted-foreground/40"
             )}
-            aria-label={`View image ${index + 1} of ${images.length}`}
+            aria-label={`Ver imagen ${index + 1} de ${images.length}`}
           >
-            <Image
+            <ProductImageWithFallback
               src={image.src}
               alt={image.alt}
-              fill
               sizes="64px"
-              className="object-cover"
+              className="object-contain p-1"
             />
           </button>
         ))}
@@ -62,12 +61,11 @@ export default function ProductImageGallery({
 
       {/* Main image */}
       <div className="relative flex-1 aspect-square overflow-hidden rounded-lg bg-muted">
-        <Image
-          src={selectedImage?.src ?? "/images/placeholder.jpg"}
+        <ProductImageWithFallback
+          src={selectedImage?.src}
           alt={selectedImage?.alt ?? productName}
-          fill
           sizes="(max-width: 768px) 100vw, 50vw"
-          className="object-cover"
+          className="object-contain p-4"
           priority
         />
 
@@ -79,7 +77,7 @@ export default function ProductImageGallery({
               size="icon"
               className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm"
               onClick={handlePrev}
-              aria-label="Previous image"
+              aria-label="Imagen anterior"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -88,7 +86,7 @@ export default function ProductImageGallery({
               size="icon"
               className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm"
               onClick={handleNext}
-              aria-label="Next image"
+              aria-label="Imagen siguiente"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>

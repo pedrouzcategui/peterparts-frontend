@@ -78,99 +78,99 @@ export const mockUsers: ForumUser[] = [
 export const mockThreads: ForumThread[] = [
   {
     id: "thread-1",
-    title: "Best replacement parts for KitchenAid Stand Mixer?",
+    title: "¿Cuales son los mejores repuestos para una KitchenAid Stand Mixer?",
     content:
-      "I have a KitchenAid Artisan Stand Mixer that's about 5 years old. The beater attachment is starting to show wear and I'm looking for quality replacement parts. Has anyone had experience with third-party vs OEM parts? Looking for recommendations on where to buy and what to avoid.",
+      "Tengo una KitchenAid Artisan Stand Mixer de unos 5 anos. El accesorio batidor ya muestra desgaste y estoy buscando repuestos de buena calidad. ¿Alguien ha probado piezas de terceros frente a repuestos originales? Busco recomendaciones sobre donde comprar y que evitar.",
     author: mockUsers[0],
     createdAt: "2026-03-03T10:30:00Z",
     upvotes: 24,
     downvotes: 2,
     commentCount: 8,
-    tags: ["KitchenAid", "Parts", "Mixer"],
+    tags: ["KitchenAid", "Repuestos", "Batidora"],
   },
   {
     id: "thread-2",
-    title: "Cuisinart food processor blade not spinning - help!",
+    title: "La cuchilla de mi procesador Cuisinart no gira. ¡Ayuda!",
     content:
-      "My Cuisinart 14-cup food processor suddenly stopped working. The motor runs but the blade doesn't spin. I've checked the safety lock and it seems fine. Has anyone encountered this issue? Is it worth repairing or should I just buy a new one?",
+      "Mi procesador de alimentos Cuisinart de 14 tazas dejo de funcionar de repente. El motor enciende, pero la cuchilla no gira. Ya revise el seguro y parece estar bien. ¿A alguien le ha pasado esto? ¿Vale la pena repararlo o mejor compro uno nuevo?",
     author: mockUsers[1],
     createdAt: "2026-03-03T08:15:00Z",
     upvotes: 15,
     downvotes: 1,
     commentCount: 12,
-    tags: ["Cuisinart", "Repair", "Food Processor"],
+    tags: ["Cuisinart", "Reparacion", "Procesador de alimentos"],
   },
   {
     id: "thread-3",
-    title: "Whirlpool refrigerator making strange noises",
+    title: "Mi refrigerador Whirlpool hace ruidos extranos",
     content:
-      "For the past week, my Whirlpool side-by-side refrigerator has been making a clicking noise every few minutes. The cooling seems fine but the noise is concerning. Any ideas what could be causing this? The fridge is about 3 years old.",
+      "Desde hace una semana, mi refrigerador Whirlpool side-by-side hace un ruido de clic cada pocos minutos. Sigue enfriando bien, pero el ruido me preocupa. ¿Alguna idea de que puede estar causandolo? El equipo tiene unos 3 anos.",
     author: mockUsers[2],
     createdAt: "2026-03-02T22:45:00Z",
     upvotes: 31,
     downvotes: 0,
     commentCount: 15,
-    tags: ["Whirlpool", "Refrigerator", "Noise"],
+    tags: ["Whirlpool", "Refrigerador", "Ruido"],
   },
   {
     id: "thread-4",
-    title: "Where to find discontinued Bosch dishwasher parts?",
+    title: "¿Donde conseguir repuestos descontinuados para un lavavajillas Bosch?",
     content:
-      "I have a Bosch dishwasher model from 2018 that needs a new spray arm. The model has been discontinued and I'm having trouble finding the exact part. Does anyone know reliable sources for discontinued Bosch parts? The dishwasher works great otherwise.",
+      "Tengo un lavavajillas Bosch de 2018 que necesita un nuevo brazo rociador. El modelo fue descontinuado y me esta costando encontrar la pieza exacta. ¿Alguien conoce fuentes confiables para repuestos Bosch descontinuados? Por lo demas el equipo funciona muy bien.",
     author: mockUsers[3],
     createdAt: "2026-03-02T16:20:00Z",
     upvotes: 18,
     downvotes: 3,
     commentCount: 6,
-    tags: ["Bosch", "Dishwasher", "Discontinued"],
+    tags: ["Bosch", "Lavavajillas", "Descontinuado"],
   },
   {
     id: "thread-5",
-    title: "Tips for maintaining stainless steel appliances?",
+    title: "¿Consejos para mantener electrodomesticos de acero inoxidable?",
     content:
-      "Just renovated my kitchen with all stainless steel appliances. Looking for tips on how to keep them looking new. What cleaning products do you recommend? Any tricks to avoid fingerprints and water spots?",
+      "Acabo de renovar mi cocina con electrodomesticos de acero inoxidable. Busco consejos para mantenerlos como nuevos. ¿Que productos de limpieza recomiendan? ¿Tienen trucos para evitar huellas y marcas de agua?",
     author: mockUsers[4],
     createdAt: "2026-03-02T14:00:00Z",
     upvotes: 42,
     downvotes: 1,
     commentCount: 23,
-    tags: ["Maintenance", "Stainless Steel", "Tips"],
+    tags: ["Mantenimiento", "Acero inoxidable", "Consejos"],
   },
   {
     id: "thread-6",
-    title: "GE oven not heating evenly - calibration issue?",
+    title: "Mi horno GE no calienta parejo. ¿Problema de calibracion?",
     content:
-      "My GE Profile oven seems to have hot spots. Baked goods come out unevenly cooked. I've tried using an oven thermometer and the temperature seems accurate at the center. Is this a calibration issue or could it be a heating element problem?",
+      "Mi horno GE Profile parece tener puntos calientes. Los horneados salen cocidos de manera desigual. Ya probe con un termometro y la temperatura en el centro parece correcta. ¿Sera un problema de calibracion o del elemento calefactor?",
     author: mockUsers[0],
     createdAt: "2026-03-01T11:30:00Z",
     upvotes: 27,
     downvotes: 2,
     commentCount: 11,
-    tags: ["GE", "Oven", "Heating"],
+    tags: ["GE", "Horno", "Calentamiento"],
   },
   {
     id: "thread-7",
-    title: "Samsung ice maker keeps freezing over",
+    title: "El hacedor de hielo Samsung se sigue congelando",
     content:
-      "The ice maker in my Samsung French door refrigerator keeps freezing over and stops producing ice. I've defrosted it manually twice now but the problem keeps coming back. Is there a permanent fix for this? Seems like a common Samsung issue.",
+      "El hacedor de hielo de mi refrigerador Samsung French Door se congela y deja de producir hielo. Ya lo descongele manualmente dos veces, pero el problema vuelve. ¿Existe una solucion definitiva? Parece ser una falla comun en Samsung.",
     author: mockUsers[1],
     createdAt: "2026-03-01T09:15:00Z",
     upvotes: 56,
     downvotes: 4,
     commentCount: 34,
-    tags: ["Samsung", "Ice Maker", "Freezer"],
+    tags: ["Samsung", "Hacedor de hielo", "Congelador"],
   },
   {
     id: "thread-8",
-    title: "Recommendation for quiet range hood?",
+    title: "¿Alguna recomendacion de campana extractora silenciosa?",
     content:
-      "Looking to replace my old, noisy range hood. What are your recommendations for a quiet but powerful range hood? Budget is around $500-800. Kitchen is about 200 sq ft with a standard 30\" range.",
+      "Quiero reemplazar mi campana extractora vieja y ruidosa. ¿Que modelos recomiendan que sean silenciosos pero potentes? Mi presupuesto esta entre $500 y $800. La cocina mide unos 200 pies cuadrados y tiene una estufa estandar de 30 pulgadas.",
     author: mockUsers[2],
     createdAt: "2026-02-28T20:00:00Z",
     upvotes: 19,
     downvotes: 0,
     commentCount: 9,
-    tags: ["Range Hood", "Recommendation", "Kitchen"],
+    tags: ["Campana extractora", "Recomendacion", "Cocina"],
   },
 ];
 
@@ -180,7 +180,7 @@ export const mockCommentsThread1: ForumComment[] = [
     id: "comment-1",
     author: mockUsers[1],
     content:
-      "I've used both OEM and third-party parts. For the beater specifically, I'd recommend sticking with OEM. The coating on third-party ones tends to chip faster. You can find genuine KitchenAid parts on their official website or through authorized dealers.",
+      "He usado tanto repuestos originales como de terceros. Para el batidor en particular, te recomendaria quedarte con el original. El recubrimiento de los de terceros suele desgastarse mas rapido. Puedes conseguir piezas KitchenAid autenticas en su web oficial o con distribuidores autorizados.",
     createdAt: "2026-03-03T11:00:00Z",
     upvotes: 12,
     downvotes: 0,
@@ -189,7 +189,7 @@ export const mockCommentsThread1: ForumComment[] = [
         id: "comment-1-1",
         author: mockUsers[0],
         content:
-          "Thanks! Do you remember roughly how much you paid for the OEM beater?",
+          "¡Gracias! ¿Recuerdas mas o menos cuanto pagaste por el batidor original?",
         createdAt: "2026-03-03T11:15:00Z",
         upvotes: 3,
         downvotes: 0,
@@ -198,7 +198,7 @@ export const mockCommentsThread1: ForumComment[] = [
         id: "comment-1-2",
         author: mockUsers[1],
         content:
-          "Around $35-40 if I remember correctly. Worth it for the quality.",
+          "Entre $35 y $40, si mal no recuerdo. Vale la pena por la calidad.",
         createdAt: "2026-03-03T11:30:00Z",
         upvotes: 5,
         downvotes: 0,
@@ -209,7 +209,7 @@ export const mockCommentsThread1: ForumComment[] = [
     id: "comment-2",
     author: mockUsers[3],
     content:
-      "I've had good luck with parts from PeterParts actually! They have a great selection of KitchenAid accessories and the prices are competitive. Plus fast shipping.",
+      "De hecho me ha ido muy bien comprando repuestos en PeterParts. Tienen una gran seleccion de accesorios KitchenAid, precios competitivos y envio rapido.",
     createdAt: "2026-03-03T12:00:00Z",
     upvotes: 8,
     downvotes: 1,
@@ -218,7 +218,7 @@ export const mockCommentsThread1: ForumComment[] = [
     id: "comment-3",
     author: mockUsers[4],
     content:
-      "Pro tip: If your mixer is out of warranty, consider getting the flex edge beater. It scrapes the sides as it mixes and is a great upgrade from the standard flat beater.",
+      "Consejo: si tu batidora ya no tiene garantia, considera comprar el batidor de borde flexible. Raspa los lados mientras mezcla y es una gran mejora frente al batidor plano estandar.",
     createdAt: "2026-03-03T13:30:00Z",
     upvotes: 15,
     downvotes: 0,
@@ -227,7 +227,7 @@ export const mockCommentsThread1: ForumComment[] = [
         id: "comment-3-1",
         author: mockUsers[2],
         content:
-          "Second this! The flex edge beater is a game changer for thick batters.",
+          "Totalmente de acuerdo. El batidor de borde flexible cambia todo para mezclas espesas.",
         createdAt: "2026-03-03T14:00:00Z",
         upvotes: 6,
         downvotes: 0,
@@ -240,25 +240,25 @@ export const mockCommentsThread1: ForumComment[] = [
 export const mockRecentPublications: RecentPublication[] = [
   {
     id: "recent-1",
-    title: "Samsung ice maker keeps freezing over",
+    title: "El hacedor de hielo Samsung se sigue congelando",
     threadId: "thread-7",
     visitedAt: "2026-03-03T09:00:00Z",
   },
   {
     id: "recent-2",
-    title: "Tips for maintaining stainless steel appliances?",
+    title: "¿Consejos para mantener electrodomesticos de acero inoxidable?",
     threadId: "thread-5",
     visitedAt: "2026-03-02T18:30:00Z",
   },
   {
     id: "recent-3",
-    title: "Whirlpool refrigerator making strange noises",
+    title: "Mi refrigerador Whirlpool hace ruidos extranos",
     threadId: "thread-3",
     visitedAt: "2026-03-02T15:00:00Z",
   },
   {
     id: "recent-4",
-    title: "Best replacement parts for KitchenAid Stand Mixer?",
+    title: "¿Cuales son los mejores repuestos para una KitchenAid Stand Mixer?",
     threadId: "thread-1",
     visitedAt: "2026-03-01T20:00:00Z",
   },
@@ -271,36 +271,36 @@ export function formatRelativeTime(dateString: string): string {
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
   if (diffInSeconds < 60) {
-    return "just now";
+    return "justo ahora";
   }
 
   const diffInMinutes = Math.floor(diffInSeconds / 60);
   if (diffInMinutes < 60) {
-    return `${diffInMinutes}m ago`;
+    return `hace ${diffInMinutes} min`;
   }
 
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) {
-    return `${diffInHours}h ago`;
+    return `hace ${diffInHours} h`;
   }
 
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays < 7) {
-    return `${diffInDays}d ago`;
+    return `hace ${diffInDays} d`;
   }
 
   const diffInWeeks = Math.floor(diffInDays / 7);
   if (diffInWeeks < 4) {
-    return `${diffInWeeks}w ago`;
+    return `hace ${diffInWeeks} sem`;
   }
 
   const diffInMonths = Math.floor(diffInDays / 30);
   if (diffInMonths < 12) {
-    return `${diffInMonths}mo ago`;
+    return `hace ${diffInMonths} mes${diffInMonths === 1 ? "" : "es"}`;
   }
 
   const diffInYears = Math.floor(diffInDays / 365);
-  return `${diffInYears}y ago`;
+  return `hace ${diffInYears} ano${diffInYears === 1 ? "" : "s"}`;
 }
 
 // Get thread by ID with comments

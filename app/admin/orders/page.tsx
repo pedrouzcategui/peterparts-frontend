@@ -27,32 +27,39 @@ function getStatusBadge(status: AdminOrder["status"]) {
     delivered: { variant: "default", className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" },
     cancelled: { variant: "destructive", className: "" },
   };
+  const labels: Record<AdminOrder["status"], string> = {
+    pending: "pendiente",
+    processing: "en proceso",
+    shipped: "enviado",
+    delivered: "entregado",
+    cancelled: "cancelado",
+  };
   const config = variants[status];
   return (
     <Badge variant={config.variant} className={`capitalize ${config.className}`}>
-      {status}
+      {labels[status]}
     </Badge>
   );
 }
 
 function getPaymentMethodLabel(method: AdminOrder["paymentMethod"]): string {
   const labels: Record<AdminOrder["paymentMethod"], string> = {
-    credit_card: "Credit Card",
+    credit_card: "Tarjeta",
     paypal: "PayPal",
-    bank_transfer: "Bank Transfer",
+    bank_transfer: "Transferencia",
   };
   return labels[method];
 }
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("es-VE", {
     style: "currency",
     currency: "USD",
   }).format(value);
 }
 
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
+  return new Date(dateString).toLocaleDateString("es-VE", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -89,44 +96,44 @@ export default function AdminOrdersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Orders</h1>
+        <h1 className="text-2xl font-bold">Pedidos</h1>
       </div>
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Total Orders</p>
+            <p className="text-sm text-muted-foreground">Pedidos totales</p>
             <p className="text-2xl font-bold">{stats.total}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Pending</p>
+            <p className="text-sm text-muted-foreground">Pendientes</p>
             <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Processing</p>
+            <p className="text-sm text-muted-foreground">En proceso</p>
             <p className="text-2xl font-bold text-blue-600">{stats.processing}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Shipped</p>
+            <p className="text-sm text-muted-foreground">Enviados</p>
             <p className="text-2xl font-bold text-purple-600">{stats.shipped}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Delivered</p>
+            <p className="text-sm text-muted-foreground">Entregados</p>
             <p className="text-2xl font-bold text-green-600">{stats.delivered}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Revenue</p>
+            <p className="text-sm text-muted-foreground">Ingresos</p>
             <p className="text-2xl font-bold text-red-600">
               {formatCurrency(stats.totalRevenue)}
             </p>
@@ -141,14 +148,14 @@ export default function AdminOrdersPage() {
             <div className="relative flex-1 min-w-[200px] max-w-sm">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search orders..."
+                placeholder="Buscar pedidos..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Status:</span>
+              <span className="text-sm text-muted-foreground">Estado:</span>
               <select
                 value={statusFilter}
                 onChange={(e) =>
@@ -156,12 +163,12 @@ export default function AdminOrdersPage() {
                 }
                 className="h-10 rounded-md border border-input bg-background px-3 text-sm"
               >
-                <option value="all">All</option>
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="all">Todos</option>
+                <option value="pending">Pendiente</option>
+                <option value="processing">En proceso</option>
+                <option value="shipped">Enviado</option>
+                <option value="delivered">Entregado</option>
+                <option value="cancelled">Cancelado</option>
               </select>
             </div>
           </div>
@@ -174,14 +181,14 @@ export default function AdminOrdersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Order</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Items</TableHead>
+                <TableHead>Pedido</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Articulos</TableHead>
                 <TableHead>Total</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Pago</TableHead>
+                <TableHead>Fecha</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -214,14 +221,14 @@ export default function AdminOrdersPage() {
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        aria-label="View order"
+                        aria-label="Ver pedido"
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        aria-label="More options"
+                        aria-label="Mas opciones"
                       >
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
@@ -233,7 +240,7 @@ export default function AdminOrdersPage() {
           </Table>
           {filteredOrders.length === 0 && (
             <div className="py-8 text-center text-muted-foreground">
-              No orders found
+              No se encontraron pedidos
             </div>
           )}
         </CardContent>

@@ -32,12 +32,12 @@ export default function MobileFilterSheet({
       <SheetTrigger asChild>
         <Button variant="outline" size="sm" className="lg:hidden">
           <SlidersHorizontal className="mr-2 h-4 w-4" />
-          Filters
+          Filtros
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-[300px] overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Filters</SheetTitle>
+          <SheetTitle>Filtros</SheetTitle>
         </SheetHeader>
         <div className="mt-4 space-y-4">
           <SearchInput />

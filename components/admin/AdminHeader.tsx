@@ -13,17 +13,17 @@ export function AdminHeader() {
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="Search stock, order, etc"
+          placeholder="Buscar inventario, pedidos, etc."
           className="pl-10"
         />
       </div>
 
       {/* Right side */}
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" aria-label="Messages">
+        <Button variant="ghost" size="icon" aria-label="Mensajes">
           <MessageSquare className="h-5 w-5" />
         </Button>
-        <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
+        <Button variant="ghost" size="icon" className="relative" aria-label="Notificaciones">
           <Bell className="h-5 w-5" />
           <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
         </Button>
@@ -36,7 +36,7 @@ export function AdminHeader() {
           </div>
           <div className="hidden sm:block">
             <p className="text-sm font-medium">Marcus George</p>
-            <p className="text-xs text-muted-foreground">Admin</p>
+            <p className="text-xs text-muted-foreground">Administrador</p>
           </div>
         </div>
       </div>

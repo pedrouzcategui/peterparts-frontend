@@ -23,7 +23,7 @@ export async function generateMetadata({
 
   if (!thread) {
     return {
-      title: "Thread Not Found",
+      title: "Hilo no encontrado",
     };
   }
 
@@ -49,7 +49,7 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to Forum
+        Volver al foro
       </Link>
 
       <div className="flex flex-col lg:flex-row gap-6">
@@ -81,7 +81,7 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
                           {thread.author.name}
                         </span>
                         <p className="text-xs">
-                          Posted {formatRelativeTime(thread.createdAt)}
+                          Publicado {formatRelativeTime(thread.createdAt)}
                         </p>
                       </div>
                     </div>
@@ -115,28 +115,28 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
                       className="flex items-center gap-1.5 hover:bg-muted px-3 py-1.5 rounded transition-colors"
                     >
                       <MessageSquare className="h-4 w-4" />
-                      <span>{thread.commentCount} Comments</span>
+                      <span>{thread.commentCount} comentarios</span>
                     </button>
                     <button
                       type="button"
                       className="flex items-center gap-1.5 hover:bg-muted px-3 py-1.5 rounded transition-colors"
                     >
                       <Share2 className="h-4 w-4" />
-                      <span>Share</span>
+                      <span>Compartir</span>
                     </button>
                     <button
                       type="button"
                       className="flex items-center gap-1.5 hover:bg-muted px-3 py-1.5 rounded transition-colors"
                     >
                       <Bookmark className="h-4 w-4" />
-                      <span>Save</span>
+                      <span>Guardar</span>
                     </button>
                     <button
                       type="button"
                       className="flex items-center gap-1.5 hover:bg-muted px-3 py-1.5 rounded transition-colors"
                     >
                       <Flag className="h-4 w-4" />
-                      <span>Report</span>
+                      <span>Reportar</span>
                     </button>
                   </div>
                 </div>
@@ -148,16 +148,15 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
           <Card className="mb-6">
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground mb-2">
-                Comment as <span className="font-medium text-foreground">Guest User</span>
+                Comentar como{" "}
+                <span className="font-medium text-foreground">Usuario invitado</span>
               </p>
               <textarea
-                placeholder="What are your thoughts?"
-                className="w-full min-h-[100px] p-3 rounded-lg border bg-background resize-none focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                placeholder="¿Que opinas?"
+                className="w-full min-h-25 rounded-lg border bg-background p-3 resize-none focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <div className="flex justify-end mt-2">
-                <Button className="bg-red-500 hover:bg-red-600">
-                  Comment
-                </Button>
+                <Button>Comentar</Button>
               </div>
             </CardContent>
           </Card>
@@ -165,7 +164,7 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
           {/* Comments section */}
           <div>
             <h2 className="font-semibold mb-4">
-              {thread.comments.length} Comments
+              {thread.comments.length} comentarios
             </h2>
 
             {thread.comments.length > 0 ? (
@@ -182,7 +181,7 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
                 <CardContent className="p-8 text-center">
                   <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                   <p className="text-muted-foreground">
-                    No comments yet. Be the first to share your thoughts!
+                    Aun no hay comentarios. Se el primero en compartir tu opinion.
                   </p>
                 </CardContent>
               </Card>

@@ -11,11 +11,11 @@ import {
 } from "@/components/ui/select";
 
 const SORT_OPTIONS = [
-  { label: "Featured", value: "featured" },
-  { label: "Newest", value: "newest" },
-  { label: "Price: Low to High", value: "price-low-high" },
-  { label: "Price: High to Low", value: "price-high-low" },
-  { label: "Top Rated", value: "top-rated" },
+  { label: "Destacados", value: "featured" },
+  { label: "Mas recientes", value: "newest" },
+  { label: "Precio: menor a mayor", value: "price-low-high" },
+  { label: "Precio: mayor a menor", value: "price-high-low" },
+  { label: "Mejor valorados", value: "top-rated" },
 ] as const;
 
 /**
@@ -49,10 +49,10 @@ export default function SortDropdown() {
 
   return (
     <div className={`flex items-center gap-2 ${isPending ? "opacity-70" : ""}`}>
-      <span className="text-sm font-medium whitespace-nowrap">Sort By</span>
+      <span className="text-sm font-medium whitespace-nowrap">Ordenar por</span>
       <Select value={currentSort} onValueChange={handleSortChange}>
         <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Sort By" />
+          <SelectValue placeholder="Ordenar por" />
         </SelectTrigger>
         <SelectContent>
           {SORT_OPTIONS.map((option) => (

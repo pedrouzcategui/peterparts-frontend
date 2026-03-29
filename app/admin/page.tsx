@@ -9,7 +9,7 @@ import {
 } from "@/lib/admin-data";
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("es-VE", {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 0,
@@ -18,7 +18,7 @@ function formatCurrency(value: number): string {
 }
 
 function formatNumber(value: number): string {
-  return new Intl.NumberFormat("en-US").format(value);
+  return new Intl.NumberFormat("es-VE").format(value);
 }
 
 function StatCard({
@@ -52,7 +52,7 @@ function StatCard({
                 {isPositive ? "+" : ""}
                 {change.toFixed(2)}%
               </span>
-              <span className="text-xs text-muted-foreground">vs last week</span>
+              <span className="text-xs text-muted-foreground">vs. la semana pasada</span>
             </div>
           </div>
           <div className="h-10 w-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
@@ -70,9 +70,9 @@ function TopCategoriesCard() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Top Categories</CardTitle>
+          <CardTitle className="text-base">Categorias principales</CardTitle>
           <button className="text-sm text-red-500 hover:underline">
-            See All
+            Ver todo
           </button>
         </div>
       </CardHeader>
@@ -81,7 +81,7 @@ function TopCategoriesCard() {
         <div className="relative mx-auto mb-4 h-32 w-32">
           <div className="absolute inset-0 rounded-full border-8 border-red-500" />
           <div className="absolute inset-4 rounded-full bg-background flex flex-col items-center justify-center">
-            <p className="text-xs text-muted-foreground">Total Sales</p>
+            <p className="text-xs text-muted-foreground">Ventas totales</p>
             <p className="text-lg font-bold">{formatCurrency(total)}</p>
           </div>
         </div>
@@ -112,7 +112,7 @@ function MonthlyTargetCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Monthly Target</CardTitle>
+        <CardTitle className="text-base">Meta mensual</CardTitle>
       </CardHeader>
       <CardContent>
         {/* Progress ring placeholder */}
@@ -140,24 +140,24 @@ function MonthlyTargetCard() {
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <p className="text-2xl font-bold">{progress}%</p>
-            <p className="text-xs text-green-500">+8.02% from last month</p>
+            <p className="text-xs text-green-500">+8.02% vs. el mes pasado</p>
           </div>
         </div>
         <div className="text-center mb-4">
-          <p className="font-medium">Great Progress! 🎉</p>
+          <p className="font-medium">Excelente progreso</p>
           <p className="text-sm text-muted-foreground">
-            Our achievement increased by{" "}
-            <span className="text-red-500">$200,000</span>, let&apos;s reach 100%
-            next month.
+            El resultado crecio en{" "}
+            <span className="text-red-500">$200,000</span>. Alcancemos el 100%
+            el proximo mes.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-4 text-center">
           <div className="rounded-lg bg-muted p-3">
-            <p className="text-xs text-muted-foreground">Target</p>
+            <p className="text-xs text-muted-foreground">Meta</p>
             <p className="font-semibold">{formatCurrency(target)}</p>
           </div>
           <div className="rounded-lg bg-muted p-3">
-            <p className="text-xs text-muted-foreground">Revenue</p>
+            <p className="text-xs text-muted-foreground">Ingresos</p>
             <p className="font-semibold">{formatCurrency(revenue)}</p>
           </div>
         </div>
@@ -172,14 +172,14 @@ function ActiveUsersCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Active User</CardTitle>
+        <CardTitle className="text-base">Usuarios activos</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex items-baseline gap-2 mb-4">
           <span className="text-3xl font-bold">{formatNumber(totalUsers)}</span>
           <span className="text-green-500 text-sm">+{change}%</span>
         </div>
-        <p className="text-sm text-muted-foreground mb-4">Users from last month</p>
+        <p className="text-sm text-muted-foreground mb-4">Usuarios del ultimo mes</p>
         <div className="space-y-3">
           {activeUsersByCountry.map((item) => (
             <div key={item.country}>
@@ -205,14 +205,19 @@ function ConversionRateCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Conversion Rate</CardTitle>
+        <CardTitle className="text-base">Tasa de conversion</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-5 gap-4 text-center">
           {Object.entries(conversionFunnel).map(([key, data]) => {
-            const label = key
-              .replace(/([A-Z])/g, " $1")
-              .replace(/^./, (str) => str.toUpperCase());
+            const labels: Record<string, string> = {
+              productViews: "Vistas",
+              addToCart: "Al carrito",
+              proceedToCheckout: "Checkout",
+              completedPurchases: "Compras",
+              abandonedCarts: "Abandonos",
+            };
+            const label = labels[key] ?? key;
             const isPositive = data.change >= 0;
             return (
               <div key={key}>
@@ -249,7 +254,7 @@ function TrafficSourcesCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Traffic Sources</CardTitle>
+        <CardTitle className="text-base">Fuentes de trafico</CardTitle>
       </CardHeader>
       <CardContent>
         {/* Bar chart placeholder */}
@@ -286,18 +291,18 @@ function RevenueAnalyticsCard() {
     <Card className="col-span-2">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Revenue Analytics</CardTitle>
+          <CardTitle className="text-base">Analitica de ingresos</CardTitle>
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-2">
               <div className="h-2 w-4 rounded-full bg-red-500" />
-              <span>Revenue</span>
+              <span>Ingresos</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="h-2 w-4 rounded-full border-2 border-dashed border-muted-foreground" />
-              <span>Order</span>
+              <span>Pedidos</span>
             </div>
-            <button className="rounded-full bg-red-500 px-3 py-1 text-white text-xs">
-              Last 8 Days
+            <button className="rounded-full bg-primary px-3 py-1 text-xs text-primary-foreground transition-colors hover:bg-primary/90">
+              Ultimos 8 dias
             </button>
           </div>
         </div>
@@ -327,7 +332,7 @@ function RevenueAnalyticsCard() {
           </div>
           {/* Revenue tooltip */}
           <div className="absolute right-24 top-8 rounded-lg bg-background border px-3 py-2 shadow-lg">
-            <p className="text-xs text-muted-foreground">Revenue</p>
+            <p className="text-xs text-muted-foreground">Ingresos</p>
             <p className="font-semibold">$14,521</p>
           </div>
         </div>
@@ -339,24 +344,24 @@ function RevenueAnalyticsCard() {
 export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+      <h1 className="text-2xl font-bold">Panel</h1>
 
       {/* Stats row */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Total Sales"
+          title="Ventas totales"
           value={formatCurrency(dashboardStats.totalSales)}
           change={dashboardStats.salesChange}
           icon={DollarSign}
         />
         <StatCard
-          title="Total Orders"
+          title="Pedidos totales"
           value={formatNumber(dashboardStats.totalOrders)}
           change={dashboardStats.ordersChange}
           icon={ShoppingCart}
         />
         <StatCard
-          title="Total Visitors"
+          title="Visitantes totales"
           value={formatNumber(dashboardStats.totalVisitors)}
           change={dashboardStats.visitorsChange}
           icon={Users}

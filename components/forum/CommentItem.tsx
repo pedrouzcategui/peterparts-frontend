@@ -47,7 +47,7 @@ export default function CommentItem({ comment, depth = 0 }: CommentItemProps) {
             className="flex items-center gap-1 hover:bg-muted px-2 py-1 rounded transition-colors"
           >
             <MessageSquare className="h-3.5 w-3.5" />
-            Reply
+            Responder
           </button>
         </div>
       </div>

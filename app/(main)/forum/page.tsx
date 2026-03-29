@@ -6,9 +6,9 @@ import ForumSidebar from "@/components/forum/ForumSidebar";
 import { mockThreads } from "@/lib/forum-data";
 
 export const metadata: Metadata = {
-  title: "Forum",
+  title: "Foro",
   description:
-    "Join the PeterParts community forum. Ask questions, share tips, and get help with your kitchen appliances.",
+    "Unete al foro de la comunidad PeterParts. Haz preguntas, comparte consejos y recibe ayuda con tus electrodomesticos de cocina.",
 };
 
 export default function ForumPage() {
@@ -16,9 +16,9 @@ export default function ForumPage() {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Community Forum</h1>
+        <h1 className="text-2xl font-bold mb-2">Foro de la comunidad</h1>
         <p className="text-muted-foreground">
-          Ask questions, share tips, and connect with other appliance enthusiasts.
+          Haz preguntas, comparte consejos y conecta con otras personas aficionadas a los electrodomesticos.
         </p>
       </div>
 
@@ -31,7 +31,7 @@ export default function ForumPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search forum..."
+                placeholder="Buscar en el foro..."
                 className="pl-9"
               />
             </div>
@@ -50,7 +50,7 @@ export default function ForumPage() {
               type="button"
               className="text-sm text-red-500 hover:underline font-medium"
             >
-              Load more threads
+              Cargar mas hilos
             </button>
           </div>
         </div>

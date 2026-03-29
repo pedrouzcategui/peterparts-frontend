@@ -77,8 +77,14 @@ export default function ProductsContent({ allProducts }: ProductsContentProps) {
       result = result.filter((p) => {
         return saleFilters.some((filter) => {
           if (filter === "sale")
-            return p.badge === "Sale" || p.originalPrice !== undefined;
-          if (filter === "new") return p.badge === "Just In";
+            return (
+              p.badge === "Sale" ||
+              p.badge === "Oferta" ||
+              p.originalPrice !== undefined
+            );
+          if (filter === "new") {
+            return p.badge === "Just In" || p.badge === "Recien llegado";
+          }
           return true;
         });
       });
@@ -110,10 +116,9 @@ export default function ProductsContent({ allProducts }: ProductsContentProps) {
     } else if (sort === "top-rated") {
       result.sort((a, b) => b.reviews.rating - a.reviews.rating);
     } else if (sort === "newest") {
-      // For demo, just use badge "Just In"
       result.sort((a, b) => {
-        const aNew = a.badge === "Just In" ? 1 : 0;
-        const bNew = b.badge === "Just In" ? 1 : 0;
+        const aNew = a.badge === "Just In" || a.badge === "Recien llegado" ? 1 : 0;
+        const bNew = b.badge === "Just In" || b.badge === "Recien llegado" ? 1 : 0;
         return bNew - aNew;
       });
     }
@@ -138,9 +143,9 @@ export default function ProductsContent({ allProducts }: ProductsContentProps) {
     <div>
       {/* Results count */}
       <p className="mb-4 text-sm text-muted-foreground">
-        Showing {paginatedProducts.length} of {filteredProducts.length} products
+        Mostrando {paginatedProducts.length} de {filteredProducts.length} productos
         {filteredProducts.length !== allProducts.length && (
-          <span> (filtered from {allProducts.length} total)</span>
+          <span> (filtrados de {allProducts.length} en total)</span>
         )}
       </p>
 
@@ -152,7 +157,7 @@ export default function ProductsContent({ allProducts }: ProductsContentProps) {
 
 function ProductsLoadingSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 12 }).map((_, index) => (
         <ProductCardSkeleton key={index} />
       ))}

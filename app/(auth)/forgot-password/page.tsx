@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
           size="icon"
           className="mb-2"
           onClick={() => router.push("/login")}
-          aria-label="Back to login"
+          aria-label="Volver al inicio de sesion"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -44,9 +44,9 @@ export default function ForgotPasswordPage() {
           <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
             <Mail className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Check your email</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Revisa tu correo</h1>
           <p className="text-muted-foreground">
-            We&apos;ve sent a password reset link to{" "}
+            Te enviamos un enlace para restablecer la contrasena a{" "}
             <span className="font-medium text-foreground">{email}</span>
           </p>
         </div>
@@ -57,16 +57,16 @@ export default function ForgotPasswordPage() {
             className="w-full h-11"
             onClick={() => router.push("/login")}
           >
-            Back to Sign In
+            Volver a iniciar sesion
           </Button>
           <p className="text-center text-sm text-muted-foreground">
-            Didn&apos;t receive the email?{" "}
+            ¿No recibiste el correo?{" "}
             <button
               type="button"
               onClick={() => setIsSubmitted(false)}
               className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
             >
-              Click to resend
+              Haz clic para reenviarlo
             </button>
           </p>
         </div>
@@ -83,28 +83,28 @@ export default function ForgotPasswordPage() {
         size="icon"
         className="mb-2"
         onClick={() => router.back()}
-        aria-label="Go back"
+        aria-label="Volver"
       >
         <ArrowLeft className="h-5 w-5" />
       </Button>
 
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Forgot Password?</h1>
+        <h1 className="text-3xl font-bold tracking-tight">¿Olvidaste tu contrasena?</h1>
         <p className="text-muted-foreground">
-          No worries, we&apos;ll send you reset instructions.
+          No te preocupes, te enviaremos instrucciones para restablecerla.
         </p>
       </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">Email Address</Label>
+          <Label htmlFor="email">Correo electronico</Label>
           <Input
             id="email"
             name="email"
             type="email"
-            placeholder="Email Address"
+            placeholder="Correo electronico"
             required
             disabled={isLoading}
             value={email}
@@ -113,18 +113,18 @@ export default function ForgotPasswordPage() {
         </div>
 
         <Button type="submit" className="w-full h-11" disabled={isLoading}>
-          {isLoading ? "Sending..." : "Reset Password"}
+          {isLoading ? "Enviando..." : "Restablecer contrasena"}
         </Button>
       </form>
 
       {/* Back to login link */}
       <p className="text-center text-sm text-muted-foreground">
-        Remember your password?{" "}
+        ¿Recordaste tu contrasena?{" "}
         <Link
           href="/login"
           className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
         >
-          Back to Sign In
+          Volver a iniciar sesion
         </Link>
       </p>
     </div>

@@ -13,21 +13,22 @@ import {
   HelpCircle,
   Settings,
 } from "lucide-react";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import { cn } from "@/lib/utils";
 
 const mainNavItems = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
-  { href: "/admin/products", label: "Products", icon: Package },
-  { href: "/admin/users", label: "Customers", icon: Users },
-  { href: "/admin/reports", label: "Reports", icon: FileText },
-  { href: "/admin/discounts", label: "Discounts", icon: Percent },
+  { href: "/admin", label: "Panel", icon: LayoutDashboard },
+  { href: "/admin/orders", label: "Pedidos", icon: ShoppingCart },
+  { href: "/admin/products", label: "Productos", icon: Package },
+  { href: "/admin/users", label: "Clientes", icon: Users },
+  { href: "/admin/reports", label: "Reportes", icon: FileText },
+  { href: "/admin/discounts", label: "Descuentos", icon: Percent },
 ];
 
 const secondaryNavItems = [
-  { href: "/admin/integrations", label: "Integrations", icon: Puzzle },
-  { href: "/admin/help", label: "Help", icon: HelpCircle },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
+  { href: "/admin/integrations", label: "Integraciones", icon: Puzzle },
+  { href: "/admin/help", label: "Ayuda", icon: HelpCircle },
+  { href: "/admin/settings", label: "Configuracion", icon: Settings },
 ];
 
 export function AdminSidebar() {
@@ -44,13 +45,8 @@ export function AdminSidebar() {
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r bg-background">
       <div className="flex h-full flex-col">
         {/* Logo */}
-        <div className="flex h-16 items-center gap-2 border-b px-6">
-          <Link href="/" className="flex items-center gap-2 border-b px-6 py-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500">
-              <span className="text-sm font-bold text-white">PP</span>
-            </div>
-            <span className="text-lg font-semibold">PeterParts</span>
-          </Link>
+        <div className="flex h-16 items-center border-b px-6">
+          <BrandLogo logoClassName="h-9 w-38" />
         </div>
 
         {/* Main Navigation */}

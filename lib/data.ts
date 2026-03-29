@@ -1,4 +1,4 @@
-import { Product, FilterGroup } from "@/lib/types";
+import { Product, FilterGroup } from "./types";
 
 export const products: Product[] = [
   // ── Cuisinart Products ──
@@ -24,10 +24,22 @@ export const products: Product[] = [
     color: "Brushed Stainless",
     style: "DFP-14BCWN",
     images: [
-      { src: "/images/cuisinart-food-processor-1.jpg", alt: "Cuisinart 14-Cup Food Processor front view" },
-      { src: "/images/cuisinart-food-processor-2.jpg", alt: "Cuisinart 14-Cup Food Processor side view" },
-      { src: "/images/cuisinart-food-processor-3.jpg", alt: "Cuisinart 14-Cup Food Processor with accessories" },
-      { src: "/images/cuisinart-food-processor-4.jpg", alt: "Cuisinart 14-Cup Food Processor top view" },
+      {
+        src: "/images/cuisinart-food-processor-1.jpg",
+        alt: "Cuisinart 14-Cup Food Processor front view",
+      },
+      {
+        src: "/images/cuisinart-food-processor-2.jpg",
+        alt: "Cuisinart 14-Cup Food Processor side view",
+      },
+      {
+        src: "/images/cuisinart-food-processor-3.jpg",
+        alt: "Cuisinart 14-Cup Food Processor with accessories",
+      },
+      {
+        src: "/images/cuisinart-food-processor-4.jpg",
+        alt: "Cuisinart 14-Cup Food Processor top view",
+      },
     ],
     variants: [
       { label: "Brushed Stainless", available: true },
@@ -61,9 +73,18 @@ export const products: Product[] = [
     color: "Stainless Steel",
     style: "DCC-3200",
     images: [
-      { src: "/images/cuisinart-coffee-maker-1.jpg", alt: "Cuisinart PerfecTemp Coffee Maker front view" },
-      { src: "/images/cuisinart-coffee-maker-2.jpg", alt: "Cuisinart PerfecTemp Coffee Maker with carafe" },
-      { src: "/images/cuisinart-coffee-maker-3.jpg", alt: "Cuisinart PerfecTemp Coffee Maker detail" },
+      {
+        src: "/images/cuisinart-coffee-maker-1.jpg",
+        alt: "Cuisinart PerfecTemp Coffee Maker front view",
+      },
+      {
+        src: "/images/cuisinart-coffee-maker-2.jpg",
+        alt: "Cuisinart PerfecTemp Coffee Maker with carafe",
+      },
+      {
+        src: "/images/cuisinart-coffee-maker-3.jpg",
+        alt: "Cuisinart PerfecTemp Coffee Maker detail",
+      },
     ],
     variants: [
       { label: "Stainless Steel", available: true },
@@ -94,13 +115,20 @@ export const products: Product[] = [
     color: "Silver/Black",
     style: "GR-5B",
     images: [
-      { src: "/images/cuisinart-griddler-1.jpg", alt: "Cuisinart Griddler FIVE closed" },
-      { src: "/images/cuisinart-griddler-2.jpg", alt: "Cuisinart Griddler FIVE open" },
-      { src: "/images/cuisinart-griddler-3.jpg", alt: "Cuisinart Griddler FIVE cooking" },
+      {
+        src: "/images/cuisinart-griddler-1.jpg",
+        alt: "Cuisinart Griddler FIVE closed",
+      },
+      {
+        src: "/images/cuisinart-griddler-2.jpg",
+        alt: "Cuisinart Griddler FIVE open",
+      },
+      {
+        src: "/images/cuisinart-griddler-3.jpg",
+        alt: "Cuisinart Griddler FIVE cooking",
+      },
     ],
-    variants: [
-      { label: "Silver/Black", available: true },
-    ],
+    variants: [{ label: "Silver/Black", available: true }],
     reviews: { rating: 4.6, count: 924 },
     badge: "Just In",
     inStock: true,
@@ -127,8 +155,14 @@ export const products: Product[] = [
     color: "White",
     style: "BFP-703",
     images: [
-      { src: "/images/cuisinart-blender-1.jpg", alt: "Cuisinart SmartPower Blender front" },
-      { src: "/images/cuisinart-blender-2.jpg", alt: "Cuisinart SmartPower Blender with food processor" },
+      {
+        src: "/images/cuisinart-blender-1.jpg",
+        alt: "Cuisinart SmartPower Blender front",
+      },
+      {
+        src: "/images/cuisinart-blender-2.jpg",
+        alt: "Cuisinart SmartPower Blender with food processor",
+      },
     ],
     variants: [
       { label: "White", available: true },
@@ -162,10 +196,22 @@ export const products: Product[] = [
     color: "Fingerprint Resistant Stainless Steel",
     style: "WRF555SDFZ",
     images: [
-      { src: "/images/whirlpool-fridge-1.jpg", alt: "Whirlpool French Door Refrigerator closed" },
-      { src: "/images/whirlpool-fridge-2.jpg", alt: "Whirlpool French Door Refrigerator open" },
-      { src: "/images/whirlpool-fridge-3.jpg", alt: "Whirlpool French Door Refrigerator interior" },
-      { src: "/images/whirlpool-fridge-4.jpg", alt: "Whirlpool French Door Refrigerator dispenser" },
+      {
+        src: "/images/whirlpool-fridge-1.jpg",
+        alt: "Whirlpool French Door Refrigerator closed",
+      },
+      {
+        src: "/images/whirlpool-fridge-2.jpg",
+        alt: "Whirlpool French Door Refrigerator open",
+      },
+      {
+        src: "/images/whirlpool-fridge-3.jpg",
+        alt: "Whirlpool French Door Refrigerator interior",
+      },
+      {
+        src: "/images/whirlpool-fridge-4.jpg",
+        alt: "Whirlpool French Door Refrigerator dispenser",
+      },
     ],
     variants: [
       { label: "Stainless Steel", available: true },
@@ -198,9 +244,18 @@ export const products: Product[] = [
     color: "Stainless Steel",
     style: "WFE525S0JS",
     images: [
-      { src: "/images/whirlpool-range-1.jpg", alt: "Whirlpool Electric Range front view" },
-      { src: "/images/whirlpool-range-2.jpg", alt: "Whirlpool Electric Range cooktop" },
-      { src: "/images/whirlpool-range-3.jpg", alt: "Whirlpool Electric Range oven interior" },
+      {
+        src: "/images/whirlpool-range-1.jpg",
+        alt: "Whirlpool Electric Range front view",
+      },
+      {
+        src: "/images/whirlpool-range-2.jpg",
+        alt: "Whirlpool Electric Range cooktop",
+      },
+      {
+        src: "/images/whirlpool-range-3.jpg",
+        alt: "Whirlpool Electric Range oven interior",
+      },
     ],
     variants: [
       { label: "Stainless Steel", available: true },
@@ -232,9 +287,18 @@ export const products: Product[] = [
     color: "Fingerprint Resistant Stainless Steel",
     style: "WDT750SAKZ",
     images: [
-      { src: "/images/whirlpool-dishwasher-1.jpg", alt: "Whirlpool Dishwasher closed" },
-      { src: "/images/whirlpool-dishwasher-2.jpg", alt: "Whirlpool Dishwasher open with dishes" },
-      { src: "/images/whirlpool-dishwasher-3.jpg", alt: "Whirlpool Dishwasher third rack" },
+      {
+        src: "/images/whirlpool-dishwasher-1.jpg",
+        alt: "Whirlpool Dishwasher closed",
+      },
+      {
+        src: "/images/whirlpool-dishwasher-2.jpg",
+        alt: "Whirlpool Dishwasher open with dishes",
+      },
+      {
+        src: "/images/whirlpool-dishwasher-3.jpg",
+        alt: "Whirlpool Dishwasher third rack",
+      },
     ],
     variants: [
       { label: "Stainless Steel", available: true },
@@ -266,8 +330,14 @@ export const products: Product[] = [
     color: "Stainless Steel",
     style: "WMH32519HZ",
     images: [
-      { src: "/images/whirlpool-microwave-1.jpg", alt: "Whirlpool Over-the-Range Microwave installed" },
-      { src: "/images/whirlpool-microwave-2.jpg", alt: "Whirlpool Microwave interior" },
+      {
+        src: "/images/whirlpool-microwave-1.jpg",
+        alt: "Whirlpool Over-the-Range Microwave installed",
+      },
+      {
+        src: "/images/whirlpool-microwave-2.jpg",
+        alt: "Whirlpool Microwave interior",
+      },
     ],
     variants: [
       { label: "Stainless Steel", available: true },
@@ -301,10 +371,22 @@ export const products: Product[] = [
     color: "Empire Red",
     style: "KSM150PSER",
     images: [
-      { src: "/images/kitchenaid-mixer-1.jpg", alt: "KitchenAid Artisan Stand Mixer Empire Red" },
-      { src: "/images/kitchenaid-mixer-2.jpg", alt: "KitchenAid Artisan Stand Mixer with bowl" },
-      { src: "/images/kitchenaid-mixer-3.jpg", alt: "KitchenAid Artisan Stand Mixer attachments" },
-      { src: "/images/kitchenaid-mixer-4.jpg", alt: "KitchenAid Artisan Stand Mixer in use" },
+      {
+        src: "/images/kitchenaid-mixer-1.jpg",
+        alt: "KitchenAid Artisan Stand Mixer Empire Red",
+      },
+      {
+        src: "/images/kitchenaid-mixer-2.jpg",
+        alt: "KitchenAid Artisan Stand Mixer with bowl",
+      },
+      {
+        src: "/images/kitchenaid-mixer-3.jpg",
+        alt: "KitchenAid Artisan Stand Mixer attachments",
+      },
+      {
+        src: "/images/kitchenaid-mixer-4.jpg",
+        alt: "KitchenAid Artisan Stand Mixer in use",
+      },
     ],
     variants: [
       { label: "Empire Red", available: true },
@@ -341,9 +423,18 @@ export const products: Product[] = [
     color: "Candy Apple Red",
     style: "KSB8270CA",
     images: [
-      { src: "/images/kitchenaid-blender-1.jpg", alt: "KitchenAid Pro Line Blender front" },
-      { src: "/images/kitchenaid-blender-2.jpg", alt: "KitchenAid Pro Line Blender blending" },
-      { src: "/images/kitchenaid-blender-3.jpg", alt: "KitchenAid Pro Line Blender controls" },
+      {
+        src: "/images/kitchenaid-blender-1.jpg",
+        alt: "KitchenAid Pro Line Blender front",
+      },
+      {
+        src: "/images/kitchenaid-blender-2.jpg",
+        alt: "KitchenAid Pro Line Blender blending",
+      },
+      {
+        src: "/images/kitchenaid-blender-3.jpg",
+        alt: "KitchenAid Pro Line Blender controls",
+      },
     ],
     variants: [
       { label: "Candy Apple Red", available: true },
@@ -376,9 +467,18 @@ export const products: Product[] = [
     color: "Black Matte",
     style: "KCO124BM",
     images: [
-      { src: "/images/kitchenaid-oven-1.jpg", alt: "KitchenAid Digital Countertop Oven front" },
-      { src: "/images/kitchenaid-oven-2.jpg", alt: "KitchenAid Digital Countertop Oven open" },
-      { src: "/images/kitchenaid-oven-3.jpg", alt: "KitchenAid Digital Countertop Oven cooking" },
+      {
+        src: "/images/kitchenaid-oven-1.jpg",
+        alt: "KitchenAid Digital Countertop Oven front",
+      },
+      {
+        src: "/images/kitchenaid-oven-2.jpg",
+        alt: "KitchenAid Digital Countertop Oven open",
+      },
+      {
+        src: "/images/kitchenaid-oven-3.jpg",
+        alt: "KitchenAid Digital Countertop Oven cooking",
+      },
     ],
     variants: [
       { label: "Black Matte", available: true },
@@ -410,8 +510,14 @@ export const products: Product[] = [
     color: "Onyx Black",
     style: "KHM7210OB",
     images: [
-      { src: "/images/kitchenaid-hand-mixer-1.jpg", alt: "KitchenAid Hand Mixer front" },
-      { src: "/images/kitchenaid-hand-mixer-2.jpg", alt: "KitchenAid Hand Mixer accessories" },
+      {
+        src: "/images/kitchenaid-hand-mixer-1.jpg",
+        alt: "KitchenAid Hand Mixer front",
+      },
+      {
+        src: "/images/kitchenaid-hand-mixer-2.jpg",
+        alt: "KitchenAid Hand Mixer accessories",
+      },
     ],
     variants: [
       { label: "Onyx Black", available: true },

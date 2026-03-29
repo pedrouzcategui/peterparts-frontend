@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import Link from "next/link";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -18,20 +18,21 @@ export function AuthLayout({ children }: AuthLayoutProps) {
 
         {/* Logo */}
         <div className="absolute top-8 left-8 z-10">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center">
-              <span className="text-white font-bold text-xl">P</span>
-            </div>
-            <span className="text-white font-semibold text-lg">PeterParts</span>
-          </Link>
+          <BrandLogo
+            href="/"
+            priority
+            variant="dark"
+            className="rounded-xl bg-white/5 px-3 py-2 backdrop-blur-sm"
+            logoClassName="h-12 w-45"
+          />
         </div>
 
         {/* Decorative content overlay */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white/80 p-8">
-            <h2 className="text-3xl font-bold mb-4">Welcome to PeterParts</h2>
+            <h2 className="text-3xl font-bold mb-4">Bienvenido a PeterParts</h2>
             <p className="text-white/60 max-w-md">
-              Your one-stop shop for premium kitchen appliances and parts
+              Tu tienda especializada en electrodomesticos y repuestos de cocina premium
             </p>
           </div>
         </div>
