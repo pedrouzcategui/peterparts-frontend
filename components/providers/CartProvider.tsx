@@ -81,13 +81,14 @@ function dispatchCartChange(): void {
 
 function persistCart(items: CartItem[]): void {
   cachedCartItems = items;
-  cachedStorageValue = items.length === 0 ? null : serializeCart(items);
+  const serializedCart = items.length === 0 ? null : serializeCart(items);
+  cachedStorageValue = serializedCart;
 
   try {
-    if (items.length === 0) {
+    if (serializedCart === null) {
       window.localStorage.removeItem(CART_STORAGE_KEY);
     } else {
-      window.localStorage.setItem(CART_STORAGE_KEY, cachedStorageValue);
+      window.localStorage.setItem(CART_STORAGE_KEY, serializedCart);
     }
   } finally {
     dispatchCartChange();

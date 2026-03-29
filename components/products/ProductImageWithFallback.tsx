@@ -38,9 +38,7 @@ export default function ProductImageWithFallback({
           return;
         }
 
-        if (imageSrc !== LOCAL_PRODUCT_PLACEHOLDER_SRC) {
-          setImageSrc(LOCAL_PRODUCT_PLACEHOLDER_SRC);
-        }
+        setImageSrc(LOCAL_PRODUCT_PLACEHOLDER_SRC);
       }}
     />
   );
