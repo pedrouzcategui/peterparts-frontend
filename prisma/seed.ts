@@ -6,8 +6,11 @@ import {
   ProductStatus,
 } from "../lib/generated/prisma/client";
 import { products } from "../lib/data";
+import { normalizePostgresConnectionString } from "../lib/postgres-connection-string";
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const adapter = new PrismaPg({
+  connectionString: normalizePostgresConnectionString(process.env.DATABASE_URL!),
+});
 const prisma = new PrismaClient({ adapter });
 
 const SAMPLE_REVIEW_BODIES = [
