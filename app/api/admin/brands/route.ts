@@ -1,10 +1,17 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
+import { requireAdminApiAccess } from "@/lib/auth/admin";
 import { getOrCreateBrand } from "@/lib/admin-catalog";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  const access = await requireAdminApiAccess("/admin/products");
+
+  if (!access.ok) {
+    return access.response;
+  }
+
   const body = (await request.json().catch(() => null)) as {
     name?: string;
   } | null;

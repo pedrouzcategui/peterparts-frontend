@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
+import { requireAdminApiAccess } from "@/lib/auth/admin";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -22,6 +23,12 @@ function parseDate(value: string | undefined, fallback: Date): Date {
 }
 
 export async function GET() {
+  const access = await requireAdminApiAccess("/admin/products");
+
+  if (!access.ok) {
+    return access.response;
+  }
+
   const exchangeRate = await prisma.exchangeRate.findFirst({
     where: {
       baseCurrency: "USD",
@@ -55,6 +62,12 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const access = await requireAdminApiAccess("/admin/products");
+
+  if (!access.ok) {
+    return access.response;
+  }
+
   const body = (await request
     .json()
     .catch(() => null)) as ExchangeRatePayload | null;

@@ -3,6 +3,7 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
+import { requireAdminApiAccess } from "@/lib/auth/admin";
 import {
   createUniqueSlug,
   getOrCreateBrand,
@@ -122,6 +123,12 @@ async function saveImages(
 }
 
 export async function POST(request: Request) {
+  const access = await requireAdminApiAccess("/admin/products");
+
+  if (!access.ok) {
+    return access.response;
+  }
+
   const formData = await request.formData();
 
   const name = getStringField(formData, "name");

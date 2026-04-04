@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
+import { requireAdminPageAccess } from "@/lib/auth/admin";
 
 export const metadata: Metadata = {
   title: {
@@ -10,11 +11,13 @@ export const metadata: Metadata = {
   description: "Panel de administracion de PeterParts",
 };
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  await requireAdminPageAccess("/admin");
+
   return (
     <div className="min-h-screen bg-muted/30">
       <AdminSidebar />
