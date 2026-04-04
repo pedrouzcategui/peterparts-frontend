@@ -1,7 +1,5 @@
 import "server-only";
 
-import path from "node:path";
-import { readFile } from "node:fs/promises";
 import { Resend } from "resend";
 import { getAppUrl, getResendFromEmail, isResendConfigured } from "@/lib/auth/env";
 
@@ -13,8 +11,6 @@ const BRAND_COLORS = {
   text: "#1A1714",
   white: "#FFFFFF",
 } as const;
-
-const LOGO_CONTENT_ID = "peterparts-logo";
 
 function getResendClient(): Resend {
   if (!isResendConfigured || !process.env.RESEND_API_KEY) {
@@ -30,16 +26,8 @@ function getResendClient(): Resend {
   return resendClient;
 }
 
-async function getInlineLogoAttachment() {
-  const logoPath = path.join(process.cwd(), "public", "images", "logo-dark.png");
-  const content = await readFile(logoPath);
-
-  return {
-    filename: "peterparts-logo-dark.png",
-    content,
-    contentType: "image/png",
-    contentId: LOGO_CONTENT_ID,
-  };
+function getAbsoluteLogoUrl(): string {
+  return `${getAppUrl()}/images/logo-dark.png`;
 }
 
 function buildEmailShell({
@@ -57,11 +45,13 @@ function buildEmailShell({
   ctaLabel: string;
   ctaUrl: string;
 }): { html: string; text: string } {
+  const logoUrl = getAbsoluteLogoUrl();
+
   const html = `
     <div style="margin:0;background:${BRAND_COLORS.secondary};padding:40px 16px;font-family:'Open Sans',Arial,sans-serif;color:${BRAND_COLORS.text};">
       <div style="max-width:560px;margin:0 auto;border:1px solid rgba(255,255,255,0.2);border-radius:28px;overflow:hidden;background:${BRAND_COLORS.white};box-shadow:0 22px 60px rgba(26,23,20,0.24);">
         <div style="background:${BRAND_COLORS.primary};padding:28px 32px;text-align:center;">
-          <img src="cid:${LOGO_CONTENT_ID}" alt="PeterParts" style="display:inline-block;width:196px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;vertical-align:middle;" />
+          <img src="${logoUrl}" alt="PeterParts" style="display:inline-block;width:196px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;vertical-align:middle;" />
         </div>
         <div style="padding:32px;">
           <p style="margin:0 0 12px;font-family:'Lato',Arial,sans-serif;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:${BRAND_COLORS.secondary};font-weight:700;">${previewText}</p>
@@ -83,6 +73,38 @@ function buildEmailShell({
   return { html, text };
 }
 
+async function sendTransactionalEmail({
+  to,
+  subject,
+  html,
+  text,
+}: {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+}): Promise<void> {
+  const response = await getResendClient().emails.send({
+    from: getResendFromEmail(),
+    to,
+    subject,
+    html,
+    text,
+  });
+
+  if (response.error) {
+    const errorMessage = response.error.message || "Resend rejected the email request.";
+
+    console.error("Transactional email failed", {
+      to,
+      subject,
+      resendError: response.error,
+    });
+
+    throw new Error(`Email delivery failed: ${errorMessage}`);
+  }
+}
+
 export async function sendVerificationEmail({
   email,
   firstName,
@@ -102,15 +124,12 @@ export async function sendVerificationEmail({
     ctaLabel: "Confirmar correo",
     ctaUrl: confirmationUrl,
   });
-  const logoAttachment = await getInlineLogoAttachment();
 
-  await getResendClient().emails.send({
-    from: getResendFromEmail(),
+  await sendTransactionalEmail({
     to: email,
     subject: "Confirma tu correo en PeterParts",
     html,
     text,
-    attachments: [logoAttachment],
   });
 }
 
@@ -133,14 +152,11 @@ export async function sendPasswordResetEmail({
     ctaLabel: "Crear nueva contraseña",
     ctaUrl: resetUrl,
   });
-  const logoAttachment = await getInlineLogoAttachment();
 
-  await getResendClient().emails.send({
-    from: getResendFromEmail(),
+  await sendTransactionalEmail({
     to: email,
     subject: "Restablece tu contraseña de PeterParts",
     html,
     text,
-    attachments: [logoAttachment],
   });
 }

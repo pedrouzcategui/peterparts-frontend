@@ -62,6 +62,9 @@ Notes:
 - The app also accepts `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` as fallbacks.
 - Email verification and password reset require both `RESEND_API_KEY` and `RESEND_FROM_EMAIL`.
 - `NEXT_PUBLIC_APP_URL` is used to generate confirmation and reset links.
+- The app also accepts `AUTH_URL`, `NEXTAUTH_URL`, and `APP_URL` as fallbacks for production email links.
+- `.env*` files are gitignored. On Vercel or any managed host, configure the production env vars in the hosting dashboard or on the server itself; a local `.env.production` file is not deployed automatically.
+- `RESEND_FROM_EMAIL` must use a sender/domain that is verified in Resend, otherwise the API can reject the request in production.
 - On Neon, keep `DATABASE_URL` pointed at the pooled endpoint for the app runtime and define `DIRECT_URL` with the non-pooler host for migrations.
 - Run migrations with `npm run db:migrate`, which uses `DIRECT_URL` via Prisma CLI `--url`.
 
