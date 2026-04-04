@@ -79,12 +79,15 @@ export default function ProductCard({ product }: ProductCardProps) {
           : product.badge;
 
   return (
-    <Link
-      href={`/products/${product.slug}`}
-      className="group block h-full"
-      aria-label={`Ver ${product.name}`}
-    >
-      <article className="flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-[#ebe7e0] bg-white shadow-[0_18px_48px_rgba(26,23,20,0.08)] transition-transform duration-300 hover:-translate-y-1 dark:border-border dark:bg-card dark:shadow-none">
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-[#ebe7e0] bg-white shadow-[0_18px_48px_rgba(26,23,20,0.08)] transition-transform duration-300 hover:-translate-y-1 dark:border-border dark:bg-card dark:shadow-none">
+      <Link
+        href={`/products/${product.slug}`}
+        className="absolute inset-0 z-10 rounded-[1.75rem]"
+        aria-label={`Ver ${product.name}`}
+      >
+        <span className="sr-only">Ver {product.name}</span>
+      </Link>
+
         {/* Image container */}
         <div className="relative aspect-[1.02] overflow-hidden border-b border-[#ebe7e0] bg-[#fcfaf7] px-6 pb-5 pt-16 dark:border-border dark:bg-muted/30">
           {badgeLabel ? (
@@ -209,10 +212,13 @@ export default function ProductCard({ product }: ProductCardProps) {
               )}
             </div>
 
-            {product.inStock ? <ProductCardQuickAdd product={product} /> : null}
+            {product.inStock ? (
+              <div className="relative z-20">
+                <ProductCardQuickAdd product={product} />
+              </div>
+            ) : null}
           </div>
         </div>
-      </article>
-    </Link>
+    </article>
   );
 }

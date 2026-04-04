@@ -180,7 +180,13 @@
   }
 
   .leaflet-container {
-    @apply font-sans;
+    @apply relative z-0 font-sans;
+  }
+
+  .leaflet-pane,
+  .leaflet-top,
+  .leaflet-bottom {
+    z-index: 10;
   }
 
   .leaflet-popup-content-wrapper,

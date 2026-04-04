@@ -15,12 +15,12 @@ export default function ProductLocationsMap({
   );
 
   return (
-    <div className="overflow-hidden rounded-[1.75rem] border border-[#e7dfd6] bg-[#f6f0e8] shadow-[0_24px_64px_rgba(26,23,20,0.08)] dark:border-border dark:bg-card dark:shadow-none">
+    <div className="relative isolate z-0 overflow-hidden rounded-[1.75rem] border border-[#e7dfd6] bg-[#f6f0e8] shadow-[0_24px_64px_rgba(26,23,20,0.08)] dark:border-border dark:bg-card dark:shadow-none">
       <MapContainer
         bounds={positions}
         boundsOptions={{ padding: [36, 36] }}
         scrollWheelZoom={false}
-        className="h-[22rem] w-full md:h-[28rem]"
+        className="relative z-0 h-[22rem] w-full md:h-[28rem]"
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
