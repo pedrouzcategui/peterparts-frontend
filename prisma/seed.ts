@@ -7,6 +7,7 @@ import {
 } from "../lib/generated/prisma/client";
 import { products } from "../lib/data";
 import { roundMoney } from "../lib/currency";
+import { mockCommentsThread1, mockThreads, mockUsers } from "../lib/forum-data";
 import { normalizePostgresConnectionString } from "../lib/postgres-connection-string";
 import { DEFAULT_STOREFRONT_SETTINGS } from "../lib/storefront-settings";
 
@@ -77,6 +78,10 @@ function buildSampleReviews(product: (typeof products)[number]) {
 }
 
 async function resetCatalog() {
+  await prisma.forumReplyVote.deleteMany();
+  await prisma.forumThreadVote.deleteMany();
+  await prisma.forumReply.deleteMany();
+  await prisma.forumThread.deleteMany();
   await prisma.productReview.deleteMany();
   await prisma.productVariant.deleteMany();
   await prisma.productImage.deleteMany();
@@ -86,6 +91,88 @@ async function resetCatalog() {
   await prisma.exchangeRate.deleteMany();
   await prisma.category.deleteMany();
   await prisma.brand.deleteMany();
+}
+
+function buildForumSeedEmail(user: (typeof mockUsers)[number]) {
+  return `${user.id}@forum.peterparts.local`;
+}
+
+async function seedForum() {
+  const forumUserIds = new Map<string, string>();
+
+  for (const user of mockUsers) {
+    const createdUser = await prisma.user.upsert({
+      where: {
+        email: buildForumSeedEmail(user),
+      },
+      update: {
+        name: user.name,
+        firstName: user.name.split(" ")[0] ?? user.name,
+        lastName: user.name.split(" ").slice(1).join(" ") || null,
+        emailVerified: new Date(user.joinedDate),
+      },
+      create: {
+        email: buildForumSeedEmail(user),
+        name: user.name,
+        firstName: user.name.split(" ")[0] ?? user.name,
+        lastName: user.name.split(" ").slice(1).join(" ") || null,
+        emailVerified: new Date(user.joinedDate),
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    forumUserIds.set(user.id, createdUser.id);
+  }
+
+  const threadIds = new Map<string, string>();
+
+  for (const thread of mockThreads) {
+    const createdThread = await prisma.forumThread.create({
+      data: {
+        slug: thread.slug ?? slugify(thread.title),
+        title: thread.title,
+        content: thread.content,
+        tags: thread.tags,
+        upvotes: thread.upvotes,
+        downvotes: thread.downvotes,
+        authorId: forumUserIds.get(thread.author.id)!,
+        createdAt: new Date(thread.createdAt),
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    threadIds.set(thread.id, createdThread.id);
+  }
+
+  for (const comment of mockCommentsThread1) {
+    await prisma.forumReply.create({
+      data: {
+        threadId: threadIds.get("thread-1")!,
+        authorId: forumUserIds.get(comment.author.id)!,
+        content: comment.content,
+        upvotes: comment.upvotes,
+        downvotes: comment.downvotes,
+        createdAt: new Date(comment.createdAt),
+      },
+    });
+
+    for (const reply of comment.replies ?? []) {
+      await prisma.forumReply.create({
+        data: {
+          threadId: threadIds.get("thread-1")!,
+          authorId: forumUserIds.get(reply.author.id)!,
+          content: reply.content,
+          upvotes: reply.upvotes,
+          downvotes: reply.downvotes,
+          createdAt: new Date(reply.createdAt),
+        },
+      });
+    }
+  }
 }
 
 async function seedCatalog() {
@@ -250,6 +337,7 @@ async function seedCatalog() {
 async function main() {
   await resetCatalog();
   await seedCatalog();
+  await seedForum();
 
   console.log(`Seeded ${products.length} products across the catalog.`);
 }

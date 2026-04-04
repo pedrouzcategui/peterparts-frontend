@@ -10,26 +10,40 @@ export interface ForumUser {
   joinedDate: string;
 }
 
+export type ForumVoteState = "up" | "down" | null;
+
 export interface ForumComment {
   id: string;
   author: ForumUser;
   content: string;
   createdAt: string;
+  updatedAt?: string;
   upvotes: number;
   downvotes: number;
+  currentUserVote?: ForumVoteState;
+  isDeleted?: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
   replies?: ForumComment[];
 }
 
 export interface ForumThread {
   id: string;
+  slug?: string;
   title: string;
   content: string;
   author: ForumUser;
   createdAt: string;
+  updatedAt?: string;
   upvotes: number;
   downvotes: number;
+  currentUserVote?: ForumVoteState;
   commentCount: number;
   tags: string[];
+  isDeleted?: boolean;
+  isEdited?: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
   comments?: ForumComment[];
 }
 
@@ -39,6 +53,8 @@ export interface RecentPublication {
   threadId: string;
   visitedAt: string;
 }
+
+export type ForumSort = "hot" | "new" | "top";
 
 // Mock users
 export const mockUsers: ForumUser[] = [
@@ -263,6 +279,71 @@ export const mockRecentPublications: RecentPublication[] = [
     visitedAt: "2026-03-01T20:00:00Z",
   },
 ];
+
+function getHotScore(thread: ForumThread): number {
+  return thread.commentCount * 3 + thread.upvotes - thread.downvotes;
+}
+
+export function normalizeForumSort(
+  value: string | string[] | null | undefined
+): ForumSort {
+  if (value === "new" || value === "top") {
+    return value;
+  }
+
+  return "hot";
+}
+
+export function slugifyForumTag(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function getForumFeed({
+  sort = "hot",
+  tag,
+}: {
+  sort?: ForumSort;
+  tag?: string | null;
+} = {}): ForumThread[] {
+  const filteredThreads = tag
+    ? mockThreads.filter((thread) =>
+        thread.tags.some((threadTag) => slugifyForumTag(threadTag) === tag)
+      )
+    : mockThreads;
+
+  return [...filteredThreads].sort((left, right) => {
+    if (sort === "new") {
+      return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
+    }
+
+    if (sort === "top") {
+      return right.upvotes - right.downvotes - (left.upvotes - left.downvotes);
+    }
+
+    return getHotScore(right) - getHotScore(left);
+  });
+}
+
+export function getFeaturedForumTags(limit = 8): string[] {
+  const tagCounts = new Map<string, number>();
+
+  for (const thread of mockThreads) {
+    for (const tag of thread.tags) {
+      tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+    }
+  }
+
+  return [...tagCounts.entries()]
+    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+    .slice(0, limit)
+    .map(([tag]) => tag);
+}
 
 // Helper function to format relative time
 export function formatRelativeTime(dateString: string): string {

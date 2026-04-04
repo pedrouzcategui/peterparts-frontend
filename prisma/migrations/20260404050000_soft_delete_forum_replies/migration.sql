@@ -1,0 +1,2 @@
+ALTER TABLE "ForumReply"
+ADD COLUMN "deletedAt" TIMESTAMP(3);
