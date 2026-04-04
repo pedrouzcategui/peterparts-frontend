@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import ProductImageGallery from "@/components/products/ProductImageGallery";
 import ProductInfo from "@/components/products/ProductInfo";
+import ProductPurchaseDetails from "@/components/products/ProductPurchaseDetails";
 import { getProductBySlug } from "@/lib/product-data";
+import { getStorefrontSettings } from "@/lib/storefront-settings-store";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -53,7 +55,10 @@ export async function generateMetadata({
  */
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { "product-slug": slug } = await params;
-  const product = await getProductBySlug(slug);
+  const [product, storefrontSettings] = await Promise.all([
+    getProductBySlug(slug),
+    getStorefrontSettings(),
+  ]);
 
   if (!product) {
     notFound();
@@ -72,7 +77,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     },
     offers: {
       "@type": "Offer",
-      price: product.price,
+      price: product.priceUsd ?? product.price,
       priceCurrency: "USD",
       availability: product.inStock
         ? "https://schema.org/InStock"
@@ -131,6 +136,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           />
           <ProductInfo product={product} />
         </div>
+
+        <ProductPurchaseDetails settings={storefrontSettings} />
       </div>
     </>
   );

@@ -30,7 +30,7 @@ const shouldReusePrisma =
   globalForPrisma.prismaConnectionString === normalizedConnectionString;
 
 export const prisma = shouldReusePrisma
-  ? globalForPrisma.prisma
+  ? globalForPrisma.prisma!
   : createPrismaClient(normalizedConnectionString);
 
 if (process.env.NODE_ENV !== "production") {

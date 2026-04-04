@@ -13,6 +13,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import MarkdownContent from "@/components/products/MarkdownContent";
+import { formatUsd, formatVes } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/lib/types";
 
@@ -28,7 +30,6 @@ export default function ProductInfo({ product }: ProductInfoProps) {
   const [selectedVariant, setSelectedVariant] = useState<string | null>(
     product.variants.find((variant) => variant.available)?.label ?? null,
   );
-  const [justAdded, setJustAdded] = useState(false);
   const { addProduct, itemCount } = useCart();
 
   const activeVariant = product.variants.find(
@@ -37,26 +38,24 @@ export default function ProductInfo({ product }: ProductInfoProps) {
   const canAddToBag =
     product.inStock &&
     (product.variants.length === 0 || Boolean(activeVariant?.available));
+  const priceUsd = product.priceUsd ?? product.price;
+  const priceVes = product.priceVes;
+  const originalPriceUsd = product.originalPriceUsd ?? product.originalPrice;
+  const originalPriceVes = product.originalPriceVes;
 
-  const formattedPrice = new Intl.NumberFormat("es-VE", {
-    style: "currency",
-    currency: "USD",
-  }).format(product.price);
-
-  const formattedOriginalPrice = product.originalPrice
-    ? new Intl.NumberFormat("es-VE", {
-        style: "currency",
-        currency: "USD",
-      }).format(product.originalPrice)
+  const formattedPrice = formatUsd(priceUsd);
+  const formattedOriginalPrice = originalPriceUsd
+    ? formatUsd(originalPriceUsd)
     : null;
+  const formattedVesPrice =
+    typeof priceVes === "number" && priceVes > 0 ? formatVes(priceVes) : null;
+  const formattedOriginalVesPrice =
+    typeof originalPriceVes === "number" && originalPriceVes > 0
+      ? formatVes(originalPriceVes)
+      : null;
 
   const handleAddToBag = () => {
     addProduct(product, selectedVariant ?? undefined);
-    setJustAdded(true);
-
-    window.setTimeout(() => {
-      setJustAdded(false);
-    }, 1600);
   };
 
   return (
@@ -65,12 +64,22 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       <div>
         <h1 className="text-2xl font-bold">{product.name}</h1>
         <p className="text-sm text-muted-foreground">{product.subcategory}</p>
-        <div className="mt-2 flex items-center gap-2">
-          <span className="text-lg font-semibold">{formattedPrice}</span>
-          {formattedOriginalPrice ? (
-            <span className="text-sm text-muted-foreground line-through">
-              {formattedOriginalPrice}
-            </span>
+        <div className="mt-3 space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-semibold">{formattedPrice}</span>
+            {formattedOriginalPrice ? (
+              <span className="text-sm text-muted-foreground line-through">
+                {formattedOriginalPrice}
+              </span>
+            ) : null}
+          </div>
+          {formattedVesPrice ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Precio en bolivares: {formattedVesPrice}</span>
+              {formattedOriginalVesPrice ? (
+                <span className="line-through">{formattedOriginalVesPrice}</span>
+              ) : null}
+            </div>
           ) : null}
         </div>
       </div>
@@ -119,11 +128,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
           disabled={!canAddToBag}
           onClick={handleAddToBag}
         >
-          {product.inStock
-            ? justAdded
-              ? "Anadido al carrito"
-              : "Anadir al carrito"
-            : "No disponible por ahora"}
+          {product.inStock ? "Anadir al carrito" : "No disponible por ahora"}
         </Button>
         <Button variant="outline" size="lg" className="w-full text-base">
           Guardar <Heart className="ml-2 h-5 w-5" />
@@ -152,9 +157,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
 
       {/* Description */}
       <div>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          {product.description}
-        </p>
+        <MarkdownContent content={product.description} />
         <ul className="mt-3 space-y-1">
           <li className="text-sm text-muted-foreground">
             <span className="font-medium text-foreground">Color mostrado:</span>{" "}

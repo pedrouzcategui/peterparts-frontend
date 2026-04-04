@@ -1,12 +1,11 @@
 import "server-only";
 
 import { cache } from "react";
+import { resolveVesAmount } from "@/lib/currency";
 import { ProductBadge, ProductStatus } from "@/lib/generated/prisma/enums";
-import type { AdminProduct } from "@/lib/admin-data";
+import type { AdminExchangeRate, AdminProduct } from "@/lib/admin-data";
 import type { FilterGroup, Product } from "@/lib/types";
 import { prisma } from "@/lib/prisma";
-
-const KNOWN_BRANDS = ["Cuisinart", "Whirlpool", "KitchenAid"] as const;
 
 const CATEGORY_TRANSLATIONS: Record<string, string> = {
   "Kitchen Appliances": "Electrodomesticos de cocina",
@@ -276,12 +275,15 @@ const productInclude = {
 
 type DatabaseProduct = Awaited<ReturnType<typeof fetchProducts>>[number];
 
-function toBrand(value: string): Product["brand"] {
-  if (KNOWN_BRANDS.includes(value as Product["brand"])) {
-    return value as Product["brand"];
-  }
+const exchangeRateSelect = {
+  rate: true,
+  source: true,
+  effectiveAt: true,
+  fetchedAt: true,
+} as const;
 
-  throw new Error(`Unexpected brand in database: ${value}`);
+function toBrand(value: string): Product["brand"] {
+  return value.trim();
 }
 
 function translateCategoryName(value: string): string {
@@ -337,12 +339,31 @@ function mapBadge(badge: ProductBadge | null): Product["badge"] {
   }
 }
 
-function mapProduct(product: DatabaseProduct): Product {
+function mapProduct(
+  product: DatabaseProduct,
+  activeExchangeRate: number | null,
+): Product {
   const parentCategory = translateCategoryName(
     product.category.parent?.name ?? product.category.name,
   );
   const leafCategory = translateCategoryName(product.category.name);
   const translation = PRODUCT_TRANSLATIONS[product.slug];
+  const priceUsd = Number(product.price);
+  const originalPriceUsd = product.compareAtPrice
+    ? Number(product.compareAtPrice)
+    : undefined;
+  const priceVes = resolveVesAmount(
+    Number(product.priceVes),
+    priceUsd,
+    activeExchangeRate,
+  );
+  const originalPriceVes = originalPriceUsd
+    ? resolveVesAmount(
+        product.compareAtPriceVes ? Number(product.compareAtPriceVes) : undefined,
+        originalPriceUsd,
+        activeExchangeRate,
+      )
+    : undefined;
 
   return {
     id: product.sku,
@@ -351,10 +372,12 @@ function mapProduct(product: DatabaseProduct): Product {
     brand: toBrand(product.brand.name),
     category: parentCategory,
     subcategory: leafCategory,
-    price: Number(product.price),
-    originalPrice: product.compareAtPrice
-      ? Number(product.compareAtPrice)
-      : undefined,
+    price: priceUsd,
+    priceUsd,
+    priceVes,
+    originalPrice: originalPriceUsd,
+    originalPriceUsd,
+    originalPriceVes,
     description: translation?.description ?? product.description,
     features: translation?.features ?? product.features,
     color: translateTerm(product.primaryColor ?? ""),
@@ -405,63 +428,133 @@ const fetchProducts = cache(async () => {
   });
 });
 
+const fetchActiveExchangeRate = cache(async () => {
+  return prisma.exchangeRate.findFirst({
+    where: {
+      baseCurrency: "USD",
+      quoteCurrency: "VES",
+      isActive: true,
+    },
+    orderBy: [{ effectiveAt: "desc" }, { createdAt: "desc" }],
+    select: exchangeRateSelect,
+  });
+});
+
+export const getAdminExchangeRate = cache(
+  async (): Promise<AdminExchangeRate | null> => {
+    const exchangeRate = await fetchActiveExchangeRate();
+
+    if (!exchangeRate) {
+      return null;
+    }
+
+    return {
+      rate: Number(exchangeRate.rate),
+      source: exchangeRate.source,
+      effectiveAt: exchangeRate.effectiveAt.toISOString(),
+      fetchedAt: exchangeRate.fetchedAt.toISOString(),
+    };
+  },
+);
+
 export const getProducts = cache(async (): Promise<Product[]> => {
-  const products = await fetchProducts();
-  return products.map(mapProduct);
+  const [products, exchangeRate] = await Promise.all([
+    fetchProducts(),
+    fetchActiveExchangeRate(),
+  ]);
+  const activeExchangeRate = exchangeRate ? Number(exchangeRate.rate) : null;
+
+  return products.map((product) => mapProduct(product, activeExchangeRate));
 });
 
 export const getFeaturedProducts = cache(async (): Promise<Product[]> => {
-  const products = await prisma.product.findMany({
-    where: {
-      status: ProductStatus.ACTIVE,
-      badge: {
-        not: null,
+  const [products, exchangeRate] = await Promise.all([
+    prisma.product.findMany({
+      where: {
+        status: ProductStatus.ACTIVE,
+        badge: {
+          not: null,
+        },
       },
-    },
-    include: productInclude,
-    orderBy: [
-      {
-        featuredRank: "asc",
-      },
-      {
-        createdAt: "desc",
-      },
-    ],
-    take: 6,
-  });
+      include: productInclude,
+      orderBy: [
+        {
+          featuredRank: "asc",
+        },
+        {
+          createdAt: "desc",
+        },
+      ],
+      take: 6,
+    }),
+    fetchActiveExchangeRate(),
+  ]);
+  const activeExchangeRate = exchangeRate ? Number(exchangeRate.rate) : null;
 
-  return products.map(mapProduct);
+  return products.map((product) => mapProduct(product, activeExchangeRate));
 });
 
 export const getProductBySlug = cache(
   async (slug: string): Promise<Product | null> => {
-    const product = await prisma.product.findUnique({
-      where: {
-        slug,
-      },
-      include: productInclude,
-    });
+    const [product, exchangeRate] = await Promise.all([
+      prisma.product.findUnique({
+        where: {
+          slug,
+        },
+        include: productInclude,
+      }),
+      fetchActiveExchangeRate(),
+    ]);
 
     if (!product || product.status !== ProductStatus.ACTIVE) {
       return null;
     }
 
-    return mapProduct(product);
+    return mapProduct(product, exchangeRate ? Number(exchangeRate.rate) : null);
   },
 );
 
+export const getAdminBrands = cache(async (): Promise<string[]> => {
+  const brands = await prisma.brand.findMany({
+    select: {
+      name: true,
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
+
+  return brands.map((brand) => brand.name);
+});
+
+export const getAdminCategories = cache(async (): Promise<string[]> => {
+  const categories = await prisma.category.findMany({
+    select: {
+      name: true,
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
+
+  return categories.map((category) => translateCategoryName(category.name));
+});
+
 export const getFilterGroups = cache(async (): Promise<FilterGroup[]> => {
   const products = await getProducts();
+  const brandOptions = Array.from(new Set(products.map((product) => product.brand)))
+    .sort((left, right) => left.localeCompare(right, "es"))
+    .map((brand) => ({
+      label: brand,
+      value: brand,
+      count: products.filter((product) => product.brand === brand).length,
+    }));
 
   return [
     {
       name: "Marca",
       key: "brand",
-      options: KNOWN_BRANDS.map((brand) => ({
-        label: brand,
-        value: brand,
-        count: products.filter((product) => product.brand === brand).length,
-      })),
+      options: brandOptions,
     },
     {
       name: "Categoria",
@@ -518,25 +611,47 @@ export const getFilterGroups = cache(async (): Promise<FilterGroup[]> => {
 });
 
 export const getAdminProducts = cache(async (): Promise<AdminProduct[]> => {
-  const products = await prisma.product.findMany({
-    include: {
-      brand: true,
-      category: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  const [products, exchangeRate] = await Promise.all([
+    prisma.product.findMany({
+      include: {
+        brand: true,
+        category: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    }),
+    fetchActiveExchangeRate(),
+  ]);
+  const activeExchangeRate = exchangeRate ? Number(exchangeRate.rate) : null;
 
-  return products.map((product) => ({
-    id: product.id,
-    name: product.name,
-    brand: toBrand(product.brand.name),
-    category: translateCategoryName(product.category.name),
-    price: Number(product.price),
-    stock: product.stockQuantity,
-    status: mapAdminStatus(product.status),
-    createdAt: product.createdAt.toISOString(),
-    updatedAt: product.updatedAt.toISOString(),
-  }));
+  return products.map((product) => {
+    const categoryLabels = Array.isArray(product.categoryLabels)
+      ? product.categoryLabels.filter(Boolean)
+      : [];
+    const priceUsd = Number(product.price);
+    const priceVes = resolveVesAmount(
+      Number(product.priceVes),
+      priceUsd,
+      activeExchangeRate,
+    );
+
+    return {
+      id: product.id,
+      name: product.name,
+      brand: toBrand(product.brand.name),
+      categories:
+        categoryLabels.length > 0
+          ? categoryLabels
+          : [translateCategoryName(product.category.name)],
+      category: translateCategoryName(product.category.name),
+      price: priceUsd,
+      priceUsd,
+      priceVes,
+      stock: product.stockQuantity,
+      status: mapAdminStatus(product.status),
+      createdAt: product.createdAt.toISOString(),
+      updatedAt: product.updatedAt.toISOString(),
+    };
+  });
 });

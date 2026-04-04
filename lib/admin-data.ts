@@ -26,13 +26,23 @@ export interface AdminOrder {
 export interface AdminProduct {
   id: string;
   name: string;
-  brand: "Cuisinart" | "Whirlpool" | "KitchenAid";
+  brand: string;
   category: string;
+  categories?: string[];
   price: number;
+  priceUsd?: number;
+  priceVes?: number;
   stock: number;
   status: "active" | "draft" | "archived";
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AdminExchangeRate {
+  rate: number;
+  source?: string | null;
+  effectiveAt: string;
+  fetchedAt: string;
 }
 
 export interface DashboardStats {

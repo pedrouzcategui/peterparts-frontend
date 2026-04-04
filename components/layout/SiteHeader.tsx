@@ -3,14 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  ChefHat,
-  Coffee,
-  CookingPot,
   CreditCard,
-  Palette,
+  PackageSearch,
   Search,
   Sparkles,
-  Tag,
   Truck,
   UserRound,
 } from "lucide-react";
@@ -22,32 +18,12 @@ import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_LINKS = [
   {
-    label: "Batidoras de pedestal",
-    href: "/products?category=Batidoras de pedestal",
-    icon: ChefHat,
+    label: "Productos",
+    href: "/products",
+    icon: PackageSearch,
   },
   {
-    label: "Cafe y espresso",
-    href: "/products?category=Cafeteras",
-    icon: Coffee,
-  },
-  {
-    label: "Encimera y cocina",
-    href: "/products?category=Procesadores de alimentos",
-    icon: CookingPot,
-  },
-  {
-    label: "Ofertas",
-    href: "/products?sale=sale",
-    icon: Tag,
-  },
-  {
-    label: "Colores",
-    href: "/products?color=red",
-    icon: Palette,
-  },
-  {
-    label: "Comunidad",
+    label: "Foro",
     href: "/forum",
     icon: Sparkles,
   },

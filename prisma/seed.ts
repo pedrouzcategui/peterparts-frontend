@@ -6,7 +6,11 @@ import {
   ProductStatus,
 } from "../lib/generated/prisma/client";
 import { products } from "../lib/data";
+import { roundMoney } from "../lib/currency";
 import { normalizePostgresConnectionString } from "../lib/postgres-connection-string";
+import { DEFAULT_STOREFRONT_SETTINGS } from "../lib/storefront-settings";
+
+const DEFAULT_USD_TO_VES_RATE = 36.5;
 
 const adapter = new PrismaPg({
   connectionString: normalizePostgresConnectionString(process.env.DATABASE_URL!),
@@ -75,6 +79,9 @@ async function resetCatalog() {
   await prisma.productVariant.deleteMany();
   await prisma.productImage.deleteMany();
   await prisma.product.deleteMany();
+  await prisma.pickupLocation.deleteMany();
+  await prisma.storefrontSetting.deleteMany();
+  await prisma.exchangeRate.deleteMany();
   await prisma.category.deleteMany();
   await prisma.brand.deleteMany();
 }
@@ -83,6 +90,46 @@ async function seedCatalog() {
   const brandIds = new Map<string, string>();
   const rootCategoryIds = new Map<string, string>();
   const leafCategoryIds = new Map<string, string>();
+  const exchangeRate = await prisma.exchangeRate.create({
+    data: {
+      baseCurrency: "USD",
+      quoteCurrency: "VES",
+      rate: DEFAULT_USD_TO_VES_RATE.toFixed(6),
+      source: "seed",
+      isActive: true,
+    },
+    select: {
+      rate: true,
+    },
+  });
+  const usdToVesRate = Number(exchangeRate.rate);
+
+  await prisma.storefrontSetting.create({
+    data: {
+      key: DEFAULT_STOREFRONT_SETTINGS.key,
+      locationIntro: DEFAULT_STOREFRONT_SETTINGS.locationIntro,
+      deliveryNote: DEFAULT_STOREFRONT_SETTINGS.deliveryNote,
+      scheduleWeekdaysLabel: DEFAULT_STOREFRONT_SETTINGS.scheduleWeekdaysLabel,
+      scheduleWeekdaysHours: DEFAULT_STOREFRONT_SETTINGS.scheduleWeekdaysHours,
+      scheduleWeekendNote: DEFAULT_STOREFRONT_SETTINGS.scheduleWeekendNote,
+      paymentMethodsForeign: DEFAULT_STOREFRONT_SETTINGS.paymentMethodsForeign,
+      paymentMethodsBolivar: DEFAULT_STOREFRONT_SETTINGS.paymentMethodsBolivar,
+      dispatchMethods: DEFAULT_STOREFRONT_SETTINGS.dispatchMethods,
+      nationalCarriers: DEFAULT_STOREFRONT_SETTINGS.nationalCarriers,
+      supportTitle: DEFAULT_STOREFRONT_SETTINGS.supportTitle,
+      supportDescription: DEFAULT_STOREFRONT_SETTINGS.supportDescription,
+      supportHighlight: DEFAULT_STOREFRONT_SETTINGS.supportHighlight,
+      pickupLocations: {
+        create: DEFAULT_STOREFRONT_SETTINGS.pickupLocations.map((location, index) => ({
+          name: location.name,
+          description: location.description,
+          latitude: location.latitude.toFixed(6),
+          longitude: location.longitude.toFixed(6),
+          sortOrder: index,
+        })),
+      },
+    },
+  });
 
   for (const brandName of [
     ...new Set(products.map((product) => product.brand)),
@@ -140,8 +187,12 @@ async function seedCatalog() {
         name: product.name,
         description: product.description,
         price: toMoneyString(product.price),
+        priceVes: toMoneyString(roundMoney(product.price * usdToVesRate)),
         compareAtPrice: product.originalPrice
           ? toMoneyString(product.originalPrice)
+          : undefined,
+        compareAtPriceVes: product.originalPrice
+          ? toMoneyString(roundMoney(product.originalPrice * usdToVesRate))
           : undefined,
         modelNumber: product.style,
         primaryColor: product.color,

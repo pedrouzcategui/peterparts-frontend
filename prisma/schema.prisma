@@ -24,6 +24,59 @@ datasource db {
   provider = "postgresql"
 }
 
+model ExchangeRate {
+  id            String   @id @default(cuid())
+  baseCurrency  String   @default("USD")
+  quoteCurrency String   @default("VES")
+  rate          Decimal  @db.Decimal(18, 6)
+  source        String?
+  effectiveAt   DateTime @default(now())
+  fetchedAt     DateTime @default(now())
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([baseCurrency, quoteCurrency, isActive])
+  @@index([effectiveAt])
+  @@map("rate_exchange")
+}
+
+model StorefrontSetting {
+  id                    String           @id @default(cuid())
+  key                   String           @unique @default("default")
+  locationIntro         String           @db.Text
+  deliveryNote          String           @db.Text
+  scheduleWeekdaysLabel String
+  scheduleWeekdaysHours String
+  scheduleWeekendNote   String           @db.Text
+  paymentMethodsForeign String[]         @default([])
+  paymentMethodsBolivar String[]         @default([])
+  dispatchMethods       String[]         @default([])
+  nationalCarriers      String[]         @default([])
+  supportTitle          String
+  supportDescription    String           @db.Text
+  supportHighlight      String           @db.Text
+  pickupLocations       PickupLocation[]
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+}
+
+model PickupLocation {
+  id                  String            @id @default(cuid())
+  storefrontSettingId String
+  name                String
+  description         String            @db.Text
+  latitude            Decimal           @db.Decimal(9, 6)
+  longitude           Decimal           @db.Decimal(9, 6)
+  sortOrder           Int               @default(0)
+  storefrontSetting   StorefrontSetting @relation(fields: [storefrontSettingId], references: [id], onDelete: Cascade)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@unique([storefrontSettingId, sortOrder])
+  @@index([storefrontSettingId])
+}
+
 model Brand {
   id        String    @id @default(cuid())
   name      String    @unique
@@ -54,8 +107,11 @@ model Product {
   slug           String           @unique
   name           String
   description    String           @db.Text
+  categoryLabels String[]         @default([])
   price          Decimal          @db.Decimal(10, 2)
+  priceVes       Decimal          @default(0) @db.Decimal(14, 2)
   compareAtPrice Decimal?         @db.Decimal(10, 2)
+  compareAtPriceVes Decimal?      @db.Decimal(14, 2)
   modelNumber    String?
   primaryColor   String?
   features       String[]
@@ -82,6 +138,7 @@ model Product {
   @@index([badge])
   @@index([primaryColor])
   @@index([price])
+  @@index([priceVes])
   @@index([modelNumber])
   @@index([createdAt])
   @@index([reviewCount])

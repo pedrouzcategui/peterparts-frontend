@@ -20,11 +20,15 @@ export interface Product {
   id: string;
   slug: string;
   name: string;
-  brand: "Cuisinart" | "Whirlpool" | "KitchenAid";
+  brand: string;
   category: string;
   subcategory: string;
   price: number;
+  priceUsd?: number;
+  priceVes?: number;
   originalPrice?: number;
+  originalPriceUsd?: number;
+  originalPriceVes?: number;
   description: string;
   features: string[];
   color: string;

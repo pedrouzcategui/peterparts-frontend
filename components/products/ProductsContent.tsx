@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo } from "react";
 import ProductGrid from "@/components/products/ProductGrid";
 import Pagination from "@/components/products/Pagination";
 import type { Product } from "@/lib/types";
@@ -15,19 +15,9 @@ interface ProductsContentProps {
 /**
  * ProductsContent — Client Component
  * Filters products based on URL search params and handles pagination.
- * Includes a simulated delay to demonstrate loading skeleton.
  */
 export default function ProductsContent({ allProducts }: ProductsContentProps) {
   const searchParams = useSearchParams();
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Simulate loading delay to show skeleton
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Filter products based on search params
   const filteredProducts = useMemo(() => {
@@ -135,10 +125,6 @@ export default function ProductsContent({ allProducts }: ProductsContentProps) {
     startIndex + PRODUCTS_PER_PAGE,
   );
 
-  if (isLoading) {
-    return <ProductsLoadingSkeleton />;
-  }
-
   return (
     <div>
       {/* Results count */}
@@ -151,44 +137,6 @@ export default function ProductsContent({ allProducts }: ProductsContentProps) {
 
       <ProductGrid products={paginatedProducts} />
       <Pagination currentPage={currentPage} totalPages={totalPages} />
-    </div>
-  );
-}
-
-function ProductsLoadingSkeleton() {
-  return (
-    <div className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 12 }).map((_, index) => (
-        <ProductCardSkeleton key={index} />
-      ))}
-    </div>
-  );
-}
-
-function ProductCardSkeleton() {
-  return (
-    <div className="group relative flex flex-col overflow-hidden rounded-lg border bg-card animate-pulse">
-      {/* Image skeleton */}
-      <div className="aspect-square w-full bg-muted" />
-
-      {/* Content skeleton */}
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        {/* Brand */}
-        <div className="h-3 w-16 bg-muted rounded" />
-        {/* Product name */}
-        <div className="h-5 w-full bg-muted rounded" />
-        <div className="h-5 w-3/4 bg-muted rounded" />
-        {/* Price */}
-        <div className="mt-auto flex items-baseline gap-2 pt-2">
-          <div className="h-6 w-20 bg-muted rounded" />
-          <div className="h-4 w-14 bg-muted rounded" />
-        </div>
-        {/* Rating */}
-        <div className="flex items-center gap-1">
-          <div className="h-4 w-24 bg-muted rounded" />
-          <div className="h-4 w-8 bg-muted rounded" />
-        </div>
-      </div>
     </div>
   );
 }

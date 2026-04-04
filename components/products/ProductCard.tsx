@@ -3,6 +3,7 @@ import { Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import ProductCardQuickAdd from "./ProductCardQuickAdd";
 import ProductImageWithFallback from "@/components/products/ProductImageWithFallback";
+import { formatUsd, formatVes } from "@/lib/currency";
 import type { Product } from "@/lib/types";
 
 interface ProductCardProps {
@@ -32,26 +33,22 @@ function getSwatchClass(label: string) {
  * Designed for SEO: uses semantic markup, alt text, and structured headings.
  */
 export default function ProductCard({ product }: ProductCardProps) {
-  const formattedPrice = new Intl.NumberFormat("es-VE", {
-    style: "currency",
-    currency: "USD",
-  }).format(product.price);
+  const priceUsd = product.priceUsd ?? product.price;
+  const priceVes = product.priceVes;
+  const originalPriceUsd = product.originalPriceUsd ?? product.originalPrice;
+  const formattedPrice = formatUsd(priceUsd);
 
-  const formattedOriginalPrice = product.originalPrice
-    ? new Intl.NumberFormat("es-VE", {
-        style: "currency",
-        currency: "USD",
-      }).format(product.originalPrice)
+  const formattedOriginalPrice = originalPriceUsd
+    ? formatUsd(originalPriceUsd)
     : null;
+  const formattedVesPrice =
+    typeof priceVes === "number" && priceVes > 0 ? formatVes(priceVes) : null;
 
   const shortDescription = product.description.slice(0, 120).trim();
   const showEllipsis = product.description.length > 120;
   const rating = product.reviews.rating.toFixed(1);
-  const savings = product.originalPrice
-    ? new Intl.NumberFormat("es-VE", {
-        style: "currency",
-        currency: "USD",
-      }).format(product.originalPrice - product.price)
+  const savings = originalPriceUsd
+    ? formatUsd(originalPriceUsd - priceUsd)
     : null;
   const swatchLabels = Array.from(
     new Set([
@@ -89,8 +86,8 @@ export default function ProductCard({ product }: ProductCardProps) {
           {badgeLabel ? (
             <div className="absolute left-4 top-4 z-10 flex items-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-black/5 dark:bg-card">
               <span className="bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white">
-                {product.originalPrice
-                  ? `-${Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%`
+                {originalPriceUsd
+                  ? `-${Math.round(((originalPriceUsd - priceUsd) / originalPriceUsd) * 100)}%`
                   : badgeLabel}
               </span>
               <span className="px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary dark:text-primary">
@@ -176,6 +173,11 @@ export default function ProductCard({ product }: ProductCardProps) {
                   </span>
                 ) : null}
               </div>
+              {formattedVesPrice ? (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Precio en bolivares: {formattedVesPrice}
+                </p>
+              ) : null}
 
               {savings ? (
                 <p className="mt-1 text-sm font-medium text-[#2f8a42] dark:text-green-400">
