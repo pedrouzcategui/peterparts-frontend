@@ -28,7 +28,9 @@ function DetailCard({
   className?: string;
 }) {
   return (
-    <article className={`rounded-[1.75rem] border border-[#e7dfd6] bg-white p-6 shadow-[0_20px_48px_rgba(26,23,20,0.06)] dark:border-border dark:bg-card dark:shadow-none ${className}`.trim()}>
+    <article
+      className={`rounded-[1.75rem] border border-[#e7dfd6] bg-white p-6 shadow-[0_20px_48px_rgba(26,23,20,0.06)] dark:border-border dark:bg-card dark:shadow-none ${className}`.trim()}
+    >
       <div className="flex items-start gap-4">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#f8d9de] text-primary dark:bg-primary/15">
           <Icon className="h-5 w-5" />
@@ -65,7 +67,9 @@ export default function ProductPurchaseDetails({
           Informacion util antes de coordinar tu pedido
         </h2>
         <p className="text-sm leading-7 text-[#5b5248] dark:text-muted-foreground sm:text-base">
-          Esta informacion aplica a cualquier producto del catalogo. Asi puedes revisar puntos de entrega, horario de trabajo, medios de pago y opciones de despacho antes de escribirnos.
+          Esta informacion aplica a cualquier producto del catalogo. Asi puedes
+          revisar puntos de entrega, horario de trabajo, medios de pago y
+          opciones de despacho antes de escribirnos.
         </p>
       </div>
 
@@ -80,7 +84,10 @@ export default function ProductPurchaseDetails({
             <ProductLocationsMapClient locations={settings.pickupLocations} />
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {settings.pickupLocations.map((location) => (
-                <div key={location.name} className="rounded-2xl bg-[#f5f0e9] p-4 dark:bg-muted/40">
+                <div
+                  key={location.name}
+                  className="rounded-2xl bg-[#f5f0e9] p-4 dark:bg-muted/40"
+                >
                   <p className="text-sm font-semibold text-[#1A1714] dark:text-foreground">
                     {location.name}
                   </p>
@@ -104,8 +111,12 @@ export default function ProductPurchaseDetails({
             >
               <div className="space-y-3 rounded-2xl bg-[#f5f0e9] p-4 dark:bg-muted/40">
                 <div className="flex items-center justify-between gap-4 text-sm">
-                  <span className="font-medium text-[#1A1714] dark:text-foreground">{settings.scheduleWeekdaysLabel}</span>
-                  <span className="text-[#5b5248] dark:text-muted-foreground">{settings.scheduleWeekdaysHours}</span>
+                  <span className="font-medium text-[#1A1714] dark:text-foreground">
+                    {settings.scheduleWeekdaysLabel}
+                  </span>
+                  <span className="text-[#5b5248] dark:text-muted-foreground">
+                    {settings.scheduleWeekdaysHours}
+                  </span>
                 </div>
                 <div className="h-px bg-[#dfd5c8] dark:bg-border" />
                 <p className="text-sm leading-6 text-[#5b5248] dark:text-muted-foreground">
@@ -130,7 +141,8 @@ export default function ProductPurchaseDetails({
                   </div>
                 ))}
                 <div className="rounded-2xl border border-dashed border-[#d8cfc3] px-4 py-3 text-sm leading-6 text-[#5b5248] dark:border-border dark:text-muted-foreground">
-                  Operadores nacionales frecuentes: {settings.nationalCarriers.join(", ")}.
+                  Operadores nacionales frecuentes:{" "}
+                  {settings.nationalCarriers.join(", ")}.
                 </div>
               </div>
             </DetailCard>

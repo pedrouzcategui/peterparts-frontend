@@ -3,7 +3,11 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
-import { createUniqueSlug, getOrCreateBrand, getOrCreateCategory } from "@/lib/admin-catalog";
+import {
+  createUniqueSlug,
+  getOrCreateBrand,
+  getOrCreateCategory,
+} from "@/lib/admin-catalog";
 import { ProductStatus } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 
@@ -72,8 +76,17 @@ function getImageFiles(formData: FormData) {
     .filter((value): value is File => value instanceof File && value.size > 0);
 }
 
-async function saveImages(files: File[], productSlug: string, productName: string) {
-  const uploadDirectory = path.join(process.cwd(), "public", "products", "uploads");
+async function saveImages(
+  files: File[],
+  productSlug: string,
+  productName: string,
+) {
+  const uploadDirectory = path.join(
+    process.cwd(),
+    "public",
+    "products",
+    "uploads",
+  );
 
   await mkdir(uploadDirectory, { recursive: true });
 
@@ -178,7 +191,10 @@ export async function POST(request: Request) {
 
   if (!Number.isInteger(stock) || stock < 0) {
     return NextResponse.json(
-      { message: "El inventario debe ser un numero entero mayor o igual a cero." },
+      {
+        message:
+          "El inventario debe ser un numero entero mayor o igual a cero.",
+      },
       { status: 400 },
     );
   }
@@ -259,9 +275,7 @@ export async function POST(request: Request) {
     );
 
     const message =
-      error instanceof Error
-        ? error.message
-        : "No se pudo crear el producto.";
+      error instanceof Error ? error.message : "No se pudo crear el producto.";
 
     return NextResponse.json({ message }, { status: 500 });
   }

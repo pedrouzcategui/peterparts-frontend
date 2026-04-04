@@ -64,8 +64,7 @@ export const DEFAULT_STOREFRONT_SETTINGS: StorefrontSettings = {
     },
     {
       name: "Montana Alta, Carrizal",
-      description:
-        "Punto de entrega coordinado en Montana Alta, Carrizal.",
+      description: "Punto de entrega coordinado en Montana Alta, Carrizal.",
       latitude: 10.3471,
       longitude: -66.9246,
     },
@@ -98,7 +97,8 @@ function normalizeArray(values: string[]): string[] {
     }
 
     const alreadyIncluded = result.some(
-      (currentValue) => currentValue.toLowerCase() === trimmedValue.toLowerCase(),
+      (currentValue) =>
+        currentValue.toLowerCase() === trimmedValue.toLowerCase(),
     );
 
     if (!alreadyIncluded) {

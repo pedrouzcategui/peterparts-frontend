@@ -51,7 +51,8 @@
 :root {
   --font-open-sans: "Open Sans";
   --font-lato: "Lato";
-  --font-geist-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  --font-geist-mono:
+    "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -138,7 +139,14 @@
     font-family: var(--font-open-sans), sans-serif;
   }
 
-  :is(.font-heading, .font-semibold, .font-bold, .font-extrabold, .font-black, .font-medium.uppercase) {
+  :is(
+    .font-heading,
+    .font-semibold,
+    .font-bold,
+    .font-extrabold,
+    .font-black,
+    .font-medium.uppercase
+  ) {
     font-family: var(--font-open-sans), sans-serif;
   }
 }

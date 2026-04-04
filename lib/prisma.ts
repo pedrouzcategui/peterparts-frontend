@@ -24,7 +24,8 @@ if (!connectionString) {
   throw new Error("DATABASE_URL is not configured.");
 }
 
-const normalizedConnectionString = normalizePostgresConnectionString(connectionString);
+const normalizedConnectionString =
+  normalizePostgresConnectionString(connectionString);
 const shouldReusePrisma =
   globalForPrisma.prisma &&
   globalForPrisma.prismaConnectionString === normalizedConnectionString;

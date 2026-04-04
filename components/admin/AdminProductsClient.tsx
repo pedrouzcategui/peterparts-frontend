@@ -34,7 +34,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { AdminExchangeRate, AdminProduct } from "@/lib/admin-data";
-import { formatExchangeRate, formatUsd, formatVes, roundMoney } from "@/lib/currency";
+import {
+  formatExchangeRate,
+  formatUsd,
+  formatVes,
+  roundMoney,
+} from "@/lib/currency";
 
 type SortField = "name" | "brand" | "price" | "stock" | "status";
 type SortDirection = "asc" | "desc";
@@ -111,7 +116,9 @@ export default function AdminProductsClient({
   latestExchangeRate,
 }: AdminProductsClientProps) {
   const router = useRouter();
-  const [brandOptions, setBrandOptions] = useState(() => sortBrands(existingBrands));
+  const [brandOptions, setBrandOptions] = useState(() =>
+    sortBrands(existingBrands),
+  );
   const defaultBrand = brandOptions[0] ?? "";
   const [searchQuery, setSearchQuery] = useState("");
   const [sortField, setSortField] = useState<SortField>("name");
@@ -173,7 +180,9 @@ export default function AdminProductsClient({
   };
 
   const handleDelete = (productId: string) => {
-    toast.info(`La eliminacion de ${productId} se habilitara en una siguiente iteracion.`);
+    toast.info(
+      `La eliminacion de ${productId} se habilitara en una siguiente iteracion.`,
+    );
   };
 
   const clearSelectedImages = () => {
@@ -214,7 +223,9 @@ export default function AdminProductsClient({
 
   const applyCurrentExchangeRate = () => {
     if (!latestExchangeRate) {
-      toast.info("No hay una tasa activa para calcular el precio en bolivares.");
+      toast.info(
+        "No hay una tasa activa para calcular el precio en bolivares.",
+      );
       return;
     }
 
@@ -234,11 +245,7 @@ export default function AdminProductsClient({
 
   const handleUsdPriceChange = (value: string) => {
     setFormValues((currentValues) => {
-      if (
-        hasManualVesPrice ||
-        !latestExchangeRate ||
-        value.trim() === ""
-      ) {
+      if (hasManualVesPrice || !latestExchangeRate || value.trim() === "") {
         return {
           ...currentValues,
           priceUsd: value,
@@ -318,9 +325,10 @@ export default function AdminProductsClient({
         body: JSON.stringify({ name: trimmedBrand }),
       });
 
-      const result = (await response.json().catch(() => null)) as
-        | { message?: string; brand?: { name: string } }
-        | null;
+      const result = (await response.json().catch(() => null)) as {
+        message?: string;
+        brand?: { name: string };
+      } | null;
 
       if (!response.ok || !result?.brand?.name) {
         throw new Error(result?.message ?? "No se pudo crear la marca.");
@@ -375,14 +383,12 @@ export default function AdminProductsClient({
         body: payload,
       });
 
-      const result = (await response.json().catch(() => null)) as
-        | { message?: string }
-        | null;
+      const result = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
 
       if (!response.ok) {
-        throw new Error(
-          result?.message ?? "No se pudo guardar el producto.",
-        );
+        throw new Error(result?.message ?? "No se pudo guardar el producto.");
       }
 
       toast.success("Producto creado correctamente.");
@@ -433,7 +439,9 @@ export default function AdminProductsClient({
                   <Input
                     id="name"
                     value={formValues.name}
-                    onChange={(event) => handleInputChange("name", event.target.value)}
+                    onChange={(event) =>
+                      handleInputChange("name", event.target.value)
+                    }
                     placeholder="Ingresa el nombre del producto"
                     required
                   />
@@ -446,7 +454,11 @@ export default function AdminProductsClient({
                     value={formValues.brand || undefined}
                     onValueChange={handleBrandSelect}
                   >
-                    <SelectTrigger id="brand" className="w-full" aria-label="Marca">
+                    <SelectTrigger
+                      id="brand"
+                      className="w-full"
+                      aria-label="Marca"
+                    >
                       <SelectValue placeholder="Selecciona una marca" />
                     </SelectTrigger>
                     <SelectContent align="start">
@@ -455,11 +467,14 @@ export default function AdminProductsClient({
                           {brand}
                         </SelectItem>
                       ))}
-                      <SelectItem value={ADD_BRAND_VALUE}>+ Agregar marca...</SelectItem>
+                      <SelectItem value={ADD_BRAND_VALUE}>
+                        + Agregar marca...
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    Selecciona una marca existente o agrega una nueva desde el modal.
+                    Selecciona una marca existente o agrega una nueva desde el
+                    modal.
                   </p>
                 </div>
                 <div className="md:col-span-2">
@@ -471,7 +486,9 @@ export default function AdminProductsClient({
                     placeholder="Escribe una categoria y usa coma para agregarla"
                     helperText="La primera categoria se usara como categoria principal del producto. Las demas se guardaran como badges adicionales."
                     required
-                    onChange={(values) => handleInputChange("categories", values)}
+                    onChange={(values) =>
+                      handleInputChange("categories", values)
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -484,7 +501,9 @@ export default function AdminProductsClient({
                     step="0.01"
                     min="0"
                     value={formValues.priceUsd}
-                    onChange={(event) => handleUsdPriceChange(event.target.value)}
+                    onChange={(event) =>
+                      handleUsdPriceChange(event.target.value)
+                    }
                     placeholder="0.00"
                     required
                   />
@@ -512,7 +531,9 @@ export default function AdminProductsClient({
                     step="0.01"
                     min="0"
                     value={formValues.priceVes}
-                    onChange={(event) => handleVesPriceChange(event.target.value)}
+                    onChange={(event) =>
+                      handleVesPriceChange(event.target.value)
+                    }
                     placeholder="0.00"
                     required
                   />
@@ -531,7 +552,9 @@ export default function AdminProductsClient({
                     type="number"
                     min="0"
                     value={formValues.stock}
-                    onChange={(event) => handleInputChange("stock", event.target.value)}
+                    onChange={(event) =>
+                      handleInputChange("stock", event.target.value)
+                    }
                     placeholder="0"
                     required
                   />
@@ -544,7 +567,10 @@ export default function AdminProductsClient({
                     id="status"
                     value={formValues.status}
                     onChange={(event) =>
-                      handleInputChange("status", event.target.value as ProductStatus)
+                      handleInputChange(
+                        "status",
+                        event.target.value as ProductStatus,
+                      )
                     }
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   >
@@ -559,11 +585,14 @@ export default function AdminProductsClient({
                   </label>
                   <AdminMarkdownEditor
                     value={formValues.description}
-                    onChange={(value) => handleInputChange("description", value)}
+                    onChange={(value) =>
+                      handleInputChange("description", value)
+                    }
                     placeholder="Escribe la descripcion en markdown. Puedes usar titulos, listas, enlaces, negritas y mas."
                   />
                   <p className="text-xs text-muted-foreground">
-                    La descripcion se guarda en markdown para que tambien pueda renderizarse en la tienda.
+                    La descripcion se guarda en markdown para que tambien pueda
+                    renderizarse en la tienda.
                   </p>
                 </div>
                 <div className="space-y-2 md:col-span-2">
@@ -579,7 +608,8 @@ export default function AdminProductsClient({
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    Las imagenes se guardaran en public/products/uploads y se asociaran automaticamente al producto.
+                    Las imagenes se guardaran en public/products/uploads y se
+                    asociaran automaticamente al producto.
                   </p>
                   {selectedImages.length > 0 ? (
                     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -590,7 +620,9 @@ export default function AdminProductsClient({
                         >
                           <div
                             className="aspect-square bg-cover bg-center"
-                            style={{ backgroundImage: `url(${image.previewUrl})` }}
+                            style={{
+                              backgroundImage: `url(${image.previewUrl})`,
+                            }}
                           />
                           <div className="space-y-1 p-3">
                             <p className="truncate text-sm font-medium text-foreground">
@@ -679,7 +711,9 @@ export default function AdminProductsClient({
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Ordenar por:</span>
+              <span className="text-sm text-muted-foreground">
+                Ordenar por:
+              </span>
               <select
                 value={sortField}
                 onChange={(event) =>
@@ -729,16 +763,24 @@ export default function AdminProductsClient({
                   <TableCell>{product.brand}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-2">
-                      {(product.categories ?? [product.category]).map((category) => (
-                        <Badge key={`${product.id}-${category}`} variant="secondary">
-                          {category}
-                        </Badge>
-                      ))}
+                      {(product.categories ?? [product.category]).map(
+                        (category) => (
+                          <Badge
+                            key={`${product.id}-${category}`}
+                            variant="secondary"
+                          >
+                            {category}
+                          </Badge>
+                        ),
+                      )}
                     </div>
                   </TableCell>
-                  <TableCell>{formatUsd(product.priceUsd ?? product.price)}</TableCell>
                   <TableCell>
-                    {typeof product.priceVes === "number" && product.priceVes > 0
+                    {formatUsd(product.priceUsd ?? product.price)}
+                  </TableCell>
+                  <TableCell>
+                    {typeof product.priceVes === "number" &&
+                    product.priceVes > 0
                       ? formatVes(product.priceVes)
                       : "-"}
                   </TableCell>

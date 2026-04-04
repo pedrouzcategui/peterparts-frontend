@@ -102,35 +102,35 @@ model Category {
 }
 
 model Product {
-  id             String           @id @default(cuid())
-  sku            String           @unique
-  slug           String           @unique
-  name           String
-  description    String           @db.Text
-  categoryLabels String[]         @default([])
-  price          Decimal          @db.Decimal(10, 2)
-  priceVes       Decimal          @default(0) @db.Decimal(14, 2)
-  compareAtPrice Decimal?         @db.Decimal(10, 2)
-  compareAtPriceVes Decimal?      @db.Decimal(14, 2)
-  modelNumber    String?
-  primaryColor   String?
-  features       String[]
-  shippingInfo   String?
-  stockQuantity  Int              @default(0)
-  status         ProductStatus    @default(DRAFT)
-  badge          ProductBadge?
-  featuredRank   Int?
-  averageRating  Decimal          @default(0) @db.Decimal(3, 2)
-  reviewCount    Int              @default(0)
-  brandId        String
-  categoryId     String
-  brand          Brand            @relation(fields: [brandId], references: [id], onDelete: Restrict)
-  category       Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  images         ProductImage[]
-  variants       ProductVariant[]
-  reviews        ProductReview[]
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  id                String           @id @default(cuid())
+  sku               String           @unique
+  slug              String           @unique
+  name              String
+  description       String           @db.Text
+  categoryLabels    String[]         @default([])
+  price             Decimal          @db.Decimal(10, 2)
+  priceVes          Decimal          @default(0) @db.Decimal(14, 2)
+  compareAtPrice    Decimal?         @db.Decimal(10, 2)
+  compareAtPriceVes Decimal?         @db.Decimal(14, 2)
+  modelNumber       String?
+  primaryColor      String?
+  features          String[]
+  shippingInfo      String?
+  stockQuantity     Int              @default(0)
+  status            ProductStatus    @default(DRAFT)
+  badge             ProductBadge?
+  featuredRank      Int?
+  averageRating     Decimal          @default(0) @db.Decimal(3, 2)
+  reviewCount       Int              @default(0)
+  brandId           String
+  categoryId        String
+  brand             Brand            @relation(fields: [brandId], references: [id], onDelete: Restrict)
+  category          Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  images            ProductImage[]
+  variants          ProductVariant[]
+  reviews           ProductReview[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
   @@index([brandId])
   @@index([categoryId])

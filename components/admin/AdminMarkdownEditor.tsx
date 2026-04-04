@@ -23,7 +23,11 @@ export default function AdminMarkdownEditor({
   placeholder,
 }: AdminMarkdownEditorProps) {
   return (
-    <div data-color-mode="light" className="markdown-editor" suppressHydrationWarning>
+    <div
+      data-color-mode="light"
+      className="markdown-editor"
+      suppressHydrationWarning
+    >
       <MDEditor
         value={value}
         onChange={(nextValue) => onChange(nextValue ?? "")}

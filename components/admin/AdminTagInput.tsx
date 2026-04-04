@@ -35,10 +35,7 @@ export default function AdminTagInput({
   const listId = useId();
 
   const addTags = (rawValue: string) => {
-    const nextValues = rawValue
-      .split(",")
-      .map(normalizeValue)
-      .filter(Boolean);
+    const nextValues = rawValue.split(",").map(normalizeValue).filter(Boolean);
 
     if (nextValues.length === 0) {
       return;
@@ -48,7 +45,8 @@ export default function AdminTagInput({
 
     nextValues.forEach((nextValue) => {
       const alreadyExists = mergedValues.some(
-        (currentValue) => currentValue.toLowerCase() === nextValue.toLowerCase(),
+        (currentValue) =>
+          currentValue.toLowerCase() === nextValue.toLowerCase(),
       );
 
       if (!alreadyExists) {
@@ -83,7 +81,11 @@ export default function AdminTagInput({
       <div className="rounded-xl border border-input bg-background p-3">
         <div className="mb-3 flex flex-wrap gap-2">
           {values.map((value) => (
-            <Badge key={value} variant="secondary" className="gap-1 rounded-full px-3 py-1">
+            <Badge
+              key={value}
+              variant="secondary"
+              className="gap-1 rounded-full px-3 py-1"
+            >
               {value}
               <Button
                 type="button"
@@ -99,7 +101,8 @@ export default function AdminTagInput({
           ))}
           {values.length === 0 ? (
             <span className="text-sm text-muted-foreground">
-              Agrega una o varias categorias. Usa coma, tab o enter para convertirlas en badges.
+              Agrega una o varias categorias. Usa coma, tab o enter para
+              convertirlas en badges.
             </span>
           ) : null}
         </div>

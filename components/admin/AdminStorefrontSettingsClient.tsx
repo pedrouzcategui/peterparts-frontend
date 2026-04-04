@@ -60,25 +60,31 @@ export default function AdminStorefrontSettingsClient({
   ) => {
     setSettings((currentSettings) => ({
       ...currentSettings,
-      pickupLocations: currentSettings.pickupLocations.map((location, locationIndex) =>
-        locationIndex === index
-          ? {
-              ...location,
-              [key]: value,
-            }
-          : location,
+      pickupLocations: currentSettings.pickupLocations.map(
+        (location, locationIndex) =>
+          locationIndex === index
+            ? {
+                ...location,
+                [key]: value,
+              }
+            : location,
       ),
     }));
   };
 
   const handleAddLocation = () => {
-    updateField("pickupLocations", [...settings.pickupLocations, createEmptyLocation()]);
+    updateField("pickupLocations", [
+      ...settings.pickupLocations,
+      createEmptyLocation(),
+    ]);
   };
 
   const handleRemoveLocation = (index: number) => {
     updateField(
       "pickupLocations",
-      settings.pickupLocations.filter((_, locationIndex) => locationIndex !== index),
+      settings.pickupLocations.filter(
+        (_, locationIndex) => locationIndex !== index,
+      ),
     );
   };
 
@@ -94,12 +100,15 @@ export default function AdminStorefrontSettingsClient({
         body: JSON.stringify(settings),
       });
 
-      const result = (await response.json().catch(() => null)) as
-        | { message?: string; settings?: StorefrontSettings }
-        | null;
+      const result = (await response.json().catch(() => null)) as {
+        message?: string;
+        settings?: StorefrontSettings;
+      } | null;
 
       if (!response.ok || !result?.settings) {
-        throw new Error(result?.message ?? "No se pudo guardar la configuracion.");
+        throw new Error(
+          result?.message ?? "No se pudo guardar la configuracion.",
+        );
       }
 
       setSettings(cloneStorefrontSettings(result.settings));
@@ -122,7 +131,8 @@ export default function AdminStorefrontSettingsClient({
         <div>
           <h1 className="text-2xl font-bold">Configuracion de tienda</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Estos datos se muestran en todos los productos dentro del bloque de compra, despacho y soporte.
+            Estos datos se muestran en todos los productos dentro del bloque de
+            compra, despacho y soporte.
           </p>
         </div>
         <Button type="submit" disabled={isSaving}>
@@ -141,7 +151,9 @@ export default function AdminStorefrontSettingsClient({
             <textarea
               className={textareaClassName()}
               value={settings.locationIntro}
-              onChange={(event) => updateField("locationIntro", event.target.value)}
+              onChange={(event) =>
+                updateField("locationIntro", event.target.value)
+              }
             />
           </div>
           <div className="space-y-2">
@@ -149,21 +161,31 @@ export default function AdminStorefrontSettingsClient({
             <textarea
               className={textareaClassName()}
               value={settings.deliveryNote}
-              onChange={(event) => updateField("deliveryNote", event.target.value)}
+              onChange={(event) =>
+                updateField("deliveryNote", event.target.value)
+              }
             />
           </div>
 
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-sm font-semibold">Ubicaciones del mapa</h2>
-              <Button type="button" variant="outline" size="sm" onClick={handleAddLocation}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddLocation}
+              >
                 <Plus className="h-4 w-4" />
                 Agregar ubicacion
               </Button>
             </div>
 
             {settings.pickupLocations.map((location, index) => (
-              <div key={`${location.name}-${index}`} className="rounded-2xl border p-4">
+              <div
+                key={`${location.name}-${index}`}
+                className="rounded-2xl border p-4"
+              >
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <p className="text-sm font-semibold">Punto #{index + 1}</p>
                   {settings.pickupLocations.length > 1 ? (
@@ -184,7 +206,9 @@ export default function AdminStorefrontSettingsClient({
                     <input
                       className={inputClassName()}
                       value={location.name}
-                      onChange={(event) => updateLocation(index, "name", event.target.value)}
+                      onChange={(event) =>
+                        updateLocation(index, "name", event.target.value)
+                      }
                     />
                   </div>
                   <div className="space-y-2 md:col-span-2">
@@ -205,7 +229,11 @@ export default function AdminStorefrontSettingsClient({
                       className={inputClassName()}
                       value={location.latitude}
                       onChange={(event) =>
-                        updateLocation(index, "latitude", Number(event.target.value))
+                        updateLocation(
+                          index,
+                          "latitude",
+                          Number(event.target.value),
+                        )
                       }
                     />
                   </div>
@@ -217,7 +245,11 @@ export default function AdminStorefrontSettingsClient({
                       className={inputClassName()}
                       value={location.longitude}
                       onChange={(event) =>
-                        updateLocation(index, "longitude", Number(event.target.value))
+                        updateLocation(
+                          index,
+                          "longitude",
+                          Number(event.target.value),
+                        )
                       }
                     />
                   </div>
@@ -257,11 +289,15 @@ export default function AdminStorefrontSettingsClient({
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Nota fin de semana / feriados</label>
+              <label className="text-sm font-medium">
+                Nota fin de semana / feriados
+              </label>
               <textarea
                 className={textareaClassName()}
                 value={settings.scheduleWeekendNote}
-                onChange={(event) => updateField("scheduleWeekendNote", event.target.value)}
+                onChange={(event) =>
+                  updateField("scheduleWeekendNote", event.target.value)
+                }
               />
             </div>
           </CardContent>
@@ -277,7 +313,9 @@ export default function AdminStorefrontSettingsClient({
               <input
                 className={inputClassName()}
                 value={settings.supportTitle}
-                onChange={(event) => updateField("supportTitle", event.target.value)}
+                onChange={(event) =>
+                  updateField("supportTitle", event.target.value)
+                }
               />
             </div>
             <div className="space-y-2">
@@ -285,7 +323,9 @@ export default function AdminStorefrontSettingsClient({
               <textarea
                 className={textareaClassName()}
                 value={settings.supportDescription}
-                onChange={(event) => updateField("supportDescription", event.target.value)}
+                onChange={(event) =>
+                  updateField("supportDescription", event.target.value)
+                }
               />
             </div>
             <div className="space-y-2">
@@ -293,7 +333,9 @@ export default function AdminStorefrontSettingsClient({
               <textarea
                 className={textareaClassName()}
                 value={settings.supportHighlight}
-                onChange={(event) => updateField("supportHighlight", event.target.value)}
+                onChange={(event) =>
+                  updateField("supportHighlight", event.target.value)
+                }
               />
             </div>
           </CardContent>
@@ -311,14 +353,18 @@ export default function AdminStorefrontSettingsClient({
               label="Divisas"
               values={settings.paymentMethodsForeign}
               placeholder="Escribe una opcion y usa coma"
-              onChange={(values) => updateField("paymentMethodsForeign", values)}
+              onChange={(values) =>
+                updateField("paymentMethodsForeign", values)
+              }
             />
             <AdminTagInput
               id="payment-methods-bolivar"
               label="Bolivar digital"
               values={settings.paymentMethodsBolivar}
               placeholder="Escribe un banco y usa coma"
-              onChange={(values) => updateField("paymentMethodsBolivar", values)}
+              onChange={(values) =>
+                updateField("paymentMethodsBolivar", values)
+              }
             />
           </CardContent>
         </Card>

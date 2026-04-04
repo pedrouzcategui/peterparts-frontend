@@ -70,7 +70,9 @@ export default function SiteHeader() {
           ? window.scrollY > scrollThresholds.expand
           : window.scrollY > scrollThresholds.collapse;
 
-        return currentValue === nextIsCondensed ? currentValue : nextIsCondensed;
+        return currentValue === nextIsCondensed
+          ? currentValue
+          : nextIsCondensed;
       });
     };
 
@@ -157,7 +159,9 @@ export default function SiteHeader() {
         <div className="site-shell flex min-h-14 items-center justify-center text-center">
           <p className="text-sm font-medium text-[#17324d] dark:text-foreground">
             <span className="font-semibold">Evento de ahorro de primavera</span>
-            <span className="mx-1.5 text-[#5a7188] dark:text-muted-foreground">|</span>
+            <span className="mx-1.5 text-[#5a7188] dark:text-muted-foreground">
+              |
+            </span>
             25% de descuento en electrodomesticos de encimera seleccionados*
             <Link
               href="/products?sale=sale"
@@ -173,7 +177,9 @@ export default function SiteHeader() {
       <div
         aria-hidden={isCondensed}
         className={`overflow-hidden bg-[#f6f3ef] transition-all duration-300 ease-out dark:bg-muted/20 ${
-          isCondensed ? "pointer-events-none max-h-0 opacity-0" : "max-h-20 opacity-100"
+          isCondensed
+            ? "pointer-events-none max-h-0 opacity-0"
+            : "max-h-20 opacity-100"
         }`}
       >
         <div className="site-shell hidden min-h-14 items-center justify-between gap-8 py-2 lg:flex">

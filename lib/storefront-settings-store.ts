@@ -54,15 +54,17 @@ const fetchStorefrontSettings = cache(async () => {
   });
 });
 
-export const getStorefrontSettings = cache(async (): Promise<StorefrontSettings> => {
-  const storefrontSettings = await fetchStorefrontSettings();
+export const getStorefrontSettings = cache(
+  async (): Promise<StorefrontSettings> => {
+    const storefrontSettings = await fetchStorefrontSettings();
 
-  if (!storefrontSettings) {
-    return cloneStorefrontSettings(DEFAULT_STOREFRONT_SETTINGS);
-  }
+    if (!storefrontSettings) {
+      return cloneStorefrontSettings(DEFAULT_STOREFRONT_SETTINGS);
+    }
 
-  return mapStorefrontSettings(storefrontSettings);
-});
+    return mapStorefrontSettings(storefrontSettings);
+  },
+);
 
 export async function saveStorefrontSettings(
   input: StorefrontSettings,

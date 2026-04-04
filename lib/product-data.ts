@@ -97,7 +97,8 @@ const TERM_TRANSLATIONS: Record<string, string> = {
 };
 
 const SHIPPING_TRANSLATIONS: Record<string, string> = {
-  "Free shipping on orders over $50": "Envio gratis en pedidos superiores a $50",
+  "Free shipping on orders over $50":
+    "Envio gratis en pedidos superiores a $50",
   "Free delivery & installation": "Entrega e instalacion gratis",
 };
 
@@ -359,7 +360,9 @@ function mapProduct(
   );
   const originalPriceVes = originalPriceUsd
     ? resolveVesAmount(
-        product.compareAtPriceVes ? Number(product.compareAtPriceVes) : undefined,
+        product.compareAtPriceVes
+          ? Number(product.compareAtPriceVes)
+          : undefined,
         originalPriceUsd,
         activeExchangeRate,
       )
@@ -542,7 +545,9 @@ export const getAdminCategories = cache(async (): Promise<string[]> => {
 
 export const getFilterGroups = cache(async (): Promise<FilterGroup[]> => {
   const products = await getProducts();
-  const brandOptions = Array.from(new Set(products.map((product) => product.brand)))
+  const brandOptions = Array.from(
+    new Set(products.map((product) => product.brand)),
+  )
     .sort((left, right) => left.localeCompare(right, "es"))
     .map((brand) => ({
       label: brand,
@@ -591,8 +596,9 @@ export const getFilterGroups = cache(async (): Promise<FilterGroup[]> => {
         {
           label: "Recien llegados",
           value: "new",
-          count: products.filter((product) => product.badge === "Recien llegado")
-            .length,
+          count: products.filter(
+            (product) => product.badge === "Recien llegado",
+          ).length,
         },
       ],
     },
@@ -603,7 +609,9 @@ export const getFilterGroups = cache(async (): Promise<FilterGroup[]> => {
         label: color.label,
         value: color.value,
         count: products.filter((product) =>
-          color.match.some((match) => product.color.toLowerCase().includes(match)),
+          color.match.some((match) =>
+            product.color.toLowerCase().includes(match),
+          ),
         ).length,
       })).filter((option) => option.count > 0),
     },

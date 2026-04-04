@@ -7,7 +7,9 @@ interface ProductLocationsMapProps {
   locations: StorefrontPickupLocation[];
 }
 
-export default function ProductLocationsMap({ locations }: ProductLocationsMapProps) {
+export default function ProductLocationsMap({
+  locations,
+}: ProductLocationsMapProps) {
   const positions = locations.map(
     (location) => [location.latitude, location.longitude] as [number, number],
   );

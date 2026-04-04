@@ -77,7 +77,9 @@ export default function ProductInfo({ product }: ProductInfoProps) {
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>Precio en bolivares: {formattedVesPrice}</span>
               {formattedOriginalVesPrice ? (
-                <span className="line-through">{formattedOriginalVesPrice}</span>
+                <span className="line-through">
+                  {formattedOriginalVesPrice}
+                </span>
               ) : null}
             </div>
           ) : null}
@@ -88,7 +90,8 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       {product.variants.length > 0 ? (
         <div>
           <h2 className="text-sm font-semibold mb-2">
-            Selecciona {[
+            Selecciona{" "}
+            {[
               "Refrigerators",
               "Ranges & Ovens",
               "Refrigeradores",
@@ -110,7 +113,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                     ? "hover:border-foreground cursor-pointer"
                     : "opacity-40 cursor-not-allowed line-through",
                   selectedVariant === variant.label &&
-                    "border-foreground ring-1 ring-foreground"
+                    "border-foreground ring-1 ring-foreground",
                 )}
               >
                 {variant.label}
@@ -135,8 +138,11 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         </Button>
         {itemCount > 0 ? (
           <p className="text-center text-sm text-muted-foreground">
-            {itemCount} articulo{itemCount === 1 ? "" : "s"} en tu carrito. {" "}
-            <Link href="/cart" className="font-medium text-foreground underline underline-offset-2">
+            {itemCount} articulo{itemCount === 1 ? "" : "s"} en tu carrito.{" "}
+            <Link
+              href="/cart"
+              className="font-medium text-foreground underline underline-offset-2"
+            >
               Ver carrito
             </Link>
           </p>
@@ -199,7 +205,8 @@ export default function ProductInfo({ product }: ProductInfoProps) {
             <p className="text-sm text-muted-foreground">
               {product.shippingInfo}. La entrega estandar tarda entre 3 y 7 dias
               habiles. Se aceptan devoluciones dentro de los 30 dias posteriores
-              a la entrega. Los articulos deben estar sin usar y en su empaque original.
+              a la entrega. Los articulos deben estar sin usar y en su empaque
+              original.
             </p>
           </AccordionContent>
         </AccordionItem>
@@ -215,7 +222,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                     "text-xs",
                     i < Math.round(product.reviews.rating)
                       ? "text-foreground"
-                      : "text-muted-foreground/30"
+                      : "text-muted-foreground/30",
                   )}
                 >
                   ★
@@ -237,7 +244,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                         "text-sm",
                         i < Math.round(product.reviews.rating)
                           ? "text-foreground"
-                          : "text-muted-foreground/30"
+                          : "text-muted-foreground/30",
                       )}
                     >
                       ★

@@ -13,7 +13,9 @@ import { DEFAULT_STOREFRONT_SETTINGS } from "../lib/storefront-settings";
 const DEFAULT_USD_TO_VES_RATE = 36.5;
 
 const adapter = new PrismaPg({
-  connectionString: normalizePostgresConnectionString(process.env.DATABASE_URL!),
+  connectionString: normalizePostgresConnectionString(
+    process.env.DATABASE_URL!,
+  ),
 });
 const prisma = new PrismaClient({ adapter });
 
@@ -120,13 +122,15 @@ async function seedCatalog() {
       supportDescription: DEFAULT_STOREFRONT_SETTINGS.supportDescription,
       supportHighlight: DEFAULT_STOREFRONT_SETTINGS.supportHighlight,
       pickupLocations: {
-        create: DEFAULT_STOREFRONT_SETTINGS.pickupLocations.map((location, index) => ({
-          name: location.name,
-          description: location.description,
-          latitude: location.latitude.toFixed(6),
-          longitude: location.longitude.toFixed(6),
-          sortOrder: index,
-        })),
+        create: DEFAULT_STOREFRONT_SETTINGS.pickupLocations.map(
+          (location, index) => ({
+            name: location.name,
+            description: location.description,
+            latitude: location.latitude.toFixed(6),
+            longitude: location.longitude.toFixed(6),
+            sortOrder: index,
+          }),
+        ),
       },
     },
   });

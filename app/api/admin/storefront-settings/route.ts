@@ -12,9 +12,7 @@ import {
 
 export const runtime = "nodejs";
 
-function isValidSettingsPayload(
-  value: unknown,
-): value is StorefrontSettings {
+function isValidSettingsPayload(value: unknown): value is StorefrontSettings {
   if (!value || typeof value !== "object") {
     return false;
   }
@@ -71,7 +69,10 @@ export async function PUT(request: Request) {
     );
   }
 
-  if (!normalizedSettings.supportTitle || !normalizedSettings.supportDescription) {
+  if (
+    !normalizedSettings.supportTitle ||
+    !normalizedSettings.supportDescription
+  ) {
     return NextResponse.json(
       { message: "Completa el bloque de asesoria tecnica." },
       { status: 400 },

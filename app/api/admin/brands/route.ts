@@ -5,9 +5,9 @@ import { getOrCreateBrand } from "@/lib/admin-catalog";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => null)) as
-    | { name?: string }
-    | null;
+  const body = (await request.json().catch(() => null)) as {
+    name?: string;
+  } | null;
 
   const name = body?.name?.trim() ?? "";
 

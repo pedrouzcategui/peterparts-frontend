@@ -53,4 +53,9 @@ export interface FilterGroup {
   options: FilterOption[];
 }
 
-export type SortOption = "featured" | "newest" | "price-low-high" | "price-high-low" | "top-rated";
+export type SortOption =
+  | "featured"
+  | "newest"
+  | "price-low-high"
+  | "price-high-low"
+  | "top-rated";

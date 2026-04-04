@@ -51,18 +51,22 @@ export default function ProductCard({ product }: ProductCardProps) {
     ? formatUsd(originalPriceUsd - priceUsd)
     : null;
   const swatchLabels = Array.from(
-    new Set([
-      product.color,
-      ...product.variants.map((variant) => variant.label),
-    ].filter(Boolean)),
+    new Set(
+      [
+        product.color,
+        ...product.variants.map((variant) => variant.label),
+      ].filter(Boolean),
+    ),
   ).slice(0, 5);
   const extraSwatches = Math.max(
     0,
     Array.from(
-      new Set([
-        product.color,
-        ...product.variants.map((variant) => variant.label),
-      ].filter(Boolean)),
+      new Set(
+        [
+          product.color,
+          ...product.variants.map((variant) => variant.label),
+        ].filter(Boolean),
+      ),
     ).length - swatchLabels.length,
   );
   const badgeLabel =
@@ -115,8 +119,13 @@ export default function ProductCard({ product }: ProductCardProps) {
                 {product.name}
               </h3>
             </div>
-            {product.badge && product.badge !== "Sale" && product.badge !== "Oferta" ? (
-              <Badge variant="secondary" className="shrink-0 bg-white text-[#630E19] dark:bg-muted dark:text-foreground">
+            {product.badge &&
+            product.badge !== "Sale" &&
+            product.badge !== "Oferta" ? (
+              <Badge
+                variant="secondary"
+                className="shrink-0 bg-white text-[#630E19] dark:bg-muted dark:text-foreground"
+              >
                 {product.badge}
               </Badge>
             ) : null}
@@ -133,12 +142,18 @@ export default function ProductCard({ product }: ProductCardProps) {
                 <Star
                   key={index}
                   className="h-4 w-4"
-                  fill={index < Math.round(product.reviews.rating) ? "currentColor" : "none"}
+                  fill={
+                    index < Math.round(product.reviews.rating)
+                      ? "currentColor"
+                      : "none"
+                  }
                 />
               ))}
             </div>
             <span className="font-medium">{rating}</span>
-            <span className="text-muted-foreground">({product.reviews.count})</span>
+            <span className="text-muted-foreground">
+              ({product.reviews.count})
+            </span>
             {product.style ? (
               <span className="ml-auto text-xs uppercase tracking-[0.14em] text-muted-foreground">
                 {product.style}
@@ -156,7 +171,9 @@ export default function ProductCard({ product }: ProductCardProps) {
                 />
               ))}
               {extraSwatches > 0 ? (
-                <span className="text-sm font-medium text-muted-foreground">+{extraSwatches}</span>
+                <span className="text-sm font-medium text-muted-foreground">
+                  +{extraSwatches}
+                </span>
               ) : null}
             </div>
           ) : null}
@@ -185,14 +202,14 @@ export default function ProductCard({ product }: ProductCardProps) {
                 </p>
               ) : (
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {product.inStock ? "Listo para enviar" : "No disponible por ahora"}
+                  {product.inStock
+                    ? "Listo para enviar"
+                    : "No disponible por ahora"}
                 </p>
               )}
             </div>
 
-            {product.inStock ? (
-              <ProductCardQuickAdd product={product} />
-            ) : null}
+            {product.inStock ? <ProductCardQuickAdd product={product} /> : null}
           </div>
         </div>
       </article>
