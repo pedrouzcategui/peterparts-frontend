@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "@fontsource/lato/300.css";
 import "@fontsource/lato/400.css";
 import "@fontsource/lato/700.css";
@@ -10,6 +11,7 @@ import "@fontsource/open-sans/800.css";
 import "leaflet/dist/leaflet.css";
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
+import { AuthToastListener } from "@/components/providers/AuthToastListener";
 import { CartProvider } from "@/components/providers/CartProvider";
 import { SonnerToaster } from "@/components/providers/SonnerToaster";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
@@ -46,9 +48,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className="antialiased">
+      <body className="antialiased" suppressHydrationWarning>
         <ThemeProvider>
           <CartProvider>
+            <Suspense fallback={null}>
+              <AuthToastListener />
+            </Suspense>
             {children}
             <SonnerToaster />
           </CartProvider>

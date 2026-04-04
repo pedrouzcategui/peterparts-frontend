@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PeterParts Frontend
+
+Next.js 16 storefront and admin frontend for PeterParts.
 
 ## Getting Started
 
-First, run the development server:
+1. Install dependencies.
+
+```bash
+npm install
+```
+
+2. Configure your environment variables.
+
+```bash
+DATABASE_URL="postgresql://..."
+AUTH_SECRET="replace-with-a-long-random-secret"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+
+AUTH_GOOGLE_ID="your-google-oauth-client-id"
+AUTH_GOOGLE_SECRET="your-google-oauth-client-secret"
+
+RESEND_API_KEY="re_..."
+RESEND_FROM_EMAIL="PeterParts <no-reply@your-domain.com>"
+```
+
+3. Apply migrations and generate Prisma.
+
+```bash
+npx prisma migrate dev
+npm run db:generate
+```
+
+4. Start the development server.
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Auth Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The login/register flow now includes:
 
-## Learn More
+- Google Login/Register through Auth.js and Google OAuth.
+- Email/password registration with mandatory email confirmation.
+- Login blocked until the email is confirmed.
+- Password reset emails sent through Resend.
 
-To learn more about Next.js, take a look at the following resources:
+Routes added or updated:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `/login`
+- `/signup`
+- `/forgot-password`
+- `/reset-password?token=...`
+- `/verify-email?token=...`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Notes:
 
-## Deploy on Vercel
+- Google auth is only enabled when both `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` are present.
+- The app also accepts `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` as fallbacks.
+- Email verification and password reset require both `RESEND_API_KEY` and `RESEND_FROM_EMAIL`.
+- `NEXT_PUBLIC_APP_URL` is used to generate confirmation and reset links.
+- On Neon, keep `DATABASE_URL` pointed at the pooled endpoint for the app runtime and define `DIRECT_URL` with the non-pooler host for migrations.
+- Run migrations with `npm run db:migrate`, which uses `DIRECT_URL` via Prisma CLI `--url`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Build Commands
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run lint
+npm run build
+```

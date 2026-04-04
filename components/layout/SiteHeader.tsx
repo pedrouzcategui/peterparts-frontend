@@ -1,16 +1,7 @@
-"use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  CreditCard,
-  PackageSearch,
-  Search,
-  Sparkles,
-  Truck,
-  UserRound,
-} from "lucide-react";
-import { useEffect, useState } from "react";
+import { PackageSearch, Search, Sparkles, UserRound } from "lucide-react";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 import CartButton from "@/components/cart/CartButton";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/layout/BrandLogo";
@@ -29,60 +20,59 @@ const NAV_LINKS = [
   },
 ] as const;
 
-const SERVICE_ITEMS = [
-  {
-    label: "Entrega estandar gratis | Sin costo de envio",
-    icon: Truck,
-  },
-  {
-    label: "Grabado disponible en productos seleccionados",
-    icon: Sparkles,
-  },
-  {
-    label: "Financiamiento al 0% APR disponible con Affirm",
-    icon: CreditCard,
-  },
-] as const;
+function getFirstName(name: string | null | undefined): string | null {
+  const normalizedName = name?.trim();
 
-const DEFAULT_SCROLL_THRESHOLDS = {
-  collapse: 40,
-  expand: 8,
-} as const;
+  if (!normalizedName) {
+    return null;
+  }
 
-const PRODUCTS_SCROLL_THRESHOLDS = {
-  collapse: 260,
-  expand: 96,
-} as const;
+  const [firstName] = normalizedName.split(/\s+/);
+  return firstName || null;
+}
 
-export default function SiteHeader() {
-  const pathname = usePathname();
-  const [isCondensed, setIsCondensed] = useState(false);
+function getFirstNameFromEmail(email: string | null | undefined): string | null {
+  const localPart = email?.split("@")[0]?.trim();
 
-  useEffect(() => {
-    const scrollThresholds =
-      pathname === "/products"
-        ? PRODUCTS_SCROLL_THRESHOLDS
-        : DEFAULT_SCROLL_THRESHOLDS;
+  if (!localPart) {
+    return null;
+  }
 
-    const handleScroll = () => {
-      setIsCondensed((currentValue) => {
-        const nextIsCondensed = currentValue
-          ? window.scrollY > scrollThresholds.expand
-          : window.scrollY > scrollThresholds.collapse;
+  const cleanedLocalPart = localPart.replace(/[._-]+/g, " ").replace(/\d+/g, " ").trim();
 
-        return currentValue === nextIsCondensed
-          ? currentValue
-          : nextIsCondensed;
-      });
-    };
+  if (!cleanedLocalPart) {
+    return null;
+  }
 
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
+  const [firstToken] = cleanedLocalPart.split(/\s+/);
 
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [pathname]);
+  if (!firstToken) {
+    return null;
+  }
+
+  return firstToken.charAt(0).toUpperCase() + firstToken.slice(1);
+}
+
+export default async function SiteHeader() {
+  const session = await auth();
+  const email = session?.user?.email?.trim().toLowerCase();
+  const sessionFirstName = getFirstName(session?.user?.name);
+  const currentUser = email
+    ? await prisma.user.findUnique({
+        where: { email },
+        select: {
+          firstName: true,
+          name: true,
+        },
+      })
+    : null;
+  const firstName =
+    currentUser?.firstName?.trim() ||
+    getFirstName(currentUser?.name) ||
+    sessionFirstName ||
+    getFirstNameFromEmail(email);
+  const isSignedIn = Boolean(session?.user);
+  const accountHref = isSignedIn ? "/account" : "/login";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#e7e1d8] bg-white text-[#1A1714] shadow-[0_10px_30px_rgba(26,23,20,0.05)] dark:border-border dark:bg-background/95 dark:text-foreground dark:shadow-none dark:supports-backdrop-filter:bg-background/60">
@@ -117,6 +107,16 @@ export default function SiteHeader() {
 
           {/* Right icons */}
           <div className="flex items-center justify-end gap-1 sm:gap-2">
+            {isSignedIn ? (
+              <Link
+                href={accountHref}
+                className="hidden items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold tracking-[0.06em] text-white transition-colors hover:bg-white/20 sm:flex dark:border-border dark:bg-accent/40 dark:text-foreground dark:hover:bg-accent/60"
+              >
+                <UserRound className="h-4 w-4" />
+                <span>{firstName ? `Hola, ${firstName}` : "Mi cuenta"}</span>
+              </Link>
+            ) : null}
+
             <Button
               variant="ghost"
               size="icon"
@@ -130,10 +130,10 @@ export default function SiteHeader() {
               asChild
               variant="ghost"
               size="icon"
-              aria-label="Cuenta"
+              aria-label={isSignedIn ? (firstName ? `Sesion iniciada como ${firstName}` : "Sesion iniciada") : "Cuenta"}
               className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
             >
-              <Link href="/login">
+              <Link href={accountHref}>
                 <UserRound className="h-5 w-5" />
               </Link>
             </Button>
@@ -144,58 +144,6 @@ export default function SiteHeader() {
             />
             <ThemeToggle className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground" />
           </div>
-        </div>
-      </div>
-
-      {/* Promo banner */}
-      <div
-        aria-hidden={isCondensed}
-        className={`overflow-hidden bg-[#e8f1fb] transition-all duration-300 ease-out dark:bg-muted/30 ${
-          isCondensed
-            ? "pointer-events-none max-h-0 border-0 opacity-0"
-            : "max-h-16 border-b border-[#dde7f3] opacity-100 dark:border-border"
-        }`}
-      >
-        <div className="site-shell flex min-h-14 items-center justify-center text-center">
-          <p className="text-sm font-medium text-[#17324d] dark:text-foreground">
-            <span className="font-semibold">Evento de ahorro de primavera</span>
-            <span className="mx-1.5 text-[#5a7188] dark:text-muted-foreground">
-              |
-            </span>
-            25% de descuento en electrodomesticos de encimera seleccionados*
-            <Link
-              href="/products?sale=sale"
-              className="ml-2 font-semibold uppercase tracking-[0.12em] underline underline-offset-4 hover:text-primary"
-            >
-              Comprar ahora
-            </Link>
-          </p>
-        </div>
-      </div>
-
-      {/* Service strip */}
-      <div
-        aria-hidden={isCondensed}
-        className={`overflow-hidden bg-[#f6f3ef] transition-all duration-300 ease-out dark:bg-muted/20 ${
-          isCondensed
-            ? "pointer-events-none max-h-0 opacity-0"
-            : "max-h-20 opacity-100"
-        }`}
-      >
-        <div className="site-shell hidden min-h-14 items-center justify-between gap-8 py-2 lg:flex">
-          {SERVICE_ITEMS.map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <div
-                key={item.label}
-                className="flex items-center gap-3 text-sm font-medium text-[#6a6358] dark:text-muted-foreground"
-              >
-                <Icon className="h-5 w-5 text-[#9a9184] dark:text-muted-foreground" />
-                <span>{item.label}</span>
-              </div>
-            );
-          })}
         </div>
       </div>
     </header>
