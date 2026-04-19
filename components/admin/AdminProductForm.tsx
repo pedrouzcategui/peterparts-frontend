@@ -1276,13 +1276,18 @@ export default function AdminProductForm({
                 </div>
               </div>
               <div className="space-y-4 rounded-xl border border-border/70 bg-muted/20 p-4 md:col-span-2">
-                <div className="space-y-1">
-                  <label htmlFor="product-colors" className="text-sm font-medium">
-                    Colores
-                  </label>
-                  <p className="text-xs text-muted-foreground">
-                    Este bloque es opcional. Si el producto tiene colores o acabados, define el nombre y el valor real del color para usarlo en el storefront y en los filtros.
-                  </p>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="space-y-1">
+                    <label htmlFor="product-colors" className="text-sm font-medium">
+                      Colores
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      Este bloque es opcional. Si el producto tiene colores o acabados, define el nombre y el valor real del color para usarlo en el storefront y en los filtros.
+                    </p>
+                  </div>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href="/admin/colors">Biblioteca de colores</Link>
+                  </Button>
                 </div>
                 <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_130px_auto] md:items-end">
                   <div className="flex-1 space-y-2">
@@ -1474,17 +1479,28 @@ export default function AdminProductForm({
                   <label htmlFor="price-ves" className="text-sm font-medium">
                     Precio VES
                   </label>
-                  {latestExchangeRate ? (
+                  <div className="flex items-center gap-3">
                     <Button
+                      asChild
                       type="button"
                       variant="ghost"
                       size="sm"
                       className="h-auto px-0 text-xs"
-                      onClick={applyCurrentExchangeRate}
                     >
-                      Usar tasa actual
+                      <Link href="/admin/exchange-rates">Gestionar tasa</Link>
                     </Button>
-                  ) : null}
+                    {latestExchangeRate ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-auto px-0 text-xs"
+                        onClick={applyCurrentExchangeRate}
+                      >
+                        Usar tasa actual
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
                 <Input
                   id="price-ves"

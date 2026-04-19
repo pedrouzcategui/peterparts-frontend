@@ -1,9 +1,9 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import {
+  AdminExchangeRateNotFoundError,
   AdminExchangeRateValidationError,
-  createAdminExchangeRate,
-  getAdminExchangeRateHistory,
+  updateAdminExchangeRate,
 } from "@/lib/admin-exchange-rates";
 import { requireAdminApiAccess } from "@/lib/auth/admin";
 
@@ -16,39 +16,23 @@ interface ExchangeRatePayload {
   fetchedAt?: string;
 }
 
-export async function GET() {
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ exchangeRateId: string }> },
+) {
   const access = await requireAdminApiAccess("/admin/exchange-rates");
 
   if (!access.ok) {
     return access.response;
   }
 
-  const exchangeRates = await getAdminExchangeRateHistory();
-  const activeExchangeRate = exchangeRates.find(
-    (exchangeRate) => exchangeRate.isActive,
-  );
-
-  return NextResponse.json(
-    {
-      exchangeRate: activeExchangeRate ?? null,
-      exchangeRates,
-    },
-    { status: 200 },
-  );
-}
-
-export async function POST(request: Request) {
-  const access = await requireAdminApiAccess("/admin/exchange-rates");
-
-  if (!access.ok) {
-    return access.response;
-  }
-
+  const exchangeRateId = (await params).exchangeRateId;
   const body = (await request
     .json()
     .catch(() => null)) as ExchangeRatePayload | null;
+
   try {
-    const exchangeRate = await createAdminExchangeRate({
+    const exchangeRate = await updateAdminExchangeRate(exchangeRateId, {
       rate: body?.rate ?? "",
       source: body?.source,
       effectiveAt: body?.effectiveAt,
@@ -59,18 +43,22 @@ export async function POST(request: Request) {
     revalidatePath("/admin/products");
     revalidatePath("/products");
 
-    return NextResponse.json({ exchangeRate }, { status: 201 });
+    return NextResponse.json({ exchangeRate }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
       {
         message:
           error instanceof Error
             ? error.message
-            : "No se pudo registrar la tasa de cambio.",
+            : "No se pudo actualizar la tasa de cambio.",
       },
       {
         status:
-          error instanceof AdminExchangeRateValidationError ? 400 : 500,
+          error instanceof AdminExchangeRateNotFoundError
+            ? 404
+            : error instanceof AdminExchangeRateValidationError
+              ? 400
+              : 500,
       },
     );
   }

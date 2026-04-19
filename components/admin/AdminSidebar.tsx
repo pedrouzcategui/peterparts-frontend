@@ -3,16 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ArrowLeftRight,
   LayoutDashboard,
   MessageSquareText,
   ShoppingCart,
   Package,
+  Palette,
   Tags,
   Users,
-  FileText,
-  Percent,
-  Puzzle,
-  HelpCircle,
   Settings,
 } from "lucide-react";
 import { BrandLogo } from "@/components/layout/BrandLogo";
@@ -23,15 +21,13 @@ const mainNavItems = [
   { href: "/admin/orders", label: "Pedidos", icon: ShoppingCart },
   { href: "/admin/forum", label: "Foro", icon: MessageSquareText },
   { href: "/admin/products", label: "Productos", icon: Package },
+  { href: "/admin/exchange-rates", label: "Exchange Rates", icon: ArrowLeftRight },
+  { href: "/admin/colors", label: "Colores", icon: Palette },
   { href: "/admin/categories", label: "Categorias", icon: Tags },
   { href: "/admin/users", label: "Users", icon: Users },
-  { href: "/admin/reports", label: "Reportes", icon: FileText },
-  { href: "/admin/discounts", label: "Descuentos", icon: Percent },
 ];
 
 const secondaryNavItems = [
-  { href: "/admin/integrations", label: "Integraciones", icon: Puzzle },
-  { href: "/admin/help", label: "Ayuda", icon: HelpCircle },
   { href: "/admin/settings", label: "Configuracion", icon: Settings },
 ];
 
