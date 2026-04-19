@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Mail } from "lucide-react";
+import { toast } from "sonner";
 import { initialAuthActionState } from "@/app/(auth)/action-state";
 import {
   resendVerificationEmailAction,
@@ -22,6 +23,67 @@ import { cn } from "@/lib/utils";
 interface SignUpPageClientProps {
   googleEnabled: boolean;
   redirectTo: string;
+}
+
+const PASSWORD_LENGTH = 16;
+const PASSWORD_CHARSETS = {
+  lowercase: "abcdefghijkmnopqrstuvwxyz",
+  uppercase: "ABCDEFGHJKLMNPQRSTUVWXYZ",
+  numbers: "23456789",
+  symbols: "!@#$%^&*()-_=+?",
+} as const;
+
+function getRandomInt(maxExclusive: number): number {
+  if (!Number.isInteger(maxExclusive) || maxExclusive <= 0) {
+    throw new Error("maxExclusive must be a positive integer");
+  }
+
+  const maxUint32 = 0x100000000;
+  const cutoff = Math.floor(maxUint32 / maxExclusive) * maxExclusive;
+  const buffer = new Uint32Array(1);
+
+  while (true) {
+    crypto.getRandomValues(buffer);
+    const randomValue = buffer[0];
+
+    if (randomValue < cutoff) {
+      return randomValue % maxExclusive;
+    }
+  }
+}
+
+function pickRandomCharacter(characters: string): string {
+  return characters[getRandomInt(characters.length)] ?? characters[0] ?? "";
+}
+
+function shuffleCharacters(characters: string[]): string[] {
+  const result = [...characters];
+
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const randomIndex = getRandomInt(index + 1);
+    const current = result[index];
+    result[index] = result[randomIndex] ?? current;
+    result[randomIndex] = current ?? "";
+  }
+
+  return result;
+}
+
+function generateSecurePassword(length = PASSWORD_LENGTH): string {
+  const requiredCharacters = [
+    pickRandomCharacter(PASSWORD_CHARSETS.lowercase),
+    pickRandomCharacter(PASSWORD_CHARSETS.uppercase),
+    pickRandomCharacter(PASSWORD_CHARSETS.numbers),
+    pickRandomCharacter(PASSWORD_CHARSETS.symbols),
+  ];
+  const allCharacters = Object.values(PASSWORD_CHARSETS).join("");
+  const generatedCharacters = [...requiredCharacters];
+
+  for (let index = requiredCharacters.length; index < length; index += 1) {
+    generatedCharacters.push(pickRandomCharacter(allCharacters));
+  }
+
+  return shuffleCharacters(generatedCharacters).join("");
 }
 
 function FeedbackMessage({
@@ -51,6 +113,8 @@ export default function SignUpPageClient({
 }: SignUpPageClientProps) {
   const router = useRouter();
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [rawSignUpState, signUpAction, isSigningUp] = useActionState(
     signUpWithPasswordAction,
     initialAuthActionState,
@@ -64,6 +128,31 @@ export default function SignUpPageClient({
   const isLoading = isSigningUp || isResending;
   const hasSignUpFeedbackMessage = signUpState.message.trim().length > 0;
   const hasResendFeedbackMessage = resendState.message.trim().length > 0;
+
+  async function handleGeneratePassword(): Promise<void> {
+    const generatedPassword = generateSecurePassword();
+
+    setPassword(generatedPassword);
+    setConfirmPassword(generatedPassword);
+
+    if (!navigator.clipboard?.writeText) {
+      toast.error("No pudimos copiar la contraseña.", {
+        description: "La completamos en ambos campos para que puedas continuar.",
+      });
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(generatedPassword);
+      toast.success("Contraseña generada.", {
+        description: "La copiamos al portapapeles y la completamos en ambos campos.",
+      });
+    } catch {
+      toast.error("No pudimos copiar la contraseña.", {
+        description: "La completamos en ambos campos para que puedas continuar.",
+      });
+    }
+  }
 
   if (signUpState.status === "success" && signUpState.email) {
     return (
@@ -200,6 +289,11 @@ export default function SignUpPageClient({
             name="password"
             placeholder="Minimo 8 caracteres"
             autoComplete="new-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            actionLabel="Generar"
+            actionAriaLabel="Generar y copiar contraseña segura"
+            onActionClick={handleGeneratePassword}
             required
             disabled={isLoading}
           />
@@ -212,6 +306,8 @@ export default function SignUpPageClient({
             name="confirmPassword"
             placeholder="Repite tu contraseña"
             autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
             required
             disabled={isLoading}
           />

@@ -4,6 +4,10 @@ function trimTrailingSlash(value: string): string {
   return value.endsWith("/") ? value.slice(0, -1) : value;
 }
 
+export function getResendApiKey(): string | null {
+  return process.env.AUTH_RESEND_KEY ?? process.env.RESEND_API_KEY ?? null;
+}
+
 export function getGoogleClientId(): string | null {
   return process.env.AUTH_GOOGLE_ID ?? process.env.GOOGLE_CLIENT_ID ?? null;
 }
@@ -17,7 +21,7 @@ export const isGoogleAuthEnabled = Boolean(
 );
 
 export const isResendConfigured = Boolean(
-  process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL,
+  getResendApiKey() && process.env.RESEND_FROM_EMAIL,
 );
 
 export function getAppUrl(): string {

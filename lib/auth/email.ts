@@ -3,7 +3,12 @@ import "server-only";
 import path from "node:path";
 import { readFile } from "node:fs/promises";
 import { Resend } from "resend";
-import { getAppUrl, getResendFromEmail, isResendConfigured } from "@/lib/auth/env";
+import {
+  getAppUrl,
+  getResendApiKey,
+  getResendFromEmail,
+  isResendConfigured,
+} from "@/lib/auth/env";
 
 let resendClient: Resend | null = null;
 
@@ -17,14 +22,16 @@ const BRAND_COLORS = {
 const LOGO_CONTENT_ID = "peterparts-logo";
 
 function getResendClient(): Resend {
-  if (!isResendConfigured || !process.env.RESEND_API_KEY) {
+  const apiKey = getResendApiKey();
+
+  if (!isResendConfigured || !apiKey) {
     throw new Error(
       "RESEND_API_KEY and RESEND_FROM_EMAIL must be configured to send auth emails.",
     );
   }
 
   if (!resendClient) {
-    resendClient = new Resend(process.env.RESEND_API_KEY);
+    resendClient = new Resend(apiKey);
   }
 
   return resendClient;
@@ -139,6 +146,34 @@ export async function sendPasswordResetEmail({
     from: getResendFromEmail(),
     to: email,
     subject: "Restablece tu contraseña de PeterParts",
+    html,
+    text,
+    attachments: [logoAttachment],
+  });
+}
+
+export async function sendMagicLinkEmail({
+  email,
+  url,
+}: {
+  email: string;
+  url: string;
+}): Promise<void> {
+  const { html, text } = buildEmailShell({
+    previewText: "Usa tu enlace seguro para iniciar sesion",
+    supportLine: "Acceso rapido y seguro para clientes PeterParts",
+    heading: "Tu enlace de acceso esta listo",
+    body:
+      "Recibimos una solicitud para iniciar sesion sin contraseña. Usa este enlace seguro para acceder a tu cuenta PeterParts.",
+    ctaLabel: "Iniciar sesion con enlace",
+    ctaUrl: url,
+  });
+  const logoAttachment = await getInlineLogoAttachment();
+
+  await getResendClient().emails.send({
+    from: getResendFromEmail(),
+    to: email,
+    subject: "Tu enlace de acceso a PeterParts",
     html,
     text,
     attachments: [logoAttachment],

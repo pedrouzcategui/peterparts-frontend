@@ -1,15 +1,8 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import LoginPageClient from "@/components/auth/LoginPageClient";
-import { isGoogleAuthEnabled } from "@/lib/auth/env";
-
-function getRedirectTo(value: string | string[] | undefined): string {
-  if (typeof value !== "string") {
-    return "/";
-  }
-
-  return value.startsWith("/") && !value.startsWith("//") ? value : "/";
-}
+import { isGoogleAuthEnabled, isResendConfigured } from "@/lib/auth/env";
+import { normalizeAuthRedirectTarget, resolvePostLoginRedirectTarget } from "@/lib/auth/service";
 
 export default async function LoginPage({
   searchParams,
@@ -17,16 +10,22 @@ export default async function LoginPage({
   searchParams: Promise<{ redirectTo?: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
-  const redirectTo = getRedirectTo(params.redirectTo);
+  const redirectTo = normalizeAuthRedirectTarget(params.redirectTo);
   const session = await auth();
 
   if (session) {
-    redirect(redirectTo);
+    const destination = await resolvePostLoginRedirectTarget({
+      email: session.user?.email,
+      redirectTo,
+    });
+
+    redirect(destination);
   }
 
   return (
     <LoginPageClient
       googleEnabled={isGoogleAuthEnabled}
+      magicLinkEnabled={isResendConfigured}
       redirectTo={redirectTo}
     />
   );
