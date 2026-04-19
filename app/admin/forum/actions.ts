@@ -15,6 +15,12 @@ function getStringValue(formData: FormData, key: string): string {
   return typeof value === "string" ? value : "";
 }
 
+function getRedirectTarget(formData: FormData, fallbackPath: string): string {
+  const redirectTo = getStringValue(formData, "redirectTo").trim();
+
+  return redirectTo || fallbackPath;
+}
+
 function revalidateForumPaths(
   thread?: { id: string; slug: string },
 ) {
@@ -31,6 +37,7 @@ export async function approveAdminForumThreadAction(
   formData: FormData,
 ): Promise<void> {
   const threadId = getStringValue(formData, "threadId");
+  const redirectTo = getRedirectTarget(formData, "/admin/forum");
 
   if (!threadId) {
     throw new Error("Debes indicar una publicacion para aprobar.");
@@ -43,7 +50,7 @@ export async function approveAdminForumThreadAction(
   });
 
   revalidateForumPaths(thread);
-  redirect("/admin/forum");
+  redirect(redirectTo);
 }
 
 export async function rejectAdminForumThreadAction(

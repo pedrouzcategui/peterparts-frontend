@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, MessageSquare, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, MessageSquare, Pencil, ShieldCheck, Trash2 } from "lucide-react";
+import { approveAdminForumThreadAction } from "@/app/admin/forum/actions";
 import {
   buildForumLoginRedirectPath,
   buildForumThreadPath,
@@ -102,6 +103,10 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
   const decoratedComments = decorateComments(thread.comments);
   const canManageThread = Boolean(thread.canEdit || thread.canDelete);
   const canHardDeleteThread = currentUser?.role === "ADMIN";
+  const canApproveThread =
+    currentUser?.role === "ADMIN" &&
+    thread.status === "pending" &&
+    !thread.isDeleted;
   const threadScore = thread.upvotes - thread.downvotes;
   const moderationMessage =
     thread.status === "pending"
@@ -210,6 +215,26 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
                         Estado: {getForumThreadStatusLabel(thread.status)}
                       </p>
                       <p className="mt-1">{moderationMessage}</p>
+                      {canApproveThread ? (
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-300/60 bg-white/60 px-3 py-3 text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-100">
+                          <div>
+                            <p className="text-sm font-semibold">
+                              Puedes aprobar esta publicacion desde aqui.
+                            </p>
+                            <p className="mt-1 text-xs text-emerald-800/90 dark:text-emerald-200/90">
+                              Al aprobarla, el hilo quedara visible para toda la comunidad y se habilitaran las respuestas.
+                            </p>
+                          </div>
+                          <form action={approveAdminForumThreadAction}>
+                            <input type="hidden" name="threadId" value={thread.id} />
+                            <input type="hidden" name="redirectTo" value={threadPath} />
+                            <Button type="submit" size="sm">
+                              <ShieldCheck className="h-4 w-4" />
+                              Aprobar ahora
+                            </Button>
+                          </form>
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
 
