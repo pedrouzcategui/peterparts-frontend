@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
+  MessageSquareText,
   ShoppingCart,
   Package,
   Tags,
@@ -20,6 +21,7 @@ import { cn } from "@/lib/utils";
 const mainNavItems = [
   { href: "/admin", label: "Panel", icon: LayoutDashboard },
   { href: "/admin/orders", label: "Pedidos", icon: ShoppingCart },
+  { href: "/admin/forum", label: "Foro", icon: MessageSquareText },
   { href: "/admin/products", label: "Productos", icon: Package },
   { href: "/admin/categories", label: "Categorias", icon: Tags },
   { href: "/admin/users", label: "Users", icon: Users },

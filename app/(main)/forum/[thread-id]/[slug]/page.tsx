@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ArrowLeft, Flag, MessageSquare, Pencil, Trash2 } from "lucide-react";
-import { buildForumLoginRedirectPath, getCurrentForumUser, getForumThreadData } from "@/lib/forum";
+import { notFound, redirect } from "next/navigation";
+import { ArrowLeft, MessageSquare, Pencil, Trash2 } from "lucide-react";
+import {
+  buildForumLoginRedirectPath,
+  buildForumThreadPath,
+  getCurrentForumUser,
+  getForumThreadData,
+} from "@/lib/forum";
 import {
   createForumReplyAction,
   hardDeleteForumThreadAction,
@@ -18,10 +23,25 @@ import ShareThreadButton from "@/components/forum/ShareThreadButton";
 import CommentItem from "@/components/forum/CommentItem";
 import ForumSidebar from "@/components/forum/ForumSidebar";
 import type { ForumComment } from "@/lib/forum-data";
-import { formatRelativeTime } from "@/lib/forum-data";
+import {
+  formatRelativeTime,
+  getForumThreadStatusLabel,
+} from "@/lib/forum-data";
 
 interface ThreadPageProps {
-  params: Promise<{ "thread-id": string }>;
+  params: Promise<{ "thread-id": string; slug: string }>;
+}
+
+function getStatusBadgeClassName(status: "pending" | "approved" | "rejected") {
+  if (status === "approved") {
+    return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300";
+  }
+
+  if (status === "pending") {
+    return "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300";
+  }
+
+  return "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300";
 }
 
 export async function generateMetadata({
@@ -43,7 +63,7 @@ export async function generateMetadata({
 }
 
 export default async function ThreadPage({ params }: ThreadPageProps) {
-  const { "thread-id": threadId } = await params;
+  const { "thread-id": threadId, slug } = await params;
   const [thread, currentUser] = await Promise.all([
     getForumThreadData(threadId),
     getCurrentForumUser(),
@@ -53,12 +73,25 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
     notFound();
   }
 
+  const threadPath = buildForumThreadPath(thread);
+
+  if (slug !== thread.slug) {
+    redirect(threadPath);
+  }
+
   const isSignedIn = Boolean(currentUser);
+  const canReply = Boolean(thread.canReply);
+  const replyHref = canReply
+    ? isSignedIn
+      ? "#reply-form"
+      : buildForumLoginRedirectPath(threadPath)
+    : null;
+  const replyLabel = canReply
+    ? isSignedIn
+      ? "Responder"
+      : "Inicia sesion para responder"
+    : undefined;
   const replyAuthorName = currentUser?.name ?? "Tu cuenta";
-  const replyHref = isSignedIn
-    ? "#reply-form"
-    : buildForumLoginRedirectPath(`/forum/${thread.slug ?? thread.id}`);
-  const threadPath = `/forum/${thread.slug ?? thread.id}`;
   const decorateComments = (comments: ForumComment[]): ForumComment[] =>
     comments.map((comment) => ({
       ...comment,
@@ -69,41 +102,62 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
   const decoratedComments = decorateComments(thread.comments);
   const canManageThread = Boolean(thread.canEdit || thread.canDelete);
   const canHardDeleteThread = currentUser?.role === "ADMIN";
+  const threadScore = thread.upvotes - thread.downvotes;
+  const moderationMessage =
+    thread.status === "pending"
+      ? currentUser?.id === thread.author.id
+        ? "Tu publicacion esta pendiente de aprobacion. Solo tu y el equipo administrador pueden verla por ahora."
+        : "Esta publicacion esta pendiente de aprobacion. Solo el autor y los administradores pueden verla por ahora."
+      : thread.status === "rejected"
+        ? currentUser?.id === thread.author.id
+          ? "Tu publicacion fue rechazada y sigue oculta para el resto de la comunidad."
+          : "Esta publicacion fue rechazada y sigue oculta para el resto de la comunidad."
+        : null;
+  const replyAvailabilityMessage = thread.isDeleted
+    ? "No se pueden agregar respuestas a una publicacion retirada."
+    : thread.status === "pending"
+      ? "Las respuestas se habilitaran cuando un administrador apruebe esta publicacion."
+      : thread.status === "rejected"
+        ? "Esta publicacion fue rechazada y no acepta respuestas mientras permanezca oculta."
+        : null;
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Back link */}
       <Link
         href="/forum"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+        className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
         Volver al foro
       </Link>
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Main content */}
+      <div className="flex flex-col gap-6 lg:flex-row">
         <div className="flex-1">
-          {/* Thread card */}
           <Card className="mb-6">
             <CardContent className="p-6">
               <div className="flex gap-4">
-                {/* Vote buttons */}
-                <VoteButtons
-                  entityType="thread"
-                  entityId={thread.id}
-                  initialUpvotes={thread.upvotes}
-                  initialDownvotes={thread.downvotes}
-                  initialVoteState={thread.currentUserVote ?? null}
-                  orientation="vertical"
-                />
+                {thread.status === "approved" && !thread.isDeleted ? (
+                  <VoteButtons
+                    entityType="thread"
+                    entityId={thread.id}
+                    initialUpvotes={thread.upvotes}
+                    initialDownvotes={thread.downvotes}
+                    initialVoteState={thread.currentUserVote ?? null}
+                    orientation="vertical"
+                  />
+                ) : (
+                  <div className="flex w-12 shrink-0 flex-col items-center justify-start pt-1 text-xs text-muted-foreground">
+                    <span className="text-base font-semibold text-foreground">
+                      {threadScore}
+                    </span>
+                    <span>votos</span>
+                  </div>
+                )}
 
-                {/* Thread content */}
-                <div className="flex-1 min-w-0">
-                  {/* Author and time */}
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
-                      <div className="h-8 w-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
                         <span className="text-xs font-medium text-red-600 dark:text-red-400">
                           {thread.author.initials}
                         </span>
@@ -120,11 +174,19 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
                     </div>
                   </div>
 
-                  {/* Title */}
-                  <h1 className="text-xl font-bold mb-4">{thread.title}</h1>
+                  <div className="mb-4 flex flex-wrap items-center gap-2">
+                    <h1 className="text-xl font-bold">{thread.title}</h1>
+                    {thread.status !== "approved" ? (
+                      <Badge
+                        variant="outline"
+                        className={getStatusBadgeClassName(thread.status)}
+                      >
+                        {getForumThreadStatusLabel(thread.status)}
+                      </Badge>
+                    ) : null}
+                  </div>
 
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-1.5 mb-4">
+                  <div className="mb-4 flex flex-wrap gap-1.5">
                     {thread.tags.map((tag) => (
                       <Badge
                         key={tag}
@@ -136,36 +198,37 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
                     ))}
                   </div>
 
-                  {/* Content */}
-                  <div className="prose prose-sm dark:prose-invert max-w-none mb-4">
+                  <div className="prose prose-sm mb-4 max-w-none dark:prose-invert">
                     <p className={thread.isDeleted ? "italic text-muted-foreground" : undefined}>
                       {thread.content}
                     </p>
                   </div>
 
-                  {/* Actions */}
+                  {moderationMessage ? (
+                    <div className={`mb-4 rounded-2xl border px-4 py-3 text-sm ${getStatusBadgeClassName(thread.status)}`}>
+                      <p className="font-semibold">
+                        Estado: {getForumThreadStatusLabel(thread.status)}
+                      </p>
+                      <p className="mt-1">{moderationMessage}</p>
+                    </div>
+                  ) : null}
+
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <button
                       type="button"
-                      className="flex items-center gap-1.5 hover:bg-muted px-3 py-1.5 rounded transition-colors"
+                      className="flex items-center gap-1.5 rounded px-3 py-1.5 transition-colors hover:bg-muted"
                     >
                       <MessageSquare className="h-4 w-4" />
                       <span>{thread.commentCount} comentarios</span>
                     </button>
                     <ShareThreadButton
                       path={threadPath}
-                      className="flex items-center gap-1.5 hover:bg-muted px-3 py-1.5 rounded transition-colors"
+                      className="flex items-center gap-1.5 rounded px-3 py-1.5 transition-colors hover:bg-muted"
                     />
-                    <button
-                      type="button"
-                      className="flex items-center gap-1.5 hover:bg-muted px-3 py-1.5 rounded transition-colors"
-                    >
-                      <Flag className="h-4 w-4" />
-                      <span>Reportar</span>
-                    </button>
                     {thread.canDelete ? (
                       <form action={softDeleteForumThreadAction}>
-                        <input type="hidden" name="threadIdOrSlug" value={thread.slug ?? thread.id} />
+                        <input type="hidden" name="threadId" value={thread.id} />
+                        <input type="hidden" name="threadPath" value={threadPath} />
                         <Button type="submit" variant="ghost" size="xs" className="text-muted-foreground hover:text-foreground">
                           <Trash2 className="h-3.5 w-3.5" />
                           Retirar
@@ -174,7 +237,8 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
                     ) : null}
                     {canHardDeleteThread ? (
                       <form action={hardDeleteForumThreadAction}>
-                        <input type="hidden" name="threadIdOrSlug" value={thread.slug ?? thread.id} />
+                        <input type="hidden" name="threadId" value={thread.id} />
+                        <input type="hidden" name="threadPath" value={threadPath} />
                         <Button type="submit" variant="ghost" size="xs" className="text-destructive hover:text-destructive">
                           <Trash2 className="h-3.5 w-3.5" />
                           Eliminar definitivamente
@@ -193,7 +257,8 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
                         action={updateForumThreadAction}
                         className="mt-3 rounded-[1.5rem] border border-[#eaded7] bg-[#fcfaf7] p-4 text-sm shadow-sm dark:border-border dark:bg-muted/20"
                       >
-                        <input type="hidden" name="threadIdOrSlug" value={thread.slug ?? thread.id} />
+                        <input type="hidden" name="threadId" value={thread.id} />
+                        <input type="hidden" name="threadPath" value={threadPath} />
                         <div className="mb-3">
                           <p className="font-medium text-foreground">Editar publicacion</p>
                           <p className="text-xs text-muted-foreground">
@@ -235,54 +300,64 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
             </CardContent>
           </Card>
 
-          {/* Comment input */}
           <Card className="mb-6">
             <CardContent className="p-5 sm:p-6">
-              {isSignedIn ? (
-                <form id="reply-form" action={createForumReplyAction} className="space-y-4">
-                  <input type="hidden" name="threadIdOrSlug" value={thread.slug ?? thread.id} />
-                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        Responder como {replyAuthorName}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Aporta una solución clara, pasos concretos o experiencia directa con este equipo.
-                      </p>
+              {thread.canReply ? (
+                isSignedIn ? (
+                  <form id="reply-form" action={createForumReplyAction} className="space-y-4">
+                    <input type="hidden" name="threadId" value={thread.id} />
+                    <input type="hidden" name="threadPath" value={threadPath} />
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          Responder como {replyAuthorName}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Aporta una solución clara, pasos concretos o experiencia directa con este equipo.
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                    <div className="space-y-3">
+                      <textarea
+                        name="content"
+                        placeholder="Comparte tu respuesta o experiencia con esta pregunta"
+                        className="min-h-32 w-full rounded-[1.5rem] border bg-background px-4 py-3 text-sm leading-6 resize-y focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
+                        required
+                      />
+                      <div className="flex justify-end">
+                        <Button type="submit" className="min-w-48 rounded-full px-6">
+                          Responder al hilo
+                        </Button>
+                      </div>
+                    </div>
+                  </form>
+                ) : (
                   <div className="space-y-3">
-                    <textarea
-                      name="content"
-                      placeholder="Comparte tu respuesta o experiencia con esta pregunta"
-                      className="min-h-32 w-full rounded-[1.5rem] border bg-background px-4 py-3 text-sm leading-6 resize-y focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                      required
-                    />
-                    <div className="flex justify-end">
-                      <Button type="submit" className="min-w-48 rounded-full px-6">
-                        Responder al hilo
-                      </Button>
-                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Inicia sesion para responder esta pregunta y participar en la comunidad.
+                    </p>
+                    <Button asChild>
+                      <Link href={buildForumLoginRedirectPath(threadPath)}>
+                        Iniciar sesion para responder
+                      </Link>
+                    </Button>
                   </div>
-                </form>
+                )
               ) : (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    Inicia sesion para responder esta pregunta y participar en la comunidad.
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">
+                    Respuestas deshabilitadas
                   </p>
-                  <Button asChild>
-                    <Link href={replyHref}>Iniciar sesion para responder</Link>
-                  </Button>
+                  <p className="text-sm text-muted-foreground">
+                    {replyAvailabilityMessage}
+                  </p>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Comments section */}
           <div>
-            <h2 className="font-semibold mb-4">
-              {decoratedComments.length} comentarios
-            </h2>
+            <h2 className="mb-4 font-semibold">{decoratedComments.length} comentarios</h2>
 
             {decoratedComments.length > 0 ? (
               <div className="space-y-1">
@@ -290,9 +365,10 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
                   <div key={comment.id}>
                     <CommentItem
                       comment={comment}
-                      threadIdOrSlug={thread.slug ?? thread.id}
-                      canReply={isSignedIn}
+                      threadId={thread.id}
+                      threadPath={threadPath}
                       replyHref={replyHref}
+                      replyLabel={replyLabel}
                     />
                     <Separator className="my-2" />
                   </div>
@@ -301,7 +377,7 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
             ) : (
               <Card>
                 <CardContent className="p-8 text-center">
-                  <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                  <MessageSquare className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
                   <p className="text-muted-foreground">
                     Aun no hay comentarios. Se el primero en compartir tu opinion.
                   </p>
@@ -311,8 +387,7 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
           </div>
         </div>
 
-        {/* Sidebar */}
-        <div className="w-full lg:w-80 shrink-0">
+        <div className="w-full shrink-0 lg:w-80">
           <ForumSidebar />
         </div>
       </div>

@@ -42,7 +42,7 @@ export default async function NewForumThreadPage() {
                   Publica tu consulta en el foro
                 </h1>
                 <p className="mt-2 text-sm text-white/80 sm:text-base">
-                  Estas publicando como {authorName}. Explica el modelo, el sintoma y lo que ya intentaste.
+                  Estas publicando como {authorName}. Explica el modelo, el sintoma y lo que ya intentaste. Un administrador revisara la publicacion antes de que aparezca en el foro publico.
                 </p>
               </div>
             </div>
@@ -51,7 +51,7 @@ export default async function NewForumThreadPage() {
           <CardHeader>
             <CardTitle>Detalles de la pregunta</CardTitle>
             <CardDescription>
-              Mientras mas contexto compartas, mas util sera la respuesta de la comunidad.
+              Mientras mas contexto compartas, mas facil sera aprobar la pregunta y obtener una respuesta util de la comunidad.
             </CardDescription>
           </CardHeader>
           <CardContent className="pb-8 sm:pb-10">
@@ -100,7 +100,7 @@ export default async function NewForumThreadPage() {
                 <Button asChild variant="outline">
                   <Link href="/forum">Cancelar</Link>
                 </Button>
-                <Button type="submit">Publicar pregunta</Button>
+                <Button type="submit">Enviar a revision</Button>
               </div>
             </form>
           </CardContent>

@@ -8,10 +8,11 @@ import { formatRelativeTime } from "@/lib/forum-data";
 
 interface CommentItemProps {
   comment: ForumComment;
-  threadIdOrSlug: string;
+  threadId: string;
+  threadPath: string;
   depth?: number;
-  canReply?: boolean;
-  replyHref?: string;
+  replyHref?: string | null;
+  replyLabel?: string;
 }
 
 /**
@@ -19,10 +20,11 @@ interface CommentItemProps {
  */
 export default function CommentItem({
   comment,
-  threadIdOrSlug,
+  threadId,
+  threadPath,
   depth = 0,
-  canReply = false,
   replyHref = "#reply-form",
+  replyLabel = "Responder",
 }: CommentItemProps) {
   const maxDepth = 3;
   const showNestedReplies = depth < maxDepth;
@@ -65,17 +67,20 @@ export default function CommentItem({
             orientation="horizontal"
             size="sm"
           />
-          <Link
-            href={replyHref}
-            className="flex items-center gap-1 hover:bg-muted px-2 py-1 rounded transition-colors"
-          >
-            <MessageSquare className="h-3.5 w-3.5" />
-            {canReply ? "Responder" : "Inicia sesion para responder"}
-          </Link>
+          {replyHref ? (
+            <Link
+              href={replyHref}
+              className="flex items-center gap-1 hover:bg-muted px-2 py-1 rounded transition-colors"
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              {replyLabel}
+            </Link>
+          ) : null}
           {comment.canDelete && !isDeleted ? (
             <form action={softDeleteForumReplyAction}>
               <input type="hidden" name="replyId" value={comment.id} />
-              <input type="hidden" name="threadIdOrSlug" value={threadIdOrSlug} />
+              <input type="hidden" name="threadId" value={threadId} />
+              <input type="hidden" name="threadPath" value={threadPath} />
               <Button type="submit" variant="ghost" size="xs" className="text-muted-foreground hover:text-foreground">
                 <Trash2 className="h-3.5 w-3.5" />
                 Eliminar
@@ -95,7 +100,8 @@ export default function CommentItem({
               className="mt-3 rounded-[1.5rem] border border-[#eaded7] bg-[#fcfaf7] p-4 text-sm shadow-sm dark:border-border dark:bg-muted/20"
             >
               <input type="hidden" name="replyId" value={comment.id} />
-              <input type="hidden" name="threadIdOrSlug" value={threadIdOrSlug} />
+              <input type="hidden" name="threadId" value={threadId} />
+              <input type="hidden" name="threadPath" value={threadPath} />
               <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-medium text-foreground">Editar respuesta</p>
@@ -129,10 +135,11 @@ export default function CommentItem({
             <CommentItem
               key={reply.id}
               comment={reply}
-              threadIdOrSlug={threadIdOrSlug}
+              threadId={threadId}
+              threadPath={threadPath}
               depth={depth + 1}
-              canReply={canReply}
               replyHref={replyHref}
+              replyLabel={replyLabel}
             />
           ))}
         </div>
