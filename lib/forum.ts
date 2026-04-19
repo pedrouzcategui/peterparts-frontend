@@ -3,11 +3,13 @@ import "server-only";
 import { cache } from "react";
 import { auth } from "@/auth";
 import {
-  ForumThreadStatus as PrismaForumThreadStatus,
   ForumVoteDirection,
   Prisma,
-  UserRole,
 } from "@/lib/generated/prisma/client";
+import {
+  ForumThreadStatus as PrismaForumThreadStatus,
+  UserRole,
+} from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import {
   type ForumComment,
@@ -145,6 +147,7 @@ export interface AdminForumHeaderModerationSummary {
 }
 
 type ForumVoteTargetType = "thread" | "reply";
+type ModeratableForumThreadStatus = "APPROVED" | "REJECTED";
 
 const ADMIN_FORUM_HEADER_PENDING_THREADS_LIMIT = 5;
 
@@ -1221,7 +1224,7 @@ export async function updateForumThreadModerationStatus({
   status,
 }: {
   threadId: string;
-  status: PrismaForumThreadStatus.APPROVED | PrismaForumThreadStatus.REJECTED;
+  status: ModeratableForumThreadStatus;
 }): Promise<ForumThreadPathInput> {
   const existingThread = await prisma.forumThread.findUnique({
     where: {

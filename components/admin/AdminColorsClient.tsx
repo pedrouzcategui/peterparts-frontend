@@ -234,14 +234,16 @@ export default function AdminColorsClient({
         throw new Error(result?.message ?? "No se pudo guardar el color.");
       }
 
+      const savedColor = result.color;
+
       setColors((currentColors) => {
         if (editorMode === "create") {
-          return sortColors([...currentColors, result.color]);
+          return sortColors([...currentColors, savedColor]);
         }
 
         return sortColors(
           currentColors.map((color) =>
-            color.id === result.color?.id ? result.color : color,
+            color.id === savedColor.id ? savedColor : color,
           ),
         );
       });

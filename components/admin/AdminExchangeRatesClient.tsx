@@ -198,10 +198,12 @@ export default function AdminExchangeRatesClient({
         throw new Error(result?.message ?? "No se pudo guardar la tasa.");
       }
 
+      const savedExchangeRate = result.exchangeRate;
+
       setExchangeRates((currentExchangeRates) => {
         if (editorMode === "create") {
           return sortExchangeRates([
-            result.exchangeRate,
+            savedExchangeRate,
             ...currentExchangeRates.map((exchangeRate) => ({
               ...exchangeRate,
               isActive: false,
@@ -211,8 +213,8 @@ export default function AdminExchangeRatesClient({
 
         return sortExchangeRates(
           currentExchangeRates.map((exchangeRate) =>
-            exchangeRate.id === result.exchangeRate?.id
-              ? result.exchangeRate
+            exchangeRate.id === savedExchangeRate.id
+              ? savedExchangeRate
               : exchangeRate,
           ),
         );
@@ -257,11 +259,13 @@ export default function AdminExchangeRatesClient({
         throw new Error(result?.message ?? "No se pudo activar la tasa.");
       }
 
+      const activeExchangeRate = result.exchangeRate;
+
       setExchangeRates((currentExchangeRates) =>
         sortExchangeRates(
           currentExchangeRates.map((exchangeRate) => ({
             ...exchangeRate,
-            isActive: exchangeRate.id === result.exchangeRate?.id,
+            isActive: exchangeRate.id === activeExchangeRate.id,
           })),
         ),
       );

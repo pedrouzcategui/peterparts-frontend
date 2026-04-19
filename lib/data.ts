@@ -1,4 +1,6 @@
-import { FilterGroup } from "./types";
+import type { StaticCatalogProduct } from "@/lib/catalog-types";
+import { mercadolibreSeller156535073Products } from "@/lib/vendor-catalog/mercadolibre-156535073";
+import type { FilterGroup } from "./types";
 
 interface SeedProductImage {
   src: string;
@@ -38,7 +40,7 @@ interface SeedProduct {
   shippingInfo: string;
 }
 
-export const products: SeedProduct[] = [
+const baseProducts: StaticCatalogProduct[] = [
   // ── Cuisinart Products ──
   {
     id: "cui-001",

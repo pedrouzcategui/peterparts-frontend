@@ -8,8 +8,6 @@ import { ProductBadge, ProductStatus } from "@/lib/generated/prisma/enums";
 import type {
   AdminColorSuggestion,
   AdminExchangeRate,
-  AdminManagedColor,
-  AdminManagedColorProduct,
   AdminProduct,
   AdminProductEditorColor,
   AdminProductEditorData,
@@ -17,7 +15,6 @@ import type {
 import { normalizeCategoryLabels } from "@/lib/category-labels";
 import {
   buildProductColorFilterValue,
-  normalizeProductColorLabel,
   PREDEFINED_PRODUCT_COLORS,
   resolveProductColorValue,
 } from "@/lib/product-colors";
@@ -384,26 +381,6 @@ function sortColorSuggestions(values: AdminColorSuggestion[]) {
   );
 }
 
-function sortManagedColorProducts(values: AdminManagedColorProduct[]) {
-  return [...values].sort((left, right) =>
-    left.name.localeCompare(right.name, "es"),
-  );
-}
-
-function sortManagedColors(values: AdminManagedColor[]) {
-  return [...values].sort((left, right) => {
-    if (left.productsCount === 0 && right.productsCount > 0) {
-      return 1;
-    }
-
-    if (left.productsCount > 0 && right.productsCount === 0) {
-      return -1;
-    }
-
-    return left.label.localeCompare(right.label, "es");
-  });
-}
-
 export function mapProduct(
   product: DatabaseProduct,
   activeExchangeRate: number | null,
@@ -767,147 +744,6 @@ export const getAdminColorSuggestions = cache(
   },
 );
 
-export const getAdminManagedColors = cache(
-  async (): Promise<AdminManagedColor[]> => {
-    const products = await prisma.product.findMany({
-      include: {
-        brand: true,
-        variants: {
-          orderBy: {
-            sortOrder: "asc",
-          },
-        },
-      },
-      orderBy: [
-        {
-          brand: {
-            name: "asc",
-          },
-        },
-        {
-          name: "asc",
-        },
-      ],
-    });
-
-    const predefinedColorsByKey = new Map(
-      PREDEFINED_PRODUCT_COLORS.map((color) => [
-        normalizeProductColorLabel(color.label).toLocaleLowerCase("es"),
-        color,
-      ]),
-    );
-
-    const colorsByKey = new Map<
-      string,
-      AdminManagedColor & { productsById: Map<string, AdminManagedColorProduct> }
-    >();
-
-    const ensureColor = (label: string, colorValue?: string | null) => {
-      const normalizedLabel = normalizeProductColorLabel(label);
-
-      if (!normalizedLabel) {
-        return null;
-      }
-
-      const key = normalizedLabel.toLocaleLowerCase("es");
-      const existingColor = colorsByKey.get(key);
-
-      if (existingColor) {
-        return { key, color: existingColor };
-      }
-
-      const predefinedColor = predefinedColorsByKey.get(key);
-      const nextColor = {
-        label: predefinedColor?.label ?? normalizedLabel,
-        colorValue: resolveProductColorValue(
-          normalizedLabel,
-          colorValue ?? predefinedColor?.colorValue,
-        ),
-        isPredefined: Boolean(predefinedColor),
-        productsCount: 0,
-        variantCount: 0,
-        availableVariantCount: 0,
-        primaryProductsCount: 0,
-        products: [],
-        productsById: new Map<string, AdminManagedColorProduct>(),
-      } satisfies AdminManagedColor & {
-        productsById: Map<string, AdminManagedColorProduct>;
-      };
-
-      colorsByKey.set(key, nextColor);
-
-      return { key, color: nextColor };
-    };
-
-    for (const predefinedColor of PREDEFINED_PRODUCT_COLORS) {
-      ensureColor(predefinedColor.label, predefinedColor.colorValue);
-    }
-
-    for (const product of products) {
-      const productSummary = {
-        id: product.id,
-        name: product.name,
-        brand: product.brand.name,
-        status: mapAdminStatus(product.status),
-      } satisfies AdminManagedColorProduct;
-
-      const registerProductUsage = (
-        label: string,
-        colorValue?: string | null,
-        options?: {
-          countsAsVariant?: boolean;
-          countsAsAvailable?: boolean;
-          countsAsPrimary?: boolean;
-        },
-      ) => {
-        const colorEntry = ensureColor(label, colorValue);
-
-        if (!colorEntry) {
-          return;
-        }
-
-        const { color } = colorEntry;
-
-        if (!color.productsById.has(product.id)) {
-          color.productsById.set(product.id, productSummary);
-          color.productsCount += 1;
-        }
-
-        if (options?.countsAsVariant) {
-          color.variantCount += 1;
-        }
-
-        if (options?.countsAsAvailable) {
-          color.availableVariantCount += 1;
-        }
-
-        if (options?.countsAsPrimary) {
-          color.primaryProductsCount += 1;
-        }
-      };
-
-      for (const variant of product.variants) {
-        registerProductUsage(variant.label, variant.colorValue, {
-          countsAsVariant: true,
-          countsAsAvailable: variant.available,
-        });
-      }
-
-      if (product.primaryColor) {
-        registerProductUsage(product.primaryColor, product.primaryColorValue, {
-          countsAsPrimary: true,
-        });
-      }
-    }
-
-    return sortManagedColors(
-      Array.from(colorsByKey.values()).map(({ productsById, ...color }) => ({
-        ...color,
-        products: sortManagedColorProducts(Array.from(productsById.values())),
-      })),
-    );
-  },
-);
 
 export const getFilterGroups = cache(async (): Promise<FilterGroup[]> => {
   const products = await getProducts();
