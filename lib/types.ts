@@ -4,12 +4,12 @@
 export interface ProductImage {
   src: string;
   alt: string;
-  variantLabels: string[];
+  variantLabels?: string[];
 }
 
 export interface ProductVariant {
   label: string;
-  colorValue: string;
+  colorValue?: string | null;
   available: boolean;
 }
 

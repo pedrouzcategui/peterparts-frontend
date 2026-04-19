@@ -184,14 +184,10 @@ export async function sendMagicLinkEmail({
     ctaLabel: "Iniciar sesion con enlace",
     ctaUrl: url,
   });
-  const logoAttachment = await getInlineLogoAttachment();
-
-  await getResendClient().emails.send({
-    from: getResendFromEmail(),
+  await sendTransactionalEmail({
     to: email,
     subject: "Tu enlace de acceso a PeterParts",
     html,
     text,
-    attachments: [logoAttachment],
   });
 }

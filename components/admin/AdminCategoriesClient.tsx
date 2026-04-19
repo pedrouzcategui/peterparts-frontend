@@ -170,14 +170,16 @@ export default function AdminCategoriesClient({
         throw new Error(result?.message ?? "No se pudo guardar la categoria.");
       }
 
+      const savedCategory = result.category;
+
       setCategories((currentCategories) => {
         if (editorMode === "create") {
-          return sortCategories([...currentCategories, result.category]);
+          return sortCategories([...currentCategories, savedCategory]);
         }
 
         return sortCategories(
           currentCategories.map((category) =>
-            category.id === result.category?.id ? result.category : category,
+            category.id === savedCategory.id ? savedCategory : category,
           ),
         );
       });

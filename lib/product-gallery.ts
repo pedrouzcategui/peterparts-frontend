@@ -20,12 +20,14 @@ export function getVisibleProductImages(
   const globalImages: ProductImage[] = [];
 
   for (const image of product.images) {
-    if (image.variantLabels.length === 0) {
+    const variantLabels = image.variantLabels ?? [];
+
+    if (variantLabels.length === 0) {
       globalImages.push(image);
       continue;
     }
 
-    if (image.variantLabels.includes(variantLabel)) {
+    if (variantLabels.includes(variantLabel)) {
       matchingImages.push(image);
     }
   }

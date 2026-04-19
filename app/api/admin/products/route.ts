@@ -10,6 +10,7 @@ import {
   getOrCreateBrand,
 } from "@/lib/admin-catalog";
 import { normalizeCategoryLabels } from "@/lib/category-labels";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { ProductStatus } from "@/lib/generated/prisma/enums";
 import {
   normalizeProductColorLabel,
@@ -144,6 +145,7 @@ function getProductColors(formData: FormData): ProductColorInput[] {
       parsedValue
         .filter(
           (value): value is {
+              id?: unknown;
             label?: unknown;
             colorValue?: unknown;
             available?: unknown;
@@ -235,7 +237,7 @@ function resolveImageColorAssignments(
     });
   }
 
-  const assignments = images.map((image) => {
+  const assignments: ImageColorAssignmentInput[] = images.map((image) => {
     const assignment = assignmentsByImageId.get(image.clientId);
 
     if (!assignment || assignment.appliesToAllColors) {
@@ -243,7 +245,7 @@ function resolveImageColorAssignments(
         imageId: image.clientId,
         appliesToAllColors: true,
         colorIds: [],
-      } satisfies ImageColorAssignmentInput;
+      };
     }
 
     const validColorIds = assignment.colorIds.filter((colorId) =>
@@ -254,7 +256,7 @@ function resolveImageColorAssignments(
       imageId: image.clientId,
       appliesToAllColors: false,
       colorIds: validColorIds,
-    } satisfies ImageColorAssignmentInput;
+    };
   });
 
   const invalidSpecificImage = assignments.find(

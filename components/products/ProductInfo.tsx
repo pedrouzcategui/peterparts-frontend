@@ -115,7 +115,7 @@ export default function ProductInfo({
                 <span className="flex items-center gap-2">
                   <span
                     className="h-3.5 w-3.5 rounded-full border border-black/10"
-                    style={{ backgroundColor: variant.colorValue }}
+                    style={{ backgroundColor: variant.colorValue ?? "#cfd6dc" }}
                     aria-hidden="true"
                   />
                   <span>{variant.label}</span>

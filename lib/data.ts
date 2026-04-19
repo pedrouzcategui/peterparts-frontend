@@ -1,6 +1,44 @@
-import { Product, FilterGroup } from "./types";
+import { FilterGroup } from "./types";
 
-export const products: Product[] = [
+interface SeedProductImage {
+  src: string;
+  alt: string;
+  variantLabels?: string[];
+}
+
+interface SeedProductVariant {
+  label: string;
+  colorValue?: string | null;
+  available: boolean;
+}
+
+interface SeedProductReview {
+  rating: number;
+  count: number;
+}
+
+interface SeedProduct {
+  id: string;
+  slug: string;
+  name: string;
+  brand: string;
+  category: string;
+  subcategory: string;
+  price: number;
+  originalPrice?: number;
+  description: string;
+  features: string[];
+  color: string;
+  style: string;
+  images: SeedProductImage[];
+  variants: SeedProductVariant[];
+  reviews: SeedProductReview;
+  badge?: string;
+  inStock: boolean;
+  shippingInfo: string;
+}
+
+export const products: SeedProduct[] = [
   // ── Cuisinart Products ──
   {
     id: "cui-001",
@@ -592,7 +630,7 @@ export const filterGroups: FilterGroup[] = [
 ];
 
 /** Look up a product by its slug. */
-export function getProductBySlug(slug: string): Product | undefined {
+export function getProductBySlug(slug: string): SeedProduct | undefined {
   return products.find((p) => p.slug === slug);
 }
 
