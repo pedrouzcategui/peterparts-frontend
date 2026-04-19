@@ -4,7 +4,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/lib/generated/prisma/client";
 import { normalizePostgresConnectionString } from "@/lib/postgres-connection-string";
 
-const PRISMA_CLIENT_CACHE_KEY = "orders-workflow-v1";
+const PRISMA_CLIENT_CACHE_KEY = "orders-workflow-v2";
 
 function createPrismaClient(connectionString: string) {
   const adapter = new PrismaPg({
@@ -26,6 +26,7 @@ function hasRequiredDelegates(
     user?: { findUnique?: unknown };
     account?: { findUnique?: unknown };
     session?: { findUnique?: unknown };
+    catalogColor?: { findMany?: unknown };
     favoriteProduct?: { findUnique?: unknown };
     order?: { findUnique?: unknown };
     orderItem?: { findFirst?: unknown };
@@ -39,6 +40,7 @@ function hasRequiredDelegates(
     typeof delegateClient.user?.findUnique === "function" &&
     typeof delegateClient.account?.findUnique === "function" &&
     typeof delegateClient.session?.findUnique === "function" &&
+    typeof delegateClient.catalogColor?.findMany === "function" &&
     typeof delegateClient.favoriteProduct?.findUnique === "function" &&
     typeof delegateClient.order?.findUnique === "function" &&
     typeof delegateClient.orderItem?.findFirst === "function" &&

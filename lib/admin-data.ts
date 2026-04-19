@@ -51,6 +51,25 @@ export interface AdminColorSuggestion {
   colorValue: string;
 }
 
+export interface AdminManagedColorProduct {
+  id: string;
+  name: string;
+  brand: string;
+  status: "active" | "draft" | "archived";
+}
+
+export interface AdminManagedColor {
+  id: string;
+  label: string;
+  colorValue: string;
+  isPredefined: boolean;
+  productsCount: number;
+  variantCount: number;
+  availableVariantCount: number;
+  primaryProductsCount: number;
+  products: AdminManagedColorProduct[];
+}
+
 export interface AdminProductEditorImage {
   id: string;
   url: string;
@@ -89,6 +108,15 @@ export interface AdminExchangeRate {
   source?: string | null;
   effectiveAt: string;
   fetchedAt: string;
+}
+
+export interface AdminManagedExchangeRate extends AdminExchangeRate {
+  id: string;
+  baseCurrency: string;
+  quoteCurrency: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface DashboardStats {

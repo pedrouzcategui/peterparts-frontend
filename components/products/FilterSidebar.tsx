@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { getBrandQueryValue } from "@/lib/brand-slugs";
 import { cn } from "@/lib/utils";
 import type { FilterGroup } from "@/lib/types";
 
@@ -21,6 +22,17 @@ export default function FilterSidebar({ filterGroups }: FilterSidebarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+
+  const normalizeFilterValue = useCallback(
+    (groupKey: string, value: string) => {
+      if (groupKey === "brand") {
+        return getBrandQueryValue(value);
+      }
+
+      return value;
+    },
+    [],
+  );
 
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(
     () => {
@@ -40,9 +52,17 @@ export default function FilterSidebar({ filterGroups }: FilterSidebarProps) {
   const getSelectedValues = useCallback(
     (groupKey: string): string[] => {
       const param = searchParams.get(groupKey);
-      return param ? param.split(",") : [];
+      return param
+        ? Array.from(
+            new Set(
+              param
+                .split(",")
+                .map((value) => normalizeFilterValue(groupKey, value)),
+            ),
+          )
+        : [];
     },
-    [searchParams],
+    [normalizeFilterValue, searchParams],
   );
 
   // Toggle a filter value in URL params
@@ -50,12 +70,15 @@ export default function FilterSidebar({ filterGroups }: FilterSidebarProps) {
     (groupKey: string, value: string, checked: boolean) => {
       const params = new URLSearchParams(searchParams.toString());
       const currentValues = getSelectedValues(groupKey);
+      const normalizedValue = normalizeFilterValue(groupKey, value);
 
       let newValues: string[];
       if (checked) {
-        newValues = [...currentValues, value];
+        newValues = Array.from(new Set([...currentValues, normalizedValue]));
       } else {
-        newValues = currentValues.filter((v) => v !== value);
+        newValues = currentValues.filter(
+          (currentValue) => currentValue !== normalizedValue,
+        );
       }
 
       if (newValues.length > 0) {
@@ -71,7 +94,7 @@ export default function FilterSidebar({ filterGroups }: FilterSidebarProps) {
         router.push(`/products?${params.toString()}`, { scroll: false });
       });
     },
-    [router, searchParams, getSelectedValues],
+    [getSelectedValues, normalizeFilterValue, router, searchParams],
   );
 
   const sortedGroups = [...filterGroups].sort((left, right) => {
@@ -116,40 +139,49 @@ export default function FilterSidebar({ filterGroups }: FilterSidebarProps) {
             {isOpen ? (
               <div className="pb-4">
                 {group.key === "color" ? (
-                  <div className="space-y-3">
+                  <div className="flex flex-wrap gap-3">
                     {group.options.map((option) => {
                       const isChecked = selectedValues.includes(option.value);
+                      const optionLabel =
+                        option.count !== undefined
+                          ? `${option.label} (${option.count})`
+                          : option.label;
 
                       return (
-                        <label
+                        <button
                           key={option.value}
-                          className="flex cursor-pointer items-center gap-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                          type="button"
+                          className={cn(
+                            "group relative flex h-11 w-11 items-center justify-center rounded-full border border-transparent bg-transparent transition-all hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbfaf7] dark:focus-visible:ring-offset-card",
+                            isChecked &&
+                              "border-primary/30 bg-primary/5 shadow-[0_0_0_1px_rgba(217,30,54,0.12)]",
+                          )}
+                          onClick={() =>
+                            toggleFilter(group.key, option.value, !isChecked)
+                          }
+                          aria-pressed={isChecked}
+                          aria-label={optionLabel}
                         >
-                          <Checkbox
-                            id={`${group.key}-${option.value}`}
-                            checked={isChecked}
-                            onCheckedChange={(checked) =>
-                              toggleFilter(
-                                group.key,
-                                option.value,
-                                Boolean(checked),
-                              )
-                            }
-                          />
+                          <span className="pointer-events-none absolute -top-9 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#1a1714] px-2.5 py-1 text-[11px] font-medium leading-none text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 dark:bg-white dark:text-[#1a1714]">
+                            {option.label}
+                          </span>
                           <span
-                            className="h-4 w-4 rounded-full border border-black/10 shadow-sm"
+                            className={cn(
+                              "h-6 w-6 rounded-full border border-black/10 shadow-sm",
+                              isChecked && "ring-2 ring-primary/60 ring-offset-2",
+                            )}
                             style={{
                               backgroundColor: option.swatchValue ?? "#cfd6dc",
                             }}
                             aria-hidden="true"
                           />
-                          <span className="flex flex-1 items-center justify-between gap-3">
-                            <span>{option.label}</span>
-                            {option.count !== undefined ? (
-                              <span className="text-xs">({option.count})</span>
-                            ) : null}
-                          </span>
-                        </label>
+                          <span className="sr-only">{optionLabel}</span>
+                          {option.count !== undefined ? (
+                            <span className="absolute -bottom-1 -right-1 min-w-5 rounded-full bg-[#fbfaf7] px-1 text-center text-[10px] font-medium leading-5 text-muted-foreground shadow-sm dark:bg-card">
+                              {option.count}
+                            </span>
+                          ) : null}
+                        </button>
                       );
                     })}
                   </div>

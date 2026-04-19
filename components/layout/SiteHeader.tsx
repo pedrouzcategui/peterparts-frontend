@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import CartButton from "@/components/cart/CartButton";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/layout/BrandLogo";
+import MobileNavMenu from "@/components/layout/MobileNavMenu";
 import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_LINKS = [
@@ -86,7 +87,7 @@ export default async function SiteHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-[#e7e1d8] bg-white text-[#1A1714] shadow-[0_10px_30px_rgba(26,23,20,0.05)] dark:border-border dark:bg-background/95 dark:text-foreground dark:shadow-none dark:supports-backdrop-filter:bg-background/60">
       {/* Main navigation */}
       <div className="border-b border-primary/30 bg-primary text-primary-foreground dark:border-border dark:bg-background">
-        <div className="site-shell grid h-24 grid-cols-[auto_1fr_auto] items-center gap-8">
+        <div className="site-shell grid h-24 grid-cols-[auto_1fr_auto] items-center gap-3 sm:gap-8">
           {/* Logo */}
           <BrandLogo
             priority
@@ -114,7 +115,7 @@ export default async function SiteHeader() {
           </nav>
 
           {/* Right icons */}
-          <div className="flex items-center justify-end gap-1 sm:gap-2">
+          <div className="flex items-center justify-end gap-0.5 sm:gap-2">
             {isSignedIn ? (
               <Link
                 href={accountHref}
@@ -129,7 +130,7 @@ export default async function SiteHeader() {
               variant="ghost"
               size="icon"
               aria-label="Buscar"
-              className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
+              className="hidden text-primary-foreground hover:bg-white/10 hover:text-white md:inline-flex dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
             >
               <Search className="h-5 w-5" />
             </Button>
@@ -168,6 +169,13 @@ export default async function SiteHeader() {
               badgeClassName="bg-white text-primary dark:bg-primary dark:text-primary-foreground"
             />
             <ThemeToggle className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground" />
+            <MobileNavMenu
+              accountHref={accountHref}
+              favouritesHref={favouritesHref}
+              favouriteCount={favouriteCount}
+              firstName={firstName}
+              isSignedIn={isSignedIn}
+            />
           </div>
         </div>
       </div>

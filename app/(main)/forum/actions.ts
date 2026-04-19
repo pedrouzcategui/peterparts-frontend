@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import {
   buildForumLoginRedirectPath,
+  buildForumThreadPath,
   createForumReply,
   createForumThread,
   getCurrentForumUser,
@@ -16,6 +17,10 @@ import {
 function getStringValue(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === "string" ? value : "";
+}
+
+function getThreadPathValue(formData: FormData): string {
+  return getStringValue(formData, "threadPath") || "/forum";
 }
 
 export async function createForumThreadAction(formData: FormData): Promise<void> {
@@ -32,72 +37,76 @@ export async function createForumThreadAction(formData: FormData): Promise<void>
     tags: getStringValue(formData, "tags"),
   });
 
-  redirect(`/forum/${thread.slug}`);
+  redirect(buildForumThreadPath(thread));
 }
 
 export async function createForumReplyAction(formData: FormData): Promise<void> {
-  const threadIdOrSlug = getStringValue(formData, "threadIdOrSlug");
+  const threadId = getStringValue(formData, "threadId");
+  const threadPath = getThreadPathValue(formData);
   const currentUser = await getCurrentForumUser();
 
   if (!currentUser) {
-    redirect(buildForumLoginRedirectPath(`/forum/${threadIdOrSlug}`));
+    redirect(buildForumLoginRedirectPath(threadPath));
   }
 
   const thread = await createForumReply({
     authorId: currentUser.id,
-    threadIdOrSlug,
+    threadId,
     content: getStringValue(formData, "content"),
   });
 
-  redirect(`/forum/${thread.slug}#reply-form`);
+  redirect(`${buildForumThreadPath(thread)}#reply-form`);
 }
 
 export async function updateForumThreadAction(formData: FormData): Promise<void> {
-  const threadIdOrSlug = getStringValue(formData, "threadIdOrSlug");
+  const threadId = getStringValue(formData, "threadId");
+  const threadPath = getThreadPathValue(formData);
   const currentUser = await getCurrentForumUser();
 
   if (!currentUser) {
-    redirect(buildForumLoginRedirectPath(`/forum/${threadIdOrSlug}`));
+    redirect(buildForumLoginRedirectPath(threadPath));
   }
 
   const thread = await updateForumThread({
     authorId: currentUser.id,
-    threadIdOrSlug,
+    threadId,
     title: getStringValue(formData, "title"),
     content: getStringValue(formData, "content"),
     tags: getStringValue(formData, "tags"),
   });
 
-  redirect(`/forum/${thread.slug}`);
+  redirect(buildForumThreadPath(thread));
 }
 
 export async function softDeleteForumThreadAction(formData: FormData): Promise<void> {
-  const threadIdOrSlug = getStringValue(formData, "threadIdOrSlug");
+  const threadId = getStringValue(formData, "threadId");
+  const threadPath = getThreadPathValue(formData);
   const currentUser = await getCurrentForumUser();
 
   if (!currentUser) {
-    redirect(buildForumLoginRedirectPath(`/forum/${threadIdOrSlug}`));
+    redirect(buildForumLoginRedirectPath(threadPath));
   }
 
   const thread = await softDeleteForumThread({
     authorId: currentUser.id,
-    threadIdOrSlug,
+    threadId,
   });
 
-  redirect(`/forum/${thread.slug}`);
+  redirect(buildForumThreadPath(thread));
 }
 
 export async function hardDeleteForumThreadAction(formData: FormData): Promise<void> {
-  const threadIdOrSlug = getStringValue(formData, "threadIdOrSlug");
+  const threadId = getStringValue(formData, "threadId");
+  const threadPath = getThreadPathValue(formData);
   const currentUser = await getCurrentForumUser();
 
   if (!currentUser) {
-    redirect(buildForumLoginRedirectPath(`/forum/${threadIdOrSlug}`));
+    redirect(buildForumLoginRedirectPath(threadPath));
   }
 
   await hardDeleteForumThread({
     actorId: currentUser.id,
-    threadIdOrSlug,
+    threadId,
   });
 
   redirect("/forum");
@@ -105,11 +114,11 @@ export async function hardDeleteForumThreadAction(formData: FormData): Promise<v
 
 export async function updateForumReplyAction(formData: FormData): Promise<void> {
   const replyId = getStringValue(formData, "replyId");
-  const threadIdOrSlug = getStringValue(formData, "threadIdOrSlug");
+  const threadPath = getThreadPathValue(formData);
   const currentUser = await getCurrentForumUser();
 
   if (!currentUser) {
-    redirect(buildForumLoginRedirectPath(`/forum/${threadIdOrSlug}`));
+    redirect(buildForumLoginRedirectPath(threadPath));
   }
 
   const thread = await updateForumReply({
@@ -118,16 +127,16 @@ export async function updateForumReplyAction(formData: FormData): Promise<void> 
     content: getStringValue(formData, "content"),
   });
 
-  redirect(`/forum/${thread.slug}#comment-${replyId}`);
+  redirect(`${buildForumThreadPath(thread)}#comment-${replyId}`);
 }
 
 export async function softDeleteForumReplyAction(formData: FormData): Promise<void> {
   const replyId = getStringValue(formData, "replyId");
-  const threadIdOrSlug = getStringValue(formData, "threadIdOrSlug");
+  const threadPath = getThreadPathValue(formData);
   const currentUser = await getCurrentForumUser();
 
   if (!currentUser) {
-    redirect(buildForumLoginRedirectPath(`/forum/${threadIdOrSlug}`));
+    redirect(buildForumLoginRedirectPath(threadPath));
   }
 
   const thread = await softDeleteForumReply({
@@ -135,5 +144,5 @@ export async function softDeleteForumReplyAction(formData: FormData): Promise<vo
     replyId,
   });
 
-  redirect(`/forum/${thread.slug}#comment-${replyId}`);
+  redirect(`${buildForumThreadPath(thread)}#comment-${replyId}`);
 }

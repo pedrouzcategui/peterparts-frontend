@@ -4,10 +4,10 @@ import { ChevronLeft } from "lucide-react";
 import AdminProductForm from "@/components/admin/AdminProductForm";
 import { Button } from "@/components/ui/button";
 import { getAdminManagedCategoryOptions } from "@/lib/admin-categories";
+import { getAdminColorSuggestions } from "@/lib/admin-colors";
 import {
   getAdminBrands,
   getAdminCategoryLabelSuggestions,
-  getAdminColorSuggestions,
   getAdminExchangeRate,
   getAdminProductById,
 } from "@/lib/product-data";

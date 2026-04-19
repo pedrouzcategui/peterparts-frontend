@@ -1,15 +1,24 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import {
+  ForumThreadStatus,
   PrismaClient,
   ProductBadge,
   ProductStatus,
 } from "../lib/generated/prisma/client";
 import { products } from "../lib/data";
 import { roundMoney } from "../lib/currency";
-import { mockCommentsThread1, mockThreads, mockUsers } from "../lib/forum-data";
 import { normalizePostgresConnectionString } from "../lib/postgres-connection-string";
 import { DEFAULT_STOREFRONT_SETTINGS } from "../lib/storefront-settings";
+import {
+  reviewAuthorNames,
+  reviewClosingSentences,
+  reviewOpeningSentences,
+  reviewPerformanceSentences,
+  reviewTitleTemplates,
+  seedForumThreads,
+  seedForumUsers,
+} from "./seed-data";
 
 const DEFAULT_USD_TO_VES_RATE = 36.5;
 
@@ -19,13 +28,6 @@ const adapter = new PrismaPg({
   ),
 });
 const prisma = new PrismaClient({ adapter });
-
-const SAMPLE_REVIEW_BODIES = [
-  "Setup was straightforward and it has held up well with regular kitchen use.",
-  "The finish looks great in person and the performance has been consistent.",
-  "This was a practical upgrade and it does exactly what we expected it to do.",
-  "Shipping was smooth and the product quality feels in line with the price.",
-];
 
 function slugify(value: string) {
   return value
@@ -43,6 +45,79 @@ function clampRating(value: number) {
   return Math.max(1, Math.min(5, value));
 }
 
+function pickFromPool<T>(pool: T[], seed: number) {
+  return pool[Math.abs(seed) % pool.length]!;
+}
+
+function getReviewSeedCount(totalReviewCount: number) {
+  const scaledCount = Math.round(Math.log10(Math.max(10, totalReviewCount)) * 4);
+
+  return Math.max(6, Math.min(14, scaledCount));
+}
+
+function buildReviewRatings(targetAverage: number, reviewCount: number) {
+  const baseRating = clampRating(Math.floor(targetAverage));
+  const ratings = Array.from({ length: reviewCount }, () => baseRating);
+  let extraStars = Math.round(targetAverage * reviewCount - baseRating * reviewCount);
+  const orderedIndexes = [
+    ...Array.from({ length: reviewCount }, (_, index) => index).filter(
+      (index) => index % 2 === 0,
+    ),
+    ...Array.from({ length: reviewCount }, (_, index) => index).filter(
+      (index) => index % 2 === 1,
+    ),
+  ];
+
+  for (const index of orderedIndexes) {
+    if (extraStars === 0) {
+      break;
+    }
+
+    ratings[index] = clampRating(ratings[index]! + 1);
+    extraStars -= 1;
+  }
+
+  return ratings;
+}
+
+function buildReviewCreatedAt(productIndex: number, reviewIndex: number) {
+  const month = (productIndex + reviewIndex) % 6;
+  const day = ((productIndex * 3 + reviewIndex * 5) % 24) + 1;
+  const hour = 9 + ((productIndex + reviewIndex) % 8);
+
+  return new Date(Date.UTC(2026, month, day, hour, (reviewIndex * 11) % 60, 0));
+}
+
+function buildReviewTitle(productIndex: number, reviewIndex: number) {
+  const title = pickFromPool(
+    reviewTitleTemplates,
+    productIndex * 7 + reviewIndex * 5,
+  );
+
+  return title;
+}
+
+function buildReviewBody(
+  product: (typeof products)[number],
+  productIndex: number,
+  reviewIndex: number,
+) {
+  const opener = pickFromPool(
+    reviewOpeningSentences,
+    productIndex * 3 + reviewIndex,
+  );
+  const performance = pickFromPool(
+    reviewPerformanceSentences,
+    productIndex * 5 + reviewIndex * 2,
+  );
+  const closing = pickFromPool(
+    reviewClosingSentences,
+    productIndex * 11 + reviewIndex * 3,
+  );
+
+  return `Compre ${product.name} para la casa. ${opener} ${performance} ${closing}`;
+}
+
 function mapBadge(badge?: string) {
   switch (badge) {
     case "Sale":
@@ -56,25 +131,35 @@ function mapBadge(badge?: string) {
   }
 }
 
-function buildSampleReviews(product: (typeof products)[number]) {
-  const roundedAverage = Math.round(product.reviews.rating);
-  const sampleCount = Math.min(
-    4,
-    Math.max(1, Math.ceil(product.reviews.rating) - 1),
-  );
+function buildProductReviews(
+  product: (typeof products)[number],
+  productIndex: number,
+) {
+  const reviewCount = getReviewSeedCount(product.reviews.count);
+  const ratings = buildReviewRatings(product.reviews.rating, reviewCount);
 
-  return Array.from({ length: sampleCount }, (_, index) => {
-    const ratingOffset = index % 2 === 0 ? 0 : -1;
-    const rating = clampRating(roundedAverage + ratingOffset);
+  return ratings.map((rating, reviewIndex) => ({
+    reviewerName: pickFromPool(
+      reviewAuthorNames,
+      productIndex * 13 + reviewIndex * 7,
+    ),
+    title: buildReviewTitle(productIndex, reviewIndex),
+    body: buildReviewBody(product, productIndex, reviewIndex),
+    rating,
+    isPublished: true,
+    createdAt: buildReviewCreatedAt(productIndex, reviewIndex),
+  }));
+}
 
-    return {
-      reviewerName: `Sample Customer ${index + 1}`,
-      title: `${product.brand} ${product.subcategory} review ${index + 1}`,
-      body: `${product.name}: ${SAMPLE_REVIEW_BODIES[index % SAMPLE_REVIEW_BODIES.length]}`,
-      rating,
-      isPublished: true,
-    };
-  });
+function mapThreadStatus(status: (typeof seedForumThreads)[number]["status"]) {
+  switch (status) {
+    case "approved":
+      return ForumThreadStatus.APPROVED;
+    case "rejected":
+      return ForumThreadStatus.REJECTED;
+    default:
+      return ForumThreadStatus.PENDING;
+  }
 }
 
 async function resetCatalog() {
@@ -91,16 +176,23 @@ async function resetCatalog() {
   await prisma.exchangeRate.deleteMany();
   await prisma.category.deleteMany();
   await prisma.brand.deleteMany();
+  await prisma.user.deleteMany({
+    where: {
+      email: {
+        endsWith: "@forum.peterparts.local",
+      },
+    },
+  });
 }
 
-function buildForumSeedEmail(user: (typeof mockUsers)[number]) {
+function buildForumSeedEmail(user: (typeof seedForumUsers)[number]) {
   return `${user.id}@forum.peterparts.local`;
 }
 
 async function seedForum() {
   const forumUserIds = new Map<string, string>();
 
-  for (const user of mockUsers) {
+  for (const user of seedForumUsers) {
     const createdUser = await prisma.user.upsert({
       where: {
         email: buildForumSeedEmail(user),
@@ -128,16 +220,18 @@ async function seedForum() {
 
   const threadIds = new Map<string, string>();
 
-  for (const thread of mockThreads) {
+  for (const thread of seedForumThreads) {
     const createdThread = await prisma.forumThread.create({
       data: {
         slug: thread.slug ?? slugify(thread.title),
+        status: mapThreadStatus(thread.status),
+        moderatedAt: thread.moderatedAt ? new Date(thread.moderatedAt) : null,
         title: thread.title,
         content: thread.content,
         tags: thread.tags,
         upvotes: thread.upvotes,
         downvotes: thread.downvotes,
-        authorId: forumUserIds.get(thread.author.id)!,
+        authorId: forumUserIds.get(thread.authorId)!,
         createdAt: new Date(thread.createdAt),
       },
       select: {
@@ -148,23 +242,14 @@ async function seedForum() {
     threadIds.set(thread.id, createdThread.id);
   }
 
-  for (const comment of mockCommentsThread1) {
-    await prisma.forumReply.create({
-      data: {
-        threadId: threadIds.get("thread-1")!,
-        authorId: forumUserIds.get(comment.author.id)!,
-        content: comment.content,
-        upvotes: comment.upvotes,
-        downvotes: comment.downvotes,
-        createdAt: new Date(comment.createdAt),
-      },
-    });
+  for (const thread of seedForumThreads) {
+    const threadId = threadIds.get(thread.id)!;
 
-    for (const reply of comment.replies ?? []) {
+    for (const reply of thread.replies) {
       await prisma.forumReply.create({
         data: {
-          threadId: threadIds.get("thread-1")!,
-          authorId: forumUserIds.get(reply.author.id)!,
+          threadId,
+          authorId: forumUserIds.get(reply.authorId)!,
           content: reply.content,
           upvotes: reply.upvotes,
           downvotes: reply.downvotes,
@@ -271,6 +356,10 @@ async function seedCatalog() {
 
   for (const [index, product] of products.entries()) {
     const categoryKey = `${product.category}::${product.subcategory}`;
+    const productReviews = buildProductReviews(product, index);
+    const reviewAverage =
+      productReviews.reduce((total, review) => total + review.rating, 0) /
+      productReviews.length;
     const createdProduct = await prisma.product.create({
       data: {
         sku: product.id,
@@ -293,8 +382,8 @@ async function seedCatalog() {
         status: ProductStatus.ACTIVE,
         badge: mapBadge(product.badge),
         featuredRank: index + 1,
-        averageRating: product.reviews.rating.toFixed(2),
-        reviewCount: product.reviews.count,
+        averageRating: reviewAverage.toFixed(2),
+        reviewCount: productReviews.length,
         brandId: brandIds.get(product.brand)!,
         categoryId: leafCategoryIds.get(categoryKey)!,
       },
@@ -320,15 +409,15 @@ async function seedCatalog() {
       })),
     });
 
-    const sampleReviews = buildSampleReviews(product);
     await prisma.productReview.createMany({
-      data: sampleReviews.map((review) => ({
+      data: productReviews.map((review) => ({
         productId: createdProduct.id,
         reviewerName: review.reviewerName,
         title: review.title,
         body: review.body,
         rating: review.rating,
         isPublished: review.isPublished,
+        createdAt: review.createdAt,
       })),
     });
   }

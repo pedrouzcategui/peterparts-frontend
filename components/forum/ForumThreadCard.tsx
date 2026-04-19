@@ -3,6 +3,7 @@ import { MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import ShareThreadButton from "@/components/forum/ShareThreadButton";
+import { buildForumThreadPath } from "@/lib/forum";
 import VoteButtons from "./VoteButtons";
 import type { ForumThread } from "@/lib/forum-data";
 import { formatRelativeTime } from "@/lib/forum-data";
@@ -16,7 +17,7 @@ interface ForumThreadCardProps {
  * Similar to Reddit post cards
  */
 export default function ForumThreadCard({ thread }: ForumThreadCardProps) {
-  const threadPath = `/forum/${thread.slug ?? thread.id}`;
+  const threadPath = buildForumThreadPath(thread);
 
   return (
     <Card className="overflow-hidden rounded-[28px] border-border/70 py-0 shadow-sm transition-all hover:border-primary/20 hover:shadow-md">

@@ -1,12 +1,15 @@
 import "server-only";
 
 import { cache } from "react";
+import { products as staticCatalogProducts } from "@/lib/data";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { resolveVesAmount } from "@/lib/currency";
 import { ProductBadge, ProductStatus } from "@/lib/generated/prisma/enums";
 import type {
   AdminColorSuggestion,
   AdminExchangeRate,
+  AdminManagedColor,
+  AdminManagedColorProduct,
   AdminProduct,
   AdminProductEditorColor,
   AdminProductEditorData,
@@ -14,9 +17,12 @@ import type {
 import { normalizeCategoryLabels } from "@/lib/category-labels";
 import {
   buildProductColorFilterValue,
+  normalizeProductColorLabel,
   PREDEFINED_PRODUCT_COLORS,
   resolveProductColorValue,
 } from "@/lib/product-colors";
+import { getBrandQueryValue } from "@/lib/brand-slugs";
+import { runStorefrontReadWithFallback } from "@/lib/storefront-query-resilience";
 import type { FilterGroup, Product } from "@/lib/types";
 import { prisma } from "@/lib/prisma";
 
@@ -262,6 +268,8 @@ export type DatabaseProduct = Prisma.ProductGetPayload<{
   include: typeof productInclude;
 }>;
 
+type StaticCatalogProduct = (typeof staticCatalogProducts)[number];
+
 const exchangeRateSelect = {
   rate: true,
   source: true,
@@ -322,6 +330,19 @@ function mapBadge(badge: ProductBadge | null): Product["badge"] {
   }
 }
 
+function mapStaticBadge(badge?: string): Product["badge"] {
+  switch (badge) {
+    case "Sale":
+      return "Oferta";
+    case "Just In":
+      return "Recien llegado";
+    case "Best Seller":
+      return "Mas vendido";
+    default:
+      return undefined;
+  }
+}
+
 function getProductColorEntries(product: Product) {
   const colorsByValue = new Map<
     string,
@@ -361,6 +382,26 @@ function sortColorSuggestions(values: AdminColorSuggestion[]) {
   return [...values].sort((left, right) =>
     left.label.localeCompare(right.label, "es"),
   );
+}
+
+function sortManagedColorProducts(values: AdminManagedColorProduct[]) {
+  return [...values].sort((left, right) =>
+    left.name.localeCompare(right.name, "es"),
+  );
+}
+
+function sortManagedColors(values: AdminManagedColor[]) {
+  return [...values].sort((left, right) => {
+    if (left.productsCount === 0 && right.productsCount > 0) {
+      return 1;
+    }
+
+    if (left.productsCount > 0 && right.productsCount === 0) {
+      return -1;
+    }
+
+    return left.label.localeCompare(right.label, "es");
+  });
 }
 
 export function mapProduct(
@@ -436,6 +477,64 @@ export function mapProduct(
   };
 }
 
+function mapStaticProduct(
+  product: StaticCatalogProduct,
+  activeExchangeRate: number | null,
+): Product {
+  const translation = PRODUCT_TRANSLATIONS[product.slug];
+  const priceUsd = product.price;
+  const originalPriceUsd = product.originalPrice;
+  const priceVes = resolveVesAmount(undefined, priceUsd, activeExchangeRate);
+  const originalPriceVes = originalPriceUsd
+    ? resolveVesAmount(undefined, originalPriceUsd, activeExchangeRate)
+    : undefined;
+
+  return {
+    id: product.id,
+    databaseId: product.id,
+    sku: product.id,
+    slug: product.slug,
+    name: product.name,
+    brand: toBrand(product.brand),
+    category: product.category,
+    subcategory: product.subcategory,
+    price: priceUsd,
+    priceUsd,
+    priceVes,
+    originalPrice: originalPriceUsd,
+    originalPriceUsd,
+    originalPriceVes,
+    description: translation?.description ?? product.description,
+    features: translation?.features ?? product.features,
+    color: translateTerm(product.color),
+    colorValue: resolveProductColorValue(product.color, null),
+    style: product.style,
+    images: product.images.map((image) => ({
+      src: image.src,
+      alt: translateImageAlt(image.alt),
+      variantLabels: [],
+    })),
+    variants: product.variants.map((variant) => ({
+      label: translateTerm(variant.label),
+      colorValue: resolveProductColorValue(variant.label, null),
+      available: variant.available,
+    })),
+    reviews: {
+      rating: product.reviews.rating,
+      count: product.reviews.count,
+    },
+    badge: mapStaticBadge(product.badge),
+    inStock: product.inStock,
+    shippingInfo: translateShippingInfo(product.shippingInfo),
+  };
+}
+
+function getStaticProducts(activeExchangeRate: number | null): Product[] {
+  return staticCatalogProducts.map((product) =>
+    mapStaticProduct(product, activeExchangeRate),
+  );
+}
+
 function mapAdminStatus(status: ProductStatus): AdminProduct["status"] {
   switch (status) {
     case ProductStatus.ACTIVE:
@@ -477,9 +576,15 @@ const fetchActiveExchangeRate = cache(async () => {
 });
 
 export const getActiveExchangeRateValue = cache(async (): Promise<number | null> => {
-  const exchangeRate = await fetchActiveExchangeRate();
+  return runStorefrontReadWithFallback(
+    "active exchange rate",
+    async () => {
+      const exchangeRate = await fetchActiveExchangeRate();
 
-  return exchangeRate ? Number(exchangeRate.rate) : null;
+      return exchangeRate ? Number(exchangeRate.rate) : null;
+    },
+    () => null,
+  );
 });
 
 export const getAdminExchangeRate = cache(
@@ -500,57 +605,78 @@ export const getAdminExchangeRate = cache(
 );
 
 export const getProducts = cache(async (): Promise<Product[]> => {
-  const [products, activeExchangeRate] = await Promise.all([
-    fetchProducts(),
-    getActiveExchangeRateValue(),
-  ]);
+  return runStorefrontReadWithFallback(
+    "catalog products",
+    async () => {
+      const [products, activeExchangeRate] = await Promise.all([
+        fetchProducts(),
+        getActiveExchangeRateValue(),
+      ]);
 
-  return products.map((product) => mapProduct(product, activeExchangeRate));
+      return products.map((product) => mapProduct(product, activeExchangeRate));
+    },
+    async () => getStaticProducts(await getActiveExchangeRateValue()),
+  );
 });
 
 export const getFeaturedProducts = cache(async (): Promise<Product[]> => {
-  const [products, activeExchangeRate] = await Promise.all([
-    prisma.product.findMany({
-      where: {
-        status: ProductStatus.ACTIVE,
-        featuredRank: {
-          not: null,
-        },
-      },
-      include: productInclude,
-      orderBy: [
-        {
-          featuredRank: "asc",
-        },
-        {
-          createdAt: "desc",
-        },
-      ],
-      take: 6,
-    }),
-    getActiveExchangeRateValue(),
-  ]);
+  return runStorefrontReadWithFallback(
+    "featured products",
+    async () => {
+      const [products, activeExchangeRate] = await Promise.all([
+        prisma.product.findMany({
+          where: {
+            status: ProductStatus.ACTIVE,
+            featuredRank: {
+              not: null,
+            },
+          },
+          include: productInclude,
+          orderBy: [
+            {
+              featuredRank: "asc",
+            },
+            {
+              createdAt: "desc",
+            },
+          ],
+          take: 6,
+        }),
+        getActiveExchangeRateValue(),
+      ]);
 
-  return products.map((product) => mapProduct(product, activeExchangeRate));
+      return products.map((product) => mapProduct(product, activeExchangeRate));
+    },
+    async () => getStaticProducts(await getActiveExchangeRateValue()).slice(0, 6),
+  );
 });
 
 export const getProductBySlug = cache(
   async (slug: string): Promise<Product | null> => {
-    const [product, activeExchangeRate] = await Promise.all([
-      prisma.product.findUnique({
-        where: {
-          slug,
-        },
-        include: productInclude,
-      }),
-      getActiveExchangeRateValue(),
-    ]);
+    return runStorefrontReadWithFallback(
+      `product by slug (${slug})`,
+      async () => {
+        const [product, activeExchangeRate] = await Promise.all([
+          prisma.product.findUnique({
+            where: {
+              slug,
+            },
+            include: productInclude,
+          }),
+          getActiveExchangeRateValue(),
+        ]);
 
-    if (!product || product.status !== ProductStatus.ACTIVE) {
-      return null;
-    }
+        if (!product || product.status !== ProductStatus.ACTIVE) {
+          return null;
+        }
 
-    return mapProduct(product, activeExchangeRate);
+        return mapProduct(product, activeExchangeRate);
+      },
+      async () =>
+        getStaticProducts(await getActiveExchangeRateValue()).find(
+          (product) => product.slug === slug,
+        ) ?? null,
+    );
   },
 );
 
@@ -641,6 +767,148 @@ export const getAdminColorSuggestions = cache(
   },
 );
 
+export const getAdminManagedColors = cache(
+  async (): Promise<AdminManagedColor[]> => {
+    const products = await prisma.product.findMany({
+      include: {
+        brand: true,
+        variants: {
+          orderBy: {
+            sortOrder: "asc",
+          },
+        },
+      },
+      orderBy: [
+        {
+          brand: {
+            name: "asc",
+          },
+        },
+        {
+          name: "asc",
+        },
+      ],
+    });
+
+    const predefinedColorsByKey = new Map(
+      PREDEFINED_PRODUCT_COLORS.map((color) => [
+        normalizeProductColorLabel(color.label).toLocaleLowerCase("es"),
+        color,
+      ]),
+    );
+
+    const colorsByKey = new Map<
+      string,
+      AdminManagedColor & { productsById: Map<string, AdminManagedColorProduct> }
+    >();
+
+    const ensureColor = (label: string, colorValue?: string | null) => {
+      const normalizedLabel = normalizeProductColorLabel(label);
+
+      if (!normalizedLabel) {
+        return null;
+      }
+
+      const key = normalizedLabel.toLocaleLowerCase("es");
+      const existingColor = colorsByKey.get(key);
+
+      if (existingColor) {
+        return { key, color: existingColor };
+      }
+
+      const predefinedColor = predefinedColorsByKey.get(key);
+      const nextColor = {
+        label: predefinedColor?.label ?? normalizedLabel,
+        colorValue: resolveProductColorValue(
+          normalizedLabel,
+          colorValue ?? predefinedColor?.colorValue,
+        ),
+        isPredefined: Boolean(predefinedColor),
+        productsCount: 0,
+        variantCount: 0,
+        availableVariantCount: 0,
+        primaryProductsCount: 0,
+        products: [],
+        productsById: new Map<string, AdminManagedColorProduct>(),
+      } satisfies AdminManagedColor & {
+        productsById: Map<string, AdminManagedColorProduct>;
+      };
+
+      colorsByKey.set(key, nextColor);
+
+      return { key, color: nextColor };
+    };
+
+    for (const predefinedColor of PREDEFINED_PRODUCT_COLORS) {
+      ensureColor(predefinedColor.label, predefinedColor.colorValue);
+    }
+
+    for (const product of products) {
+      const productSummary = {
+        id: product.id,
+        name: product.name,
+        brand: product.brand.name,
+        status: mapAdminStatus(product.status),
+      } satisfies AdminManagedColorProduct;
+
+      const registerProductUsage = (
+        label: string,
+        colorValue?: string | null,
+        options?: {
+          countsAsVariant?: boolean;
+          countsAsAvailable?: boolean;
+          countsAsPrimary?: boolean;
+        },
+      ) => {
+        const colorEntry = ensureColor(label, colorValue);
+
+        if (!colorEntry) {
+          return;
+        }
+
+        const { color } = colorEntry;
+
+        if (!color.productsById.has(product.id)) {
+          color.productsById.set(product.id, productSummary);
+          color.productsCount += 1;
+        }
+
+        if (options?.countsAsVariant) {
+          color.variantCount += 1;
+        }
+
+        if (options?.countsAsAvailable) {
+          color.availableVariantCount += 1;
+        }
+
+        if (options?.countsAsPrimary) {
+          color.primaryProductsCount += 1;
+        }
+      };
+
+      for (const variant of product.variants) {
+        registerProductUsage(variant.label, variant.colorValue, {
+          countsAsVariant: true,
+          countsAsAvailable: variant.available,
+        });
+      }
+
+      if (product.primaryColor) {
+        registerProductUsage(product.primaryColor, product.primaryColorValue, {
+          countsAsPrimary: true,
+        });
+      }
+    }
+
+    return sortManagedColors(
+      Array.from(colorsByKey.values()).map(({ productsById, ...color }) => ({
+        ...color,
+        products: sortManagedColorProducts(Array.from(productsById.values())),
+      })),
+    );
+  },
+);
+
 export const getFilterGroups = cache(async (): Promise<FilterGroup[]> => {
   const products = await getProducts();
   const brandOptions = Array.from(
@@ -649,7 +917,7 @@ export const getFilterGroups = cache(async (): Promise<FilterGroup[]> => {
     .sort((left, right) => left.localeCompare(right, "es"))
     .map((brand) => ({
       label: brand,
-      value: brand,
+      value: getBrandQueryValue(brand),
       count: products.filter((product) => product.brand === brand).length,
     }));
 

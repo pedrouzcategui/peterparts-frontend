@@ -2,6 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
+import { runStorefrontReadWithFallback } from "@/lib/storefront-query-resilience";
 import {
   cloneStorefrontSettings,
   DEFAULT_STOREFRONT_SETTINGS,
@@ -56,13 +57,19 @@ const fetchStorefrontSettings = cache(async () => {
 
 export const getStorefrontSettings = cache(
   async (): Promise<StorefrontSettings> => {
-    const storefrontSettings = await fetchStorefrontSettings();
+    return runStorefrontReadWithFallback(
+      "storefront settings",
+      async () => {
+        const storefrontSettings = await fetchStorefrontSettings();
 
-    if (!storefrontSettings) {
-      return cloneStorefrontSettings(DEFAULT_STOREFRONT_SETTINGS);
-    }
+        if (!storefrontSettings) {
+          return cloneStorefrontSettings(DEFAULT_STOREFRONT_SETTINGS);
+        }
 
-    return mapStorefrontSettings(storefrontSettings);
+        return mapStorefrontSettings(storefrontSettings);
+      },
+      () => cloneStorefrontSettings(DEFAULT_STOREFRONT_SETTINGS),
+    );
   },
 );
 

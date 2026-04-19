@@ -36,6 +36,34 @@ export function buildLoginRedirectPath(redirectTo: string): string {
   return `/login?redirectTo=${encodeURIComponent(redirectTo)}`;
 }
 
+type FavouriteProductDelegate = {
+  findMany: typeof prisma.favoriteProduct.findMany;
+  findUnique: typeof prisma.favoriteProduct.findUnique;
+  count: typeof prisma.favoriteProduct.count;
+  create: typeof prisma.favoriteProduct.create;
+  delete: typeof prisma.favoriteProduct.delete;
+};
+
+function getFavouriteProductDelegate(): FavouriteProductDelegate | null {
+  const favouriteProduct = (
+    prisma as typeof prisma & {
+      favoriteProduct?: Partial<FavouriteProductDelegate>;
+    }
+  ).favoriteProduct;
+
+  if (
+    typeof favouriteProduct?.findMany !== "function" ||
+    typeof favouriteProduct?.findUnique !== "function" ||
+    typeof favouriteProduct?.count !== "function" ||
+    typeof favouriteProduct?.create !== "function" ||
+    typeof favouriteProduct?.delete !== "function"
+  ) {
+    return null;
+  }
+
+  return favouriteProduct as FavouriteProductDelegate;
+}
+
 function isFavouritePersistenceUnavailableError(error: unknown): boolean {
   return (
     error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -68,8 +96,14 @@ export async function getFavouriteProductIdsForUser(
   userId: string,
   productIds?: string[],
 ): Promise<Set<string>> {
+  const favouriteProduct = getFavouriteProductDelegate();
+
+  if (!favouriteProduct) {
+    return new Set<string>();
+  }
+
   try {
-    const favourites = await prisma.favoriteProduct.findMany({
+    const favourites = await favouriteProduct.findMany({
       where: {
         userId,
         ...(productIds && productIds.length > 0
@@ -101,9 +135,15 @@ export async function getFavouriteProductIdsForUser(
 export async function getFavouriteProductsForUser(
   userId: string,
 ): Promise<FavouriteProductItem[]> {
+  const favouriteProduct = getFavouriteProductDelegate();
+
+  if (!favouriteProduct) {
+    return [];
+  }
+
   try {
     const [favourites, activeExchangeRate] = await Promise.all([
-      prisma.favoriteProduct.findMany({
+      favouriteProduct.findMany({
         where: {
           userId,
           product: {
@@ -136,8 +176,14 @@ export async function getFavouriteProductsForUser(
 }
 
 export async function getFavouriteCountForUser(userId: string): Promise<number> {
+  const favouriteProduct = getFavouriteProductDelegate();
+
+  if (!favouriteProduct) {
+    return 0;
+  }
+
   try {
-    return await prisma.favoriteProduct.count({
+    return await favouriteProduct.count({
       where: {
         userId,
         product: {
@@ -176,8 +222,18 @@ export async function toggleFavoriteForUser(
     };
   }
 
+  const favouriteProduct = getFavouriteProductDelegate();
+
+  if (!favouriteProduct) {
+    return {
+      status: "error",
+      message:
+        "Los favoritos estaran disponibles despues de regenerar el cliente de Prisma.",
+    };
+  }
+
   try {
-    const existingFavourite = await prisma.favoriteProduct.findUnique({
+    const existingFavourite = await favouriteProduct.findUnique({
       where: {
         userId_productId: {
           userId,
@@ -190,7 +246,7 @@ export async function toggleFavoriteForUser(
     });
 
     if (existingFavourite) {
-      await prisma.favoriteProduct.delete({
+      await favouriteProduct.delete({
         where: {
           userId_productId: {
             userId,
@@ -205,7 +261,7 @@ export async function toggleFavoriteForUser(
       };
     }
 
-    await prisma.favoriteProduct.create({
+    await favouriteProduct.create({
       data: {
         userId,
         productId: product.id,

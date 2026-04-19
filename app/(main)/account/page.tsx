@@ -22,7 +22,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getFavouriteCountForUser } from "@/lib/favourites";
-import { getForumQuestionSummaryForUser } from "@/lib/forum";
+import {
+  buildForumThreadPath,
+  getForumQuestionSummaryForUser,
+} from "@/lib/forum";
+import { getForumThreadStatusLabel } from "@/lib/forum-data";
 import { getCustomerOrders } from "@/lib/order-data";
 import {
   formatOrderCurrency,
@@ -56,6 +60,25 @@ function OrderStatusBadge({ status }: { status: OrderDisplayStatus }) {
       className={`capitalize ${presentation.className}`}
     >
       {presentation.label}
+    </Badge>
+  );
+}
+
+function ForumThreadStatusBadge({
+  status,
+}: {
+  status: "pending" | "approved" | "rejected";
+}) {
+  const className =
+    status === "approved"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
+      : status === "pending"
+        ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300"
+        : "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300";
+
+  return (
+    <Badge variant="outline" className={className}>
+      {getForumThreadStatusLabel(status)}
     </Badge>
   );
 }
@@ -391,11 +414,14 @@ export default async function AccountPage() {
                   <div className="mt-4 space-y-2">
                     {questionSummary.recentThreads.map((thread) => (
                       <Link
-                        key={thread.slug ?? thread.id}
-                        href={`/forum/${thread.slug ?? thread.id}`}
+                        key={thread.id}
+                        href={buildForumThreadPath(thread)}
                         className="block rounded-2xl border border-border/70 bg-background px-3 py-3 text-sm transition-colors hover:border-primary/20 hover:bg-muted/60"
                       >
-                        <span className="font-medium text-foreground">{thread.title}</span>
+                        <span className="flex items-start justify-between gap-3">
+                          <span className="font-medium text-foreground">{thread.title}</span>
+                          <ForumThreadStatusBadge status={thread.status} />
+                        </span>
                       </Link>
                     ))}
                   </div>
