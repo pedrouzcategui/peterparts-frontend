@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { Heart } from "lucide-react";
 import { useCart } from "@/components/providers/CartProvider";
+import FavouriteToggleButton from "@/components/products/FavouriteToggleButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -16,20 +15,27 @@ import {
 import MarkdownContent from "@/components/products/MarkdownContent";
 import { formatUsd, formatVes } from "@/lib/currency";
 import { cn } from "@/lib/utils";
-import type { Product } from "@/lib/types";
+import type { Product, ProductImage } from "@/lib/types";
 
 interface ProductInfoProps {
   product: Product;
+  initiallyFavourited: boolean;
+  selectedVariant: string | null;
+  onSelectedVariantChange: (variantLabel: string) => void;
+  selectedImage: ProductImage | null;
 }
 
 /**
  * ProductInfo — Client Component
  * Right-side panel on the PDP: name, price, variant picker, add to bag, etc.
  */
-export default function ProductInfo({ product }: ProductInfoProps) {
-  const [selectedVariant, setSelectedVariant] = useState<string | null>(
-    product.variants.find((variant) => variant.available)?.label ?? null,
-  );
+export default function ProductInfo({
+  product,
+  initiallyFavourited,
+  selectedVariant,
+  onSelectedVariantChange,
+  selectedImage,
+}: ProductInfoProps) {
   const { addProduct, itemCount } = useCart();
 
   const activeVariant = product.variants.find(
@@ -55,7 +61,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       : null;
 
   const handleAddToBag = () => {
-    addProduct(product, selectedVariant ?? undefined);
+    addProduct(product, selectedVariant ?? undefined, 1, selectedImage ?? undefined);
   };
 
   return (
@@ -89,24 +95,14 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       {/* Variant selector */}
       {product.variants.length > 0 ? (
         <div>
-          <h2 className="text-sm font-semibold mb-2">
-            Selecciona{" "}
-            {[
-              "Refrigerators",
-              "Ranges & Ovens",
-              "Refrigeradores",
-              "Cocinas y hornos",
-            ].includes(product.subcategory)
-              ? "acabado"
-              : "color"}
-          </h2>
+          <h2 className="text-sm font-semibold mb-2">Selecciona una opcion</h2>
           <div className="grid grid-cols-2 gap-2">
             {product.variants.map((variant) => (
               <button
                 key={variant.label}
                 type="button"
                 disabled={!variant.available}
-                onClick={() => setSelectedVariant(variant.label)}
+                onClick={() => onSelectedVariantChange(variant.label)}
                 className={cn(
                   "rounded-md border px-4 py-3 text-sm transition-colors",
                   variant.available
@@ -116,7 +112,14 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                     "border-foreground ring-1 ring-foreground",
                 )}
               >
-                {variant.label}
+                <span className="flex items-center gap-2">
+                  <span
+                    className="h-3.5 w-3.5 rounded-full border border-black/10"
+                    style={{ backgroundColor: variant.colorValue }}
+                    aria-hidden="true"
+                  />
+                  <span>{variant.label}</span>
+                </span>
               </button>
             ))}
           </div>
@@ -133,9 +136,13 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         >
           {product.inStock ? "Anadir al carrito" : "No disponible por ahora"}
         </Button>
-        <Button variant="outline" size="lg" className="w-full text-base">
-          Guardar <Heart className="ml-2 h-5 w-5" />
-        </Button>
+        <FavouriteToggleButton
+          productId={product.databaseId}
+          redirectPath={`/products/${product.slug}`}
+          initiallyFavourited={initiallyFavourited}
+          size="lg"
+          className="w-full text-base"
+        />
         {itemCount > 0 ? (
           <p className="text-center text-sm text-muted-foreground">
             {itemCount} articulo{itemCount === 1 ? "" : "s"} en tu carrito.{" "}
@@ -153,9 +160,9 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       <div className="space-y-1">
         <p className="text-sm font-semibold">Envio</p>
         <p className="text-sm text-muted-foreground">{product.shippingInfo}</p>
-        <p className="text-sm font-semibold mt-2">Retiro gratis</p>
+        <p className="text-sm font-semibold mt-2">Retiro coordinado</p>
         <button type="button" className="text-sm underline underline-offset-2">
-          Buscar una tienda
+          Ver puntos de entrega
         </button>
       </div>
 
@@ -167,7 +174,16 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         <ul className="mt-3 space-y-1">
           <li className="text-sm text-muted-foreground">
             <span className="font-medium text-foreground">Color mostrado:</span>{" "}
-            {product.color}
+            <span className="inline-flex items-center gap-2">
+              {product.colorValue ? (
+                <span
+                  className="h-3.5 w-3.5 rounded-full border border-black/10"
+                  style={{ backgroundColor: product.colorValue }}
+                  aria-hidden="true"
+                />
+              ) : null}
+              <span>{product.color}</span>
+            </span>
           </li>
           <li className="text-sm text-muted-foreground">
             <span className="font-medium text-foreground">Modelo:</span>{" "}

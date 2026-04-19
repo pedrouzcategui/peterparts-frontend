@@ -33,6 +33,22 @@ export default function AdminTagInput({
 }: AdminTagInputProps) {
   const [draftValue, setDraftValue] = useState("");
   const listId = useId();
+  const normalizedDraftValue = normalizeValue(draftValue).toLocaleLowerCase("es");
+  const visibleSuggestions = suggestions.filter((suggestion) => {
+    const alreadySelected = values.some(
+      (value) => value.toLocaleLowerCase("es") === suggestion.toLocaleLowerCase("es"),
+    );
+
+    if (alreadySelected) {
+      return false;
+    }
+
+    if (!normalizedDraftValue) {
+      return true;
+    }
+
+    return suggestion.toLocaleLowerCase("es").includes(normalizedDraftValue);
+  });
 
   const addTags = (rawValue: string) => {
     const nextValues = rawValue.split(",").map(normalizeValue).filter(Boolean);
@@ -116,6 +132,23 @@ export default function AdminTagInput({
           onKeyDown={handleKeyDown}
           onBlur={() => addTags(draftValue)}
         />
+        {visibleSuggestions.length > 0 ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {visibleSuggestions.map((suggestion) => (
+              <Button
+                key={suggestion}
+                type="button"
+                variant="outline"
+                size="xs"
+                className="rounded-full"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => addTags(suggestion)}
+              >
+                {suggestion}
+              </Button>
+            ))}
+          </div>
+        ) : null}
         {suggestions.length > 0 ? (
           <datalist id={listId}>
             {suggestions.map((suggestion) => (

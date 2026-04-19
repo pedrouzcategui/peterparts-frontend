@@ -3,10 +3,11 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Mail } from "lucide-react";
 import { initialAuthActionState } from "@/app/(auth)/action-state";
 import {
   loginWithPasswordAction,
+  requestMagicLinkAction,
   resendVerificationEmailAction,
   signInWithGoogleAction,
 } from "@/app/(auth)/actions";
@@ -20,6 +21,7 @@ import { cn } from "@/lib/utils";
 
 interface LoginPageClientProps {
   googleEnabled: boolean;
+  magicLinkEnabled: boolean;
   redirectTo: string;
 }
 
@@ -46,6 +48,7 @@ function FeedbackMessage({
 
 export default function LoginPageClient({
   googleEnabled,
+  magicLinkEnabled,
   redirectTo,
 }: LoginPageClientProps) {
   const router = useRouter();
@@ -53,14 +56,24 @@ export default function LoginPageClient({
     loginWithPasswordAction,
     initialAuthActionState,
   );
+  const [rawMagicLinkState, magicLinkAction, isMagicLinkPending] = useActionState(
+    requestMagicLinkAction,
+    initialAuthActionState,
+  );
   const [rawResendState, resendAction, isResendPending] = useActionState(
     resendVerificationEmailAction,
     initialAuthActionState,
   );
   const loginState = normalizeAuthActionState(rawLoginState);
+  const magicLinkState = normalizeAuthActionState(rawMagicLinkState);
   const resendState = normalizeAuthActionState(rawResendState);
-  const isLoading = isLoginPending || isResendPending;
-  const feedbackState = resendState.status !== "idle" ? resendState : loginState;
+  const isLoading = isLoginPending || isMagicLinkPending || isResendPending;
+  const feedbackState =
+    magicLinkState.status !== "idle"
+      ? magicLinkState
+      : resendState.status !== "idle"
+        ? resendState
+        : loginState;
   const hasFeedbackMessage = feedbackState.message.trim().length > 0;
 
   return (
@@ -137,6 +150,54 @@ export default function LoginPageClient({
           {isLoginPending ? "Iniciando sesion..." : "Iniciar sesion"}
         </Button>
       </form>
+
+      {magicLinkEnabled ? (
+        <div className="rounded-3xl border border-border/70 bg-muted/20 p-5">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Mail className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              <h2 className="text-base font-semibold">Entrar con enlace magico</h2>
+              <p className="text-sm text-muted-foreground">
+                Recibe un enlace seguro en tu correo y entra sin escribir tu contraseña.
+              </p>
+            </div>
+          </div>
+
+          <form action={magicLinkAction} className="mt-4 space-y-4">
+            <input type="hidden" name="redirectTo" value={redirectTo} />
+
+            <div className="space-y-2">
+              <Label htmlFor="magic-link-email">Correo electronico</Label>
+              <Input
+                id="magic-link-email"
+                name="email"
+                type="email"
+                placeholder="tu@correo.com"
+                autoComplete="email"
+                defaultValue={magicLinkState.email ?? loginState.email ?? ""}
+                required
+                disabled={isLoading}
+              />
+            </div>
+
+            <Button type="submit" variant="outline" className="h-11 w-full" disabled={isLoading}>
+              {isMagicLinkPending ? "Enviando enlace..." : "Enviar enlace de acceso"}
+            </Button>
+          </form>
+        </div>
+      ) : (
+        <p className="rounded-2xl border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
+          El acceso con enlace estara disponible cuando configures
+          {" "}
+          RESEND_API_KEY
+          {" "}
+          y
+          {" "}
+          RESEND_FROM_EMAIL.
+        </p>
+      )}
 
       {loginState.requiresEmailVerification && loginState.email ? (
         <form action={resendAction} className="rounded-2xl border border-border bg-muted/30 p-4">

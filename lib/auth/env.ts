@@ -4,19 +4,27 @@ function trimTrailingSlash(value: string): string {
   return value.endsWith("/") ? value.slice(0, -1) : value;
 }
 
+export function getResendApiKey(): string | null {
+  return process.env.AUTH_RESEND_KEY ?? process.env.RESEND_API_KEY ?? null;
+}
+
 function normalizeEnvValue(value: string | undefined): string | null {
   const normalizedValue = value?.trim();
   return normalizedValue ? normalizedValue : null;
 }
 
 export function getGoogleClientId(): string | null {
-  return normalizeEnvValue(process.env.AUTH_GOOGLE_ID)
-    ?? normalizeEnvValue(process.env.GOOGLE_CLIENT_ID);
+  return (
+    normalizeEnvValue(process.env.AUTH_GOOGLE_ID) ??
+    normalizeEnvValue(process.env.GOOGLE_CLIENT_ID)
+  );
 }
 
 export function getGoogleClientSecret(): string | null {
-  return normalizeEnvValue(process.env.AUTH_GOOGLE_SECRET)
-    ?? normalizeEnvValue(process.env.GOOGLE_CLIENT_SECRET);
+  return (
+    normalizeEnvValue(process.env.AUTH_GOOGLE_SECRET) ??
+    normalizeEnvValue(process.env.GOOGLE_CLIENT_SECRET)
+  );
 }
 
 export const isGoogleAuthEnabled = Boolean(
@@ -24,8 +32,7 @@ export const isGoogleAuthEnabled = Boolean(
 );
 
 export const isResendConfigured = Boolean(
-  normalizeEnvValue(process.env.RESEND_API_KEY) &&
-    normalizeEnvValue(process.env.RESEND_FROM_EMAIL),
+  process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL,
 );
 
 export function getAppUrl(): string {

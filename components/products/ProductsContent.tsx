@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import ProductGrid from "@/components/products/ProductGrid";
 import Pagination from "@/components/products/Pagination";
+import { buildProductColorFilterValue } from "@/lib/product-colors";
 import type { Product } from "@/lib/types";
 
 const PRODUCTS_PER_PAGE = 6;
@@ -84,16 +85,16 @@ export default function ProductsContent({ allProducts }: ProductsContentProps) {
     const colors = searchParams.get("color")?.split(",");
     if (colors?.length) {
       result = result.filter((p) => {
-        const productColor = p.color.toLowerCase();
-        return colors.some((color) => {
-          if (color === "stainless-steel")
-            return productColor.includes("stainless");
-          if (color === "black") return productColor.includes("black");
-          if (color === "red") return productColor.includes("red");
-          if (color === "white") return productColor.includes("white");
-          if (color === "silver") return productColor.includes("silver");
-          return false;
-        });
+        const productColors = new Set(
+          [
+            p.color,
+            ...p.variants.map((variant) => variant.label),
+          ]
+            .filter(Boolean)
+            .map((color) => buildProductColorFilterValue(color)),
+        );
+
+        return colors.some((color) => productColors.has(color));
       });
     }
 

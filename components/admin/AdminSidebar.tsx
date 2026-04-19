@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   ShoppingCart,
   Package,
+  Tags,
   Users,
   FileText,
   Percent,
@@ -20,7 +21,8 @@ const mainNavItems = [
   { href: "/admin", label: "Panel", icon: LayoutDashboard },
   { href: "/admin/orders", label: "Pedidos", icon: ShoppingCart },
   { href: "/admin/products", label: "Productos", icon: Package },
-  { href: "/admin/users", label: "Clientes", icon: Users },
+  { href: "/admin/categories", label: "Categorias", icon: Tags },
+  { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/reports", label: "Reportes", icon: FileText },
   { href: "/admin/discounts", label: "Descuentos", icon: Percent },
 ];

@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { PackageSearch, Search, Sparkles, UserRound } from "lucide-react";
+import { Heart, PackageSearch, Search, Sparkles, UserRound } from "lucide-react";
 import { auth } from "@/auth";
+import { getFavouriteCountForUser } from "@/lib/favourites";
 import { prisma } from "@/lib/prisma";
 import CartButton from "@/components/cart/CartButton";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,7 @@ export default async function SiteHeader() {
     ? await prisma.user.findUnique({
         where: { email },
         select: {
+          id: true,
           firstName: true,
           name: true,
         },
@@ -73,6 +75,12 @@ export default async function SiteHeader() {
     getFirstNameFromEmail(email);
   const isSignedIn = Boolean(session?.user);
   const accountHref = isSignedIn ? "/account" : "/login";
+  const favouritesHref = isSignedIn
+    ? "/favourites"
+    : "/login?redirectTo=%2Ffavourites";
+  const favouriteCount = currentUser?.id
+    ? await getFavouriteCountForUser(currentUser.id)
+    : 0;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#e7e1d8] bg-white text-[#1A1714] shadow-[0_10px_30px_rgba(26,23,20,0.05)] dark:border-border dark:bg-background/95 dark:text-foreground dark:shadow-none dark:supports-backdrop-filter:bg-background/60">
@@ -135,6 +143,23 @@ export default async function SiteHeader() {
             >
               <Link href={accountHref}>
                 <UserRound className="h-5 w-5" />
+              </Link>
+            </Button>
+
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              aria-label={isSignedIn ? `Favoritos (${favouriteCount})` : "Favoritos"}
+              className="relative text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
+            >
+              <Link href={favouritesHref}>
+                <Heart className="h-5 w-5" />
+                {favouriteCount > 0 ? (
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[10px] font-semibold text-primary dark:bg-primary dark:text-primary-foreground">
+                    {favouriteCount > 9 ? "9+" : favouriteCount}
+                  </span>
+                ) : null}
               </Link>
             </Button>
 

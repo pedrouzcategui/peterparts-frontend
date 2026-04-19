@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 import { requireAdminActionAccess } from "@/lib/auth/admin";
 import {
   archiveAdminProduct,
+  archiveAdminProducts,
   createAdminProduct,
   hardDeleteAdminProduct,
+  hardDeleteAdminProducts,
   importPlaceholderProducts,
   restoreAdminProduct,
   updateAdminProduct,
@@ -26,6 +28,8 @@ export interface AdminProductFormInput {
 export interface AdminProductActionResult {
   ok: boolean;
   message: string;
+  count?: number;
+  total?: number;
 }
 
 function mapInput(input: AdminProductFormInput): AdminProductWriteInput {
@@ -104,7 +108,68 @@ export async function archiveAdminProductAction(
 
     return {
       ok: true,
-      message: "Producto enviado a la papelera.",
+      message: "Producto archivado correctamente.",
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message: extractErrorMessage(error),
+    };
+  }
+}
+
+export async function archiveAdminProductsAction(
+  productIds: string[],
+): Promise<AdminProductActionResult> {
+  try {
+    await requireAdminActionAccess();
+
+    const normalizedProductIds = productIds
+      .filter((productId) => typeof productId === "string")
+      .map((productId) => productId.trim())
+      .filter(Boolean);
+
+    if (normalizedProductIds.length === 0) {
+      return {
+        ok: false,
+        message: "Debes seleccionar al menos un producto.",
+      };
+    }
+
+    const { matchedCount, archivedCount } = await archiveAdminProducts(
+      normalizedProductIds,
+    );
+    revalidateProductPaths();
+
+    if (archivedCount === 0) {
+      return {
+        ok: true,
+        message:
+          matchedCount === 1
+            ? "El producto seleccionado ya estaba archivado."
+            : `Los ${matchedCount} productos seleccionados ya estaban archivados.`,
+        count: archivedCount,
+        total: matchedCount,
+      };
+    }
+
+    if (archivedCount === matchedCount) {
+      return {
+        ok: true,
+        message:
+          archivedCount === 1
+            ? "1 producto archivado correctamente."
+            : `${archivedCount} productos archivados correctamente.`,
+        count: archivedCount,
+        total: matchedCount,
+      };
+    }
+
+    return {
+      ok: true,
+      message: `Se archivaron ${archivedCount} de ${matchedCount} productos seleccionados.`,
+      count: archivedCount,
+      total: matchedCount,
     };
   } catch (error) {
     return {
@@ -145,6 +210,64 @@ export async function hardDeleteAdminProductAction(
     return {
       ok: true,
       message: "Producto eliminado definitivamente.",
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message: extractErrorMessage(error),
+    };
+  }
+}
+
+export async function hardDeleteAdminProductsAction(
+  productIds: string[],
+): Promise<AdminProductActionResult> {
+  try {
+    await requireAdminActionAccess();
+
+    const normalizedProductIds = productIds
+      .filter((productId) => typeof productId === "string")
+      .map((productId) => productId.trim())
+      .filter(Boolean);
+
+    if (normalizedProductIds.length === 0) {
+      return {
+        ok: false,
+        message: "Debes seleccionar al menos un producto.",
+      };
+    }
+
+    const { matchedCount, deletedCount } = await hardDeleteAdminProducts(
+      normalizedProductIds,
+    );
+    revalidateProductPaths();
+
+    if (deletedCount === 0) {
+      return {
+        ok: false,
+        message: "No se pudo eliminar ninguno de los productos seleccionados.",
+        count: deletedCount,
+        total: matchedCount,
+      };
+    }
+
+    if (deletedCount === matchedCount) {
+      return {
+        ok: true,
+        message:
+          deletedCount === 1
+            ? "1 producto eliminado definitivamente."
+            : `${deletedCount} productos eliminados definitivamente.`,
+        count: deletedCount,
+        total: matchedCount,
+      };
+    }
+
+    return {
+      ok: true,
+      message: `Se eliminaron ${deletedCount} de ${matchedCount} productos seleccionados.`,
+      count: deletedCount,
+      total: matchedCount,
     };
   } catch (error) {
     return {

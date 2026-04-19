@@ -1,7 +1,11 @@
 import "server-only";
 
+import { UserRole } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
-import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/auth/email";
+import {
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+} from "@/lib/auth/email";
 import { hashPassword, validatePassword, verifyPassword } from "@/lib/auth/password";
 import { generateToken, hashToken } from "@/lib/auth/tokens";
 
@@ -9,6 +13,8 @@ const EMAIL_VERIFICATION_TTL_MS = 1000 * 60 * 60 * 24;
 const PASSWORD_RESET_TTL_MS = 1000 * 60 * 60;
 const GENERIC_PASSWORD_RESET_MESSAGE =
   "Si encontramos una cuenta compatible, te enviaremos instrucciones a tu correo.";
+const GENERIC_MAGIC_LINK_MESSAGE =
+  "Si existe una cuenta verificada con ese correo, hemos enviado un enlace de acceso.";
 
 type CredentialsFailureReason =
   | "invalid_credentials"
@@ -47,13 +53,78 @@ export interface AuthMutationResult {
   email?: string;
 }
 
+export interface MagicLinkRequestResult extends AuthMutationResult {
+  eligible: boolean;
+}
+
 export interface TokenConfirmationResult {
   ok: boolean;
   message: string;
 }
 
+type RedirectInput = string | string[] | null | undefined;
+
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+export function normalizeAuthRedirectTarget(value: RedirectInput): string {
+  if (typeof value !== "string") {
+    return "/";
+  }
+
+  return value.startsWith("/") && !value.startsWith("//") ? value : "/";
+}
+
+export function buildLoginSuccessRedirectPath(redirectTo: string): string {
+  const [pathWithQuery, hash = ""] = redirectTo.split("#", 2);
+  const [pathname, query = ""] = pathWithQuery.split("?", 2);
+  const params = new URLSearchParams(query);
+
+  params.set("auth", "login-success");
+
+  const nextQuery = params.toString();
+
+  return `${pathname}${nextQuery ? `?${nextQuery}` : ""}${hash ? `#${hash}` : ""}`;
+}
+
+export function buildPostLoginContinuationPath(redirectTo: RedirectInput): string {
+  const normalizedRedirectTo = normalizeAuthRedirectTarget(redirectTo);
+
+  return `/login/continue?redirectTo=${encodeURIComponent(normalizedRedirectTo)}`;
+}
+
+export async function resolvePostLoginRedirectTarget({
+  email,
+  redirectTo,
+}: {
+  email: string | null | undefined;
+  redirectTo: RedirectInput;
+}): Promise<string> {
+  const normalizedRedirectTo = normalizeAuthRedirectTarget(redirectTo);
+
+  if (normalizedRedirectTo !== "/") {
+    return normalizedRedirectTo;
+  }
+
+  if (typeof email !== "string") {
+    return normalizedRedirectTo;
+  }
+
+  const normalizedEmail = normalizeEmail(email);
+
+  if (!normalizedEmail) {
+    return normalizedRedirectTo;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+    select: {
+      role: true,
+    },
+  });
+
+  return user?.role === UserRole.ADMIN ? "/admin" : normalizedRedirectTo;
 }
 
 function validateEmail(email: string): string | null {
@@ -167,6 +238,47 @@ export async function validateCredentialsLogin(
       name: user.name,
       image: user.image,
     },
+  };
+}
+
+export async function isMagicLinkEligibleEmail(email: string): Promise<boolean> {
+  const normalizedEmail = normalizeEmail(email);
+
+  if (!normalizedEmail) {
+    return false;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+    select: {
+      emailVerified: true,
+    },
+  });
+
+  return Boolean(user?.emailVerified);
+}
+
+export async function requestMagicLinkLogin(
+  email: string,
+): Promise<MagicLinkRequestResult> {
+  const normalizedEmail = normalizeEmail(email);
+  const emailError = validateEmail(normalizedEmail);
+
+  if (emailError) {
+    return {
+      ok: false,
+      eligible: false,
+      message: emailError,
+    };
+  }
+
+  const eligible = await isMagicLinkEligibleEmail(normalizedEmail);
+
+  return {
+    ok: true,
+    eligible,
+    email: normalizedEmail,
+    message: GENERIC_MAGIC_LINK_MESSAGE,
   };
 }
 

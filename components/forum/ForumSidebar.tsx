@@ -85,7 +85,7 @@ export default async function ForumSidebar({
               Comunidad de soporte
             </h3>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Diagnósticos rápidos, mantenimiento preventivo y recomendaciones de repuestos para cocina y lavandería.
+              Diagnosticos rapidos, mantenimiento preventivo y recomendaciones de repuestos, engranajes y batidoras compatibles.
             </p>
           </div>
 
@@ -114,11 +114,11 @@ export default async function ForumSidebar({
           <div className="mt-5 space-y-3 text-sm text-muted-foreground">
             <div className="flex items-start gap-3 rounded-2xl bg-muted/50 px-3 py-3">
               <CircleHelp className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <span>Explica el modelo exacto y los síntomas antes de pedir ayuda.</span>
+              <span>Explica la marca, el modelo exacto y los sintomas antes de pedir ayuda.</span>
             </div>
             <div className="flex items-start gap-3 rounded-2xl bg-muted/50 px-3 py-3">
               <Bolt className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <span>Las respuestas priorizan pasos concretos, seguridad y compatibilidad.</span>
+              <span>Las respuestas priorizan seguridad, compatibilidad y pasos concretos de reparacion.</span>
             </div>
           </div>
         </CardContent>
@@ -242,7 +242,7 @@ export default async function ForumSidebar({
             href="/products"
             className="flex items-center justify-between rounded-2xl bg-muted px-3 py-3 text-sm font-medium transition-colors hover:bg-muted/80"
           >
-            <span>Explorar catálogo de repuestos</span>
+            <span>Explorar catalogo de repuestos y batidoras</span>
             <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
           </Link>
         </CardContent>

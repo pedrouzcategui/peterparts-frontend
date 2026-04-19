@@ -9,13 +9,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getFilterGroups, getProducts } from "@/lib/product-data";
 
 export const metadata: Metadata = {
-  title: "Electrodomesticos y accesorios de cocina | PeterParts",
+  title: "Repuestos, engranajes y batidoras | PeterParts",
   description:
-    "Explora electrodomesticos de cocina premium de Cuisinart, Whirlpool y KitchenAid. Compra procesadores de alimentos, batidoras de pedestal, refrigeradores y mas en PeterParts.",
+    "Explora repuestos, engranajes y batidoras de KitchenAid, Cuisinart y Whirlpool. Encuentra piezas compatibles para reparar, mantener y equipar tu cocina con PeterParts.",
   openGraph: {
-    title: "Electrodomesticos y accesorios de cocina | PeterParts",
+    title: "Repuestos, engranajes y batidoras | PeterParts",
     description:
-      "Explora electrodomesticos de cocina premium de Cuisinart, Whirlpool y KitchenAid.",
+      "Explora repuestos, engranajes y batidoras de KitchenAid, Cuisinart y Whirlpool.",
     type: "website",
   },
 };
@@ -41,10 +41,10 @@ export default async function ProductsPage() {
             Catalogo PeterParts
           </p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-[#1A1714] dark:text-foreground">
-            Electrodomesticos y accesorios ({totalProducts})
+            Repuestos, engranajes y batidoras ({totalProducts})
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Explora electrodomesticos especializados de marcas confiables, con filtros por acabado, categoria, precio y ofertas vigentes.
+            Explora piezas compatibles, engranajes y batidoras de marcas confiables, con filtros por categoria, precio y ofertas vigentes. No vendemos electrodomesticos completos.
           </p>
         </div>
         <div className="flex items-center gap-3">

@@ -51,9 +51,9 @@ export const DEFAULT_STOREFRONT_SETTINGS: StorefrontSettings = {
   nationalCarriers: ["MRW", "Zoom", "Tealca"],
   supportTitle: "Asesoria tecnica gratuita por WhatsApp",
   supportDescription:
-    "Le brindamos asesoria tecnica gratuita via telefonica y por WhatsApp. Respondemos y aclaramos sus dudas para ayudarte con la reparacion de tu batidora y la compatibilidad del repuesto.",
+    "Le brindamos asesoria tecnica gratuita via telefonica y por WhatsApp. Respondemos sus dudas para ayudarle con la reparacion de su batidora, la compatibilidad del repuesto y la seleccion correcta de engranajes o piezas.",
   supportHighlight:
-    "Antes de comprar, puedes escribirnos con el modelo del equipo o una foto de la pieza para validar compatibilidad y reducir errores en el pedido.",
+    "Antes de comprar, puede escribirnos con el modelo del equipo o una foto de la pieza para validar compatibilidad y reducir errores en el pedido.",
   pickupLocations: [
     {
       name: "San Bernardino, Caracas",

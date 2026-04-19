@@ -40,8 +40,8 @@ export default function SiteFooter() {
           <div>
             <BrandLogo logoClassName="h-10 w-40" />
             <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-              Tu fuente de confianza para electrodomesticos de cocina premium de Cuisinart,
-              Whirlpool y KitchenAid.
+              Tu fuente de confianza para repuestos, engranajes y batidoras de
+              KitchenAid, Cuisinart y Whirlpool.
             </p>
           </div>
 

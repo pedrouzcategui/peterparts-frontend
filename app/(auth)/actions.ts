@@ -1,34 +1,21 @@
 "use server";
 
+import { AuthError } from "next-auth";
 import { signIn } from "@/auth";
 import {
   initialAuthActionState,
   type AuthActionState,
 } from "@/app/(auth)/action-state";
-import { isGoogleAuthEnabled } from "@/lib/auth/env";
+import { isGoogleAuthEnabled, isResendConfigured } from "@/lib/auth/env";
 import {
+  buildPostLoginContinuationPath,
   registerUserWithPassword,
+  requestMagicLinkLogin,
   requestPasswordReset,
   resendVerificationEmail,
   resetPasswordWithToken,
   validateCredentialsLogin,
 } from "@/lib/auth/service";
-
-function normalizeRedirectTo(value: string): string {
-  return value.startsWith("/") && !value.startsWith("//") ? value : "/";
-}
-
-function buildLoginSuccessRedirect(redirectTo: string): string {
-  const [pathWithQuery, hash = ""] = redirectTo.split("#", 2);
-  const [pathname, query = ""] = pathWithQuery.split("?", 2);
-  const params = new URLSearchParams(query);
-
-  params.set("auth", "login-success");
-
-  const nextQuery = params.toString();
-
-  return `${pathname}${nextQuery ? `?${nextQuery}` : ""}${hash ? `#${hash}` : ""}`;
-}
 
 function getStringValue(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -41,8 +28,8 @@ export async function loginWithPasswordAction(
 ): Promise<AuthActionState> {
   const email = getStringValue(formData, "email");
   const password = getStringValue(formData, "password");
-  const redirectTo = buildLoginSuccessRedirect(
-    normalizeRedirectTo(getStringValue(formData, "redirectTo") || "/"),
+  const redirectTo = buildPostLoginContinuationPath(
+    getStringValue(formData, "redirectTo") || "/",
   );
   const validation = await validateCredentialsLogin(email, password);
 
@@ -82,8 +69,8 @@ export async function loginWithPasswordAction(
 }
 
 export async function signInWithGoogleAction(formData: FormData): Promise<void> {
-  const redirectTo = buildLoginSuccessRedirect(
-    normalizeRedirectTo(getStringValue(formData, "redirectTo") || "/"),
+  const redirectTo = buildPostLoginContinuationPath(
+    getStringValue(formData, "redirectTo") || "/",
   );
 
   if (!isGoogleAuthEnabled) {
@@ -91,6 +78,66 @@ export async function signInWithGoogleAction(formData: FormData): Promise<void> 
   }
 
   await signIn("google", { redirectTo });
+}
+
+export async function requestMagicLinkAction(
+  _previousState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const email = getStringValue(formData, "email");
+
+  if (!isResendConfigured) {
+    return {
+      status: "error",
+      email,
+      message: "El acceso con enlace no esta configurado todavia.",
+    };
+  }
+
+  const redirectTo = buildPostLoginContinuationPath(
+    getStringValue(formData, "redirectTo") || "/",
+  );
+  const result = await requestMagicLinkLogin(email);
+
+  if (!result.ok) {
+    return {
+      status: "error",
+      email,
+      message: result.message,
+    };
+  }
+
+  if (!result.eligible || !result.email) {
+    return {
+      status: "success",
+      email: result.email ?? email,
+      message: result.message,
+    };
+  }
+
+  try {
+    await signIn("resend", {
+      email: result.email,
+      redirect: false,
+      redirectTo,
+    });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return {
+        status: "error",
+        email: result.email,
+        message: "No pudimos enviar el enlace de acceso. Intenta nuevamente.",
+      };
+    }
+
+    throw error;
+  }
+
+  return {
+    status: "success",
+    email: result.email,
+    message: result.message,
+  };
 }
 
 export async function signUpWithPasswordAction(

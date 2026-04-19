@@ -1,52 +1,24 @@
 import "server-only";
 
 import { cache } from "react";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { resolveVesAmount } from "@/lib/currency";
 import { ProductBadge, ProductStatus } from "@/lib/generated/prisma/enums";
-import type { AdminExchangeRate, AdminProduct } from "@/lib/admin-data";
+import type {
+  AdminColorSuggestion,
+  AdminExchangeRate,
+  AdminProduct,
+  AdminProductEditorColor,
+  AdminProductEditorData,
+} from "@/lib/admin-data";
+import { normalizeCategoryLabels } from "@/lib/category-labels";
+import {
+  buildProductColorFilterValue,
+  PREDEFINED_PRODUCT_COLORS,
+  resolveProductColorValue,
+} from "@/lib/product-colors";
 import type { FilterGroup, Product } from "@/lib/types";
 import { prisma } from "@/lib/prisma";
-
-const CATEGORY_TRANSLATIONS: Record<string, string> = {
-  "Kitchen Appliances": "Electrodomesticos de cocina",
-  "Food Processors": "Procesadores de alimentos",
-  "Coffee Makers": "Cafeteras",
-  "Grills & Griddles": "Parrillas y planchas",
-  Blenders: "Licuadoras",
-  Refrigerators: "Refrigeradores",
-  "Ranges & Ovens": "Cocinas y hornos",
-  Dishwashers: "Lavavajillas",
-  Microwaves: "Microondas",
-  "Stand Mixers": "Batidoras de pedestal",
-  "Toaster Ovens": "Hornos tostadores",
-  "Hand Mixers": "Batidoras de mano",
-};
-
-const CATEGORY_ORDER = [
-  "Procesadores de alimentos",
-  "Cafeteras",
-  "Parrillas y planchas",
-  "Licuadoras",
-  "Refrigeradores",
-  "Cocinas y hornos",
-  "Lavavajillas",
-  "Microondas",
-  "Batidoras de pedestal",
-  "Hornos tostadores",
-  "Batidoras de mano",
-] as const;
-
-const COLOR_FILTERS = [
-  {
-    label: "Acero inoxidable",
-    value: "stainless-steel",
-    match: ["stainless", "inoxidable"],
-  },
-  { label: "Negro", value: "black", match: ["black", "negro"] },
-  { label: "Rojo", value: "red", match: ["red", "rojo"] },
-  { label: "Blanco", value: "white", match: ["white", "blanco"] },
-  { label: "Plata", value: "silver", match: ["silver", "plata"] },
-] as const;
 
 const PRICE_FILTERS = [
   {
@@ -255,7 +227,7 @@ const PRODUCT_TRANSLATIONS: Record<
   },
 };
 
-const productInclude = {
+export const productInclude = {
   brand: true,
   category: {
     include: {
@@ -263,6 +235,18 @@ const productInclude = {
     },
   },
   images: {
+    include: {
+      variantAssignments: {
+        include: {
+          productVariant: {
+            select: {
+              id: true,
+              label: true,
+            },
+          },
+        },
+      },
+    },
     orderBy: {
       sortOrder: "asc",
     },
@@ -272,9 +256,11 @@ const productInclude = {
       sortOrder: "asc",
     },
   },
-} as const;
+} satisfies Prisma.ProductInclude;
 
-type DatabaseProduct = Awaited<ReturnType<typeof fetchProducts>>[number];
+export type DatabaseProduct = Prisma.ProductGetPayload<{
+  include: typeof productInclude;
+}>;
 
 const exchangeRateSelect = {
   rate: true,
@@ -285,10 +271,6 @@ const exchangeRateSelect = {
 
 function toBrand(value: string): Product["brand"] {
   return value.trim();
-}
-
-function translateCategoryName(value: string): string {
-  return CATEGORY_TRANSLATIONS[value] ?? value;
 }
 
 function translateTerm(value: string): string {
@@ -340,14 +322,53 @@ function mapBadge(badge: ProductBadge | null): Product["badge"] {
   }
 }
 
-function mapProduct(
+function getProductColorEntries(product: Product) {
+  const colorsByValue = new Map<
+    string,
+    { label: string; value: string; swatchValue: string }
+  >();
+
+  const registerColor = (label: string, colorValue?: string | null) => {
+    const normalizedLabel = label.trim();
+
+    if (!normalizedLabel) {
+      return;
+    }
+
+    const value = buildProductColorFilterValue(normalizedLabel);
+
+    if (colorsByValue.has(value)) {
+      return;
+    }
+
+    colorsByValue.set(value, {
+      label: normalizedLabel,
+      value,
+      swatchValue: resolveProductColorValue(normalizedLabel, colorValue),
+    });
+  };
+
+  registerColor(product.color, product.colorValue);
+
+  for (const variant of product.variants) {
+    registerColor(variant.label, variant.colorValue);
+  }
+
+  return Array.from(colorsByValue.values());
+}
+
+function sortColorSuggestions(values: AdminColorSuggestion[]) {
+  return [...values].sort((left, right) =>
+    left.label.localeCompare(right.label, "es"),
+  );
+}
+
+export function mapProduct(
   product: DatabaseProduct,
   activeExchangeRate: number | null,
 ): Product {
-  const parentCategory = translateCategoryName(
-    product.category.parent?.name ?? product.category.name,
-  );
-  const leafCategory = translateCategoryName(product.category.name);
+  const parentCategory = product.category.parent?.name ?? product.category.name;
+  const leafCategory = product.category.name;
   const translation = PRODUCT_TRANSLATIONS[product.slug];
   const priceUsd = Number(product.price);
   const originalPriceUsd = product.compareAtPrice
@@ -370,6 +391,8 @@ function mapProduct(
 
   return {
     id: product.sku,
+    databaseId: product.id,
+    sku: product.sku,
     slug: product.slug,
     name: product.name,
     brand: toBrand(product.brand.name),
@@ -384,13 +407,23 @@ function mapProduct(
     description: translation?.description ?? product.description,
     features: translation?.features ?? product.features,
     color: translateTerm(product.primaryColor ?? ""),
+    colorValue: product.primaryColor
+      ? resolveProductColorValue(
+          product.primaryColor,
+          product.primaryColorValue,
+        )
+      : null,
     style: product.modelNumber ?? "",
     images: product.images.map((image) => ({
       src: image.url,
       alt: translateImageAlt(image.altText),
+      variantLabels: image.variantAssignments.map((assignment) =>
+        translateTerm(assignment.productVariant.label),
+      ),
     })),
     variants: product.variants.map((variant) => ({
       label: translateTerm(variant.label),
+      colorValue: resolveProductColorValue(variant.label, variant.colorValue),
       available: variant.available,
     })),
     reviews: {
@@ -443,6 +476,12 @@ const fetchActiveExchangeRate = cache(async () => {
   });
 });
 
+export const getActiveExchangeRateValue = cache(async (): Promise<number | null> => {
+  const exchangeRate = await fetchActiveExchangeRate();
+
+  return exchangeRate ? Number(exchangeRate.rate) : null;
+});
+
 export const getAdminExchangeRate = cache(
   async (): Promise<AdminExchangeRate | null> => {
     const exchangeRate = await fetchActiveExchangeRate();
@@ -461,21 +500,20 @@ export const getAdminExchangeRate = cache(
 );
 
 export const getProducts = cache(async (): Promise<Product[]> => {
-  const [products, exchangeRate] = await Promise.all([
+  const [products, activeExchangeRate] = await Promise.all([
     fetchProducts(),
-    fetchActiveExchangeRate(),
+    getActiveExchangeRateValue(),
   ]);
-  const activeExchangeRate = exchangeRate ? Number(exchangeRate.rate) : null;
 
   return products.map((product) => mapProduct(product, activeExchangeRate));
 });
 
 export const getFeaturedProducts = cache(async (): Promise<Product[]> => {
-  const [products, exchangeRate] = await Promise.all([
+  const [products, activeExchangeRate] = await Promise.all([
     prisma.product.findMany({
       where: {
         status: ProductStatus.ACTIVE,
-        badge: {
+        featuredRank: {
           not: null,
         },
       },
@@ -490,30 +528,29 @@ export const getFeaturedProducts = cache(async (): Promise<Product[]> => {
       ],
       take: 6,
     }),
-    fetchActiveExchangeRate(),
+    getActiveExchangeRateValue(),
   ]);
-  const activeExchangeRate = exchangeRate ? Number(exchangeRate.rate) : null;
 
   return products.map((product) => mapProduct(product, activeExchangeRate));
 });
 
 export const getProductBySlug = cache(
   async (slug: string): Promise<Product | null> => {
-    const [product, exchangeRate] = await Promise.all([
+    const [product, activeExchangeRate] = await Promise.all([
       prisma.product.findUnique({
         where: {
           slug,
         },
         include: productInclude,
       }),
-      fetchActiveExchangeRate(),
+      getActiveExchangeRateValue(),
     ]);
 
     if (!product || product.status !== ProductStatus.ACTIVE) {
       return null;
     }
 
-    return mapProduct(product, exchangeRate ? Number(exchangeRate.rate) : null);
+    return mapProduct(product, activeExchangeRate);
   },
 );
 
@@ -530,18 +567,79 @@ export const getAdminBrands = cache(async (): Promise<string[]> => {
   return brands.map((brand) => brand.name);
 });
 
-export const getAdminCategories = cache(async (): Promise<string[]> => {
-  const categories = await prisma.category.findMany({
-    select: {
-      name: true,
-    },
-    orderBy: {
-      name: "asc",
-    },
-  });
+export const getAdminCategoryLabelSuggestions = cache(
+  async (): Promise<string[]> => {
+    const products = await prisma.product.findMany({
+      select: {
+        categoryLabels: true,
+      },
+    });
 
-  return categories.map((category) => translateCategoryName(category.name));
-});
+    const uniqueLabels = new Set<string>();
+
+    for (const product of products) {
+      const labels = Array.isArray(product.categoryLabels)
+        ? product.categoryLabels
+        : [];
+
+      for (const label of labels) {
+        const normalizedLabel = label.trim().replace(/\s+/g, " ");
+
+        if (!normalizedLabel) {
+          continue;
+        }
+
+        uniqueLabels.add(normalizedLabel);
+      }
+    }
+
+    return Array.from(uniqueLabels).sort((left, right) =>
+      left.localeCompare(right, "es"),
+    );
+  },
+);
+
+export const getAdminColorSuggestions = cache(
+  async (): Promise<AdminColorSuggestion[]> => {
+    const variants = await prisma.productVariant.findMany({
+      select: {
+        label: true,
+        colorValue: true,
+      },
+      orderBy: {
+        label: "asc",
+      },
+    });
+
+    const suggestionsByLabel = new Map<string, AdminColorSuggestion>();
+
+    for (const color of PREDEFINED_PRODUCT_COLORS) {
+      suggestionsByLabel.set(color.label.toLocaleLowerCase("es"), color);
+    }
+
+    for (const variant of variants) {
+      const normalizedLabel = variant.label.trim();
+
+      if (!normalizedLabel) {
+        continue;
+      }
+
+      const key = normalizedLabel.toLocaleLowerCase("es");
+
+      if (!suggestionsByLabel.has(key)) {
+        suggestionsByLabel.set(key, {
+          label: normalizedLabel,
+          colorValue: resolveProductColorValue(
+            normalizedLabel,
+            variant.colorValue,
+          ),
+        });
+      }
+    }
+
+    return sortColorSuggestions(Array.from(suggestionsByLabel.values()));
+  },
+);
 
 export const getFilterGroups = cache(async (): Promise<FilterGroup[]> => {
   const products = await getProducts();
@@ -564,12 +662,17 @@ export const getFilterGroups = cache(async (): Promise<FilterGroup[]> => {
     {
       name: "Categoria",
       key: "category",
-      options: CATEGORY_ORDER.map((category) => ({
-        label: category,
-        value: category,
-        count: products.filter((product) => product.subcategory === category)
-          .length,
-      })).filter((option) => option.count > 0),
+      options: Array.from(
+        new Set(products.map((product) => product.subcategory)),
+      )
+        .sort((left, right) => left.localeCompare(right, "es"))
+        .map((category) => ({
+          label: category,
+          value: category,
+          count: products.filter((product) => product.subcategory === category)
+            .length,
+        }))
+        .filter((option) => option.count > 0),
     },
     {
       name: "Comprar por precio",
@@ -605,15 +708,46 @@ export const getFilterGroups = cache(async (): Promise<FilterGroup[]> => {
     {
       name: "Color",
       key: "color",
-      options: COLOR_FILTERS.map((color) => ({
-        label: color.label,
-        value: color.value,
-        count: products.filter((product) =>
-          color.match.some((match) =>
-            product.color.toLowerCase().includes(match),
-          ),
-        ).length,
-      })).filter((option) => option.count > 0),
+      options: Array.from(
+        products.reduce(
+          (optionsByValue, product) => {
+            for (const color of getProductColorEntries(product)) {
+              const existingOption = optionsByValue.get(color.value);
+
+              if (existingOption) {
+                existingOption.productIds.add(product.databaseId);
+                continue;
+              }
+
+              optionsByValue.set(color.value, {
+                label: color.label,
+                value: color.value,
+                swatchValue: color.swatchValue,
+                productIds: new Set([product.databaseId]),
+              });
+            }
+
+            return optionsByValue;
+          },
+          new Map<
+            string,
+            {
+              label: string;
+              value: string;
+              swatchValue: string;
+              productIds: Set<string>;
+            }
+          >(),
+        ).values(),
+      )
+        .map((option) => ({
+          label: option.label,
+          value: option.value,
+          swatchValue: option.swatchValue,
+          count: option.productIds.size,
+        }))
+        .filter((option) => option.count > 0)
+        .sort((left, right) => left.label.localeCompare(right.label, "es")),
     },
   ];
 });
@@ -624,6 +758,15 @@ export const getAdminProducts = cache(async (): Promise<AdminProduct[]> => {
       include: {
         brand: true,
         category: true,
+        images: {
+          orderBy: {
+            sortOrder: "asc",
+          },
+          take: 1,
+          select: {
+            url: true,
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -634,9 +777,12 @@ export const getAdminProducts = cache(async (): Promise<AdminProduct[]> => {
   const activeExchangeRate = exchangeRate ? Number(exchangeRate.rate) : null;
 
   return products.map((product) => {
-    const categoryLabels = Array.isArray(product.categoryLabels)
-      ? product.categoryLabels.filter(Boolean)
-      : [];
+    const categoryLabels = normalizeCategoryLabels(
+      product.category.name,
+      Array.isArray(product.categoryLabels)
+        ? product.categoryLabels.filter(Boolean)
+        : [],
+    );
     const priceUsd = Number(product.price);
     const priceVes = resolveVesAmount(
       Number(product.priceVes),
@@ -647,19 +793,103 @@ export const getAdminProducts = cache(async (): Promise<AdminProduct[]> => {
     return {
       id: product.id,
       name: product.name,
+      imageUrl: product.images[0]?.url ?? null,
       brand: toBrand(product.brand.name),
-      categories:
-        categoryLabels.length > 0
-          ? categoryLabels
-          : [translateCategoryName(product.category.name)],
-      category: translateCategoryName(product.category.name),
+      categories: [product.category.name, ...categoryLabels],
+      category: product.category.name,
       price: priceUsd,
       priceUsd,
       priceVes,
       stock: product.stockQuantity,
       status: mapAdminStatus(product.status),
+      featuredRank: product.featuredRank,
       createdAt: product.createdAt.toISOString(),
       updatedAt: product.updatedAt.toISOString(),
     };
   });
 });
+
+export const getAdminProductById = cache(
+  async (productId: string): Promise<AdminProductEditorData | null> => {
+    const [product, exchangeRate] = await Promise.all([
+      prisma.product.findUnique({
+        where: { id: productId },
+        include: {
+          brand: true,
+          category: true,
+          variants: {
+            orderBy: {
+              sortOrder: "asc",
+            },
+          },
+          images: {
+            include: {
+              variantAssignments: {
+                include: {
+                  productVariant: {
+                    select: {
+                      id: true,
+                    },
+                  },
+                },
+              },
+            },
+            orderBy: {
+              sortOrder: "asc",
+            },
+          },
+        },
+      }),
+      fetchActiveExchangeRate(),
+    ]);
+
+    if (!product) {
+      return null;
+    }
+
+    const activeExchangeRate = exchangeRate ? Number(exchangeRate.rate) : null;
+    const categoryLabels = normalizeCategoryLabels(
+      product.category.name,
+      Array.isArray(product.categoryLabels)
+        ? product.categoryLabels.filter(Boolean)
+        : [],
+    );
+    const colors: AdminProductEditorColor[] = product.variants.map((variant) => ({
+      id: variant.id,
+      label: variant.label,
+      colorValue: resolveProductColorValue(variant.label, variant.colorValue),
+      available: variant.available,
+    }));
+    const priceUsd = Number(product.price);
+
+    return {
+      id: product.id,
+      name: product.name,
+      brand: toBrand(product.brand.name),
+      primaryCategoryId: product.category.id,
+      primaryCategoryName: product.category.name,
+      categoryLabels,
+      primaryColor: product.primaryColor,
+      primaryColorValue: product.primaryColorValue,
+      colors,
+      priceUsd,
+      priceVes: resolveVesAmount(
+        Number(product.priceVes),
+        priceUsd,
+        activeExchangeRate,
+      ),
+      stock: product.stockQuantity,
+      status: mapAdminStatus(product.status),
+      featuredRank: product.featuredRank,
+      description: product.description,
+      images: product.images.map((image) => ({
+        id: image.id,
+        url: image.url,
+        altText: image.altText,
+        colorIds: image.variantAssignments.map(
+          (assignment) => assignment.productVariant.id,
+        ),
+      })),
+    };
+  },
+);

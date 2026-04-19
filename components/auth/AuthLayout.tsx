@@ -32,7 +32,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           <div className="text-center text-white/80 p-8">
             <h2 className="text-3xl font-bold mb-4">Bienvenido a PeterParts</h2>
             <p className="text-white/60 max-w-md">
-              Tu tienda especializada en electrodomesticos y repuestos de cocina premium
+              Tu tienda especializada en repuestos, engranajes y batidoras para KitchenAid, Cuisinart y Whirlpool
             </p>
           </div>
         </div>

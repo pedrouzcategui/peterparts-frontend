@@ -2,13 +2,19 @@ import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
+import Resend from "next-auth/providers/resend";
 import { prisma } from "@/lib/prisma";
 import {
   getGoogleClientId,
   getGoogleClientSecret,
+  getResendApiKey,
+  getResendFromEmail,
   isGoogleAuthEnabled,
+  isResendConfigured,
 } from "@/lib/auth/env";
+import { sendMagicLinkEmail } from "@/lib/auth/email";
 import {
+  isMagicLinkEligibleEmail,
   syncGoogleUserProfile,
   validateCredentialsLogin,
 } from "@/lib/auth/service";
@@ -23,9 +29,15 @@ function hasVerifiedGoogleEmail(
   return "email_verified" in profile;
 }
 
+function normalizeEmailIdentifier(identifier: string): string {
+  const [local, domain = ""] = identifier.toLowerCase().trim().split("@");
+  return `${local}@${domain.split(",")[0]}`;
+}
+
 function buildProviders() {
   const googleClientId = getGoogleClientId();
   const googleClientSecret = getGoogleClientSecret();
+  const resendApiKey = getResendApiKey();
 
   return [
     Credentials({
@@ -53,6 +65,23 @@ function buildProviders() {
         return result.user;
       },
     }),
+    ...(isResendConfigured && resendApiKey
+      ? [
+          Resend({
+            apiKey: resendApiKey,
+            from: getResendFromEmail(),
+            normalizeIdentifier(identifier) {
+              return normalizeEmailIdentifier(identifier);
+            },
+            async sendVerificationRequest({ identifier, url }) {
+              await sendMagicLinkEmail({
+                email: identifier,
+                url,
+              });
+            },
+          }),
+        ]
+      : []),
     ...(isGoogleAuthEnabled
       ? [
           Google({
@@ -84,6 +113,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             ? Boolean(profile.email_verified)
             : false,
         });
+      }
+
+      if (account?.type === "email") {
+        const signInEmail = typeof user.email === "string" ? user.email : null;
+
+        if (!signInEmail) {
+          return "/login";
+        }
+
+        const allowed = await isMagicLinkEligibleEmail(signInEmail);
+
+        if (!allowed) {
+          return "/login";
+        }
       }
 
       return true;

@@ -19,11 +19,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "PeterParts — Electrodomesticos y accesorios de cocina",
+    default: "PeterParts — Repuestos, engranajes y batidoras",
     template: "%s | PeterParts",
   },
   description:
-    "Compra electrodomesticos de cocina premium de Cuisinart, Whirlpool y KitchenAid en PeterParts.",
+    "Compra repuestos, engranajes y batidoras de KitchenAid, Cuisinart y Whirlpool en PeterParts.",
   metadataBase: new URL("https://peterparts.com"),
   icons: {
     icon: [
