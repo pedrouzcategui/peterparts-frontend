@@ -24,6 +24,8 @@ async function getAuthenticatedUser() {
     select: {
       id: true,
       email: true,
+      firstName: true,
+      lastName: true,
       role: true,
       name: true,
     },

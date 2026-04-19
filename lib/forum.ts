@@ -131,7 +131,22 @@ export interface AdminForumModerationData {
   };
 }
 
+export interface AdminForumHeaderPendingThread {
+  id: string;
+  title: string;
+  authorName: string;
+  createdAt: string;
+  path: string;
+}
+
+export interface AdminForumHeaderModerationSummary {
+  pendingCount: number;
+  recentPendingThreads: AdminForumHeaderPendingThread[];
+}
+
 type ForumVoteTargetType = "thread" | "reply";
+
+const ADMIN_FORUM_HEADER_PENDING_THREADS_LIMIT = 5;
 
 function isForumUnavailableError(error: unknown): boolean {
   return (
@@ -1137,6 +1152,63 @@ export async function getAdminForumModerationData(): Promise<AdminForumModeratio
           approved: 0,
           rejected: 0,
         },
+      };
+    }
+
+    throw error;
+  }
+}
+
+export async function getAdminHeaderModerationSummary(): Promise<AdminForumHeaderModerationSummary> {
+  try {
+    const [pendingCount, pendingThreads] = await prisma.$transaction([
+      prisma.forumThread.count({
+        where: {
+          status: PrismaForumThreadStatus.PENDING,
+        },
+      }),
+      prisma.forumThread.findMany({
+        where: {
+          status: PrismaForumThreadStatus.PENDING,
+        },
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          createdAt: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              createdAt: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: ADMIN_FORUM_HEADER_PENDING_THREADS_LIMIT,
+      }),
+    ]);
+
+    return {
+      pendingCount,
+      recentPendingThreads: pendingThreads.map((thread) => ({
+        id: thread.id,
+        title: thread.title,
+        authorName: getDisplayName(thread.author),
+        createdAt: thread.createdAt.toISOString(),
+        path: buildForumThreadPath(thread),
+      })),
+    };
+  } catch (error) {
+    if (isForumUnavailableError(error)) {
+      return {
+        pendingCount: 0,
+        recentPendingThreads: [],
       };
     }
 
