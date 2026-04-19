@@ -9,10 +9,8 @@ import {
   loginWithPasswordAction,
   requestMagicLinkAction,
   resendVerificationEmailAction,
-  signInWithGoogleAction,
 } from "@/app/(auth)/actions";
 import { normalizeAuthActionState } from "@/components/auth/auth-action-state";
-import { SocialButtons } from "@/components/auth/SocialButtons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +18,6 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { cn } from "@/lib/utils";
 
 interface LoginPageClientProps {
-  googleEnabled: boolean;
   magicLinkEnabled: boolean;
   redirectTo: string;
 }
@@ -47,7 +44,6 @@ function FeedbackMessage({
 }
 
 export default function LoginPageClient({
-  googleEnabled,
   magicLinkEnabled,
   redirectTo,
 }: LoginPageClientProps) {
@@ -217,22 +213,6 @@ export default function LoginPageClient({
           </Button>
         </form>
       ) : null}
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">o</span>
-        </div>
-      </div>
-
-      <SocialButtons
-        googleAction={signInWithGoogleAction}
-        redirectTo={redirectTo}
-        googleEnabled={googleEnabled}
-        isLoading={isLoading}
-      />
     </div>
   );
 }

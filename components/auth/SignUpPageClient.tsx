@@ -8,11 +8,9 @@ import { toast } from "sonner";
 import { initialAuthActionState } from "@/app/(auth)/action-state";
 import {
   resendVerificationEmailAction,
-  signInWithGoogleAction,
   signUpWithPasswordAction,
 } from "@/app/(auth)/actions";
 import { normalizeAuthActionState } from "@/components/auth/auth-action-state";
-import { SocialButtons } from "@/components/auth/SocialButtons";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -21,7 +19,6 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { cn } from "@/lib/utils";
 
 interface SignUpPageClientProps {
-  googleEnabled: boolean;
   redirectTo: string;
 }
 
@@ -108,7 +105,6 @@ function FeedbackMessage({
 }
 
 export default function SignUpPageClient({
-  googleEnabled,
   redirectTo,
 }: SignUpPageClientProps) {
   const router = useRouter();
@@ -340,22 +336,6 @@ export default function SignUpPageClient({
           {isSigningUp ? "Creando cuenta..." : "Crear cuenta"}
         </Button>
       </form>
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">o</span>
-        </div>
-      </div>
-
-      <SocialButtons
-        googleAction={signInWithGoogleAction}
-        redirectTo={redirectTo}
-        googleEnabled={googleEnabled}
-        isLoading={isLoading}
-      />
     </div>
   );
 }
