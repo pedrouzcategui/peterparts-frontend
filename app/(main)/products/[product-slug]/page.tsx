@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import ProductImageGallery from "@/components/products/ProductImageGallery";
-import ProductInfo from "@/components/products/ProductInfo";
+import ProductDetailClient from "@/components/products/ProductDetailClient";
 import ProductPurchaseDetails from "@/components/products/ProductPurchaseDetails";
+import {
+  getCurrentFavouriteUser,
+  getFavouriteProductIdsForUser,
+} from "@/lib/favourites";
 import { getProductBySlug } from "@/lib/product-data";
 import { getStorefrontSettings } from "@/lib/storefront-settings-store";
 import {
@@ -55,14 +58,20 @@ export async function generateMetadata({
  */
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { "product-slug": slug } = await params;
-  const [product, storefrontSettings] = await Promise.all([
+  const [product, storefrontSettings, currentUser] = await Promise.all([
     getProductBySlug(slug),
     getStorefrontSettings(),
+    getCurrentFavouriteUser(),
   ]);
 
   if (!product) {
     notFound();
   }
+
+  const favouriteProductIds = currentUser
+    ? await getFavouriteProductIdsForUser(currentUser.id, [product.databaseId])
+    : new Set<string>();
+  const isFavourited = favouriteProductIds.has(product.databaseId);
 
   // JSON-LD structured data for SEO
   const jsonLd = {
@@ -129,13 +138,10 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         </Breadcrumb>
 
         {/* PDP layout: gallery + info */}
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <ProductImageGallery
-            images={product.images}
-            productName={product.name}
-          />
-          <ProductInfo product={product} />
-        </div>
+        <ProductDetailClient
+          product={product}
+          initiallyFavourited={isFavourited}
+        />
 
         <ProductPurchaseDetails settings={storefrontSettings} />
       </div>

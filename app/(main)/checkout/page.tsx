@@ -3,7 +3,7 @@ import CheckoutPageClient from "@/components/cart/CheckoutPageClient";
 
 export const metadata: Metadata = {
   title: "Finalizar compra",
-  description: "Revisa tus productos y completa un checkout de muestra de PeterParts.",
+  description: "Revisa tus productos, crea tu pedido y continua la coordinacion por WhatsApp.",
 };
 
 export default function CheckoutPage() {

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import type { ProductImage } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -10,6 +9,8 @@ import ProductImageWithFallback from "@/components/products/ProductImageWithFall
 interface ProductImageGalleryProps {
   images: ProductImage[];
   productName: string;
+  selectedImageSrc: string | null;
+  onSelectImageSrc: (imageSrc: string) => void;
 }
 
 /**
@@ -20,16 +21,39 @@ interface ProductImageGalleryProps {
 export default function ProductImageGallery({
   images,
   productName,
+  selectedImageSrc,
+  onSelectImageSrc,
 }: ProductImageGalleryProps) {
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const selectedIndex = Math.max(
+    0,
+    images.findIndex((image) => image.src === selectedImageSrc),
+  );
   const selectedImage = images[selectedIndex] ?? images[0];
 
   const handlePrev = () => {
-    setSelectedIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
+    if (images.length === 0) {
+      return;
+    }
+
+    const nextIndex = selectedIndex > 0 ? selectedIndex - 1 : images.length - 1;
+    const nextImage = images[nextIndex];
+
+    if (nextImage) {
+      onSelectImageSrc(nextImage.src);
+    }
   };
 
   const handleNext = () => {
-    setSelectedIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
+    if (images.length === 0) {
+      return;
+    }
+
+    const nextIndex = selectedIndex < images.length - 1 ? selectedIndex + 1 : 0;
+    const nextImage = images[nextIndex];
+
+    if (nextImage) {
+      onSelectImageSrc(nextImage.src);
+    }
   };
 
   return (
@@ -40,7 +64,7 @@ export default function ProductImageGallery({
           <button
             key={image.src}
             type="button"
-            onClick={() => setSelectedIndex(index)}
+            onClick={() => onSelectImageSrc(image.src)}
             className={cn(
               "relative aspect-square w-16 overflow-hidden rounded border-2 transition-colors",
               index === selectedIndex
@@ -60,7 +84,7 @@ export default function ProductImageGallery({
       </div>
 
       {/* Main image */}
-      <div className="relative flex-1 aspect-square overflow-hidden rounded-lg bg-muted">
+      <div className="relative flex-1 aspect-square overflow-hidden rounded-lg bg-white dark:bg-white">
         <ProductImageWithFallback
           src={selectedImage?.src}
           alt={selectedImage?.alt ?? productName}

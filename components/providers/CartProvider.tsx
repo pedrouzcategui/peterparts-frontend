@@ -23,7 +23,12 @@ interface CartContextValue {
   itemCount: number;
   subtotal: number;
   addItem: (item: CartItem, quantity?: number) => void;
-  addProduct: (product: Product, variantLabel?: string, quantity?: number) => void;
+  addProduct: (
+    product: Product,
+    variantLabel?: string,
+    quantity?: number,
+    selectedImage?: Product["images"][number],
+  ) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   removeItem: (itemId: string) => void;
   clearCart: () => void;
@@ -138,8 +143,13 @@ export function CartProvider({ children }: CartProviderProps) {
     });
   };
 
-  const addProduct = (product: Product, variantLabel?: string, quantity = 1) => {
-    addItem(createCartItem(product, variantLabel), quantity);
+  const addProduct = (
+    product: Product,
+    variantLabel?: string,
+    quantity = 1,
+    selectedImage?: Product["images"][number],
+  ) => {
+    addItem(createCartItem(product, variantLabel, selectedImage), quantity);
   };
 
   const updateQuantity = (itemId: string, quantity: number) => {

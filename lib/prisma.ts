@@ -4,7 +4,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/lib/generated/prisma/client";
 import { normalizePostgresConnectionString } from "@/lib/postgres-connection-string";
 
-const PRISMA_CLIENT_CACHE_KEY = "forum-thread-soft-delete-v2";
+const PRISMA_CLIENT_CACHE_KEY = "orders-workflow-v1";
 
 function createPrismaClient(connectionString: string) {
   const adapter = new PrismaPg({
@@ -26,6 +26,9 @@ function hasRequiredDelegates(
     user?: { findUnique?: unknown };
     account?: { findUnique?: unknown };
     session?: { findUnique?: unknown };
+    favoriteProduct?: { findUnique?: unknown };
+    order?: { findUnique?: unknown };
+    orderItem?: { findFirst?: unknown };
     forumThread?: { findMany?: unknown };
     forumReply?: { findMany?: unknown };
     forumThreadVote?: { findUnique?: unknown };
@@ -36,6 +39,9 @@ function hasRequiredDelegates(
     typeof delegateClient.user?.findUnique === "function" &&
     typeof delegateClient.account?.findUnique === "function" &&
     typeof delegateClient.session?.findUnique === "function" &&
+    typeof delegateClient.favoriteProduct?.findUnique === "function" &&
+    typeof delegateClient.order?.findUnique === "function" &&
+    typeof delegateClient.orderItem?.findFirst === "function" &&
     typeof delegateClient.forumThread?.findMany === "function" &&
     typeof delegateClient.forumReply?.findMany === "function" &&
     typeof delegateClient.forumThreadVote?.findUnique === "function" &&

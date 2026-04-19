@@ -10,23 +10,6 @@ interface ProductCardProps {
   product: Product;
 }
 
-const COLOR_SWATCH_STYLES: Array<{ match: RegExp; className: string }> = [
-  { match: /red|empire|beet|burgundy/i, className: "bg-[#c61c31]" },
-  { match: /black|onyx|ink/i, className: "bg-[#1A1714]" },
-  { match: /white|milk|porcelain/i, className: "bg-white" },
-  { match: /silver|stainless|chrome/i, className: "bg-[#d5d7db]" },
-  { match: /blue|ice|sky|aqua/i, className: "bg-[#bfdde5]" },
-  { match: /green|sage|pistachio/i, className: "bg-[#9aa78f]" },
-  { match: /pink|lavender|lilac|rose/i, className: "bg-[#d8bfd3]" },
-  { match: /yellow|gold/i, className: "bg-[#e6c84f]" },
-  { match: /orange|copper/i, className: "bg-[#c97a35]" },
-];
-
-function getSwatchClass(label: string) {
-  const match = COLOR_SWATCH_STYLES.find((entry) => entry.match.test(label));
-  return match?.className ?? "bg-[#cfd6dc]";
-}
-
 /**
  * ProductCard — Server Component
  * Renders a single product in the grid listing.
@@ -50,24 +33,52 @@ export default function ProductCard({ product }: ProductCardProps) {
   const savings = originalPriceUsd
     ? formatUsd(originalPriceUsd - priceUsd)
     : null;
-  const swatchLabels = Array.from(
-    new Set(
-      [
-        product.color,
-        ...product.variants.map((variant) => variant.label),
-      ].filter(Boolean),
-    ),
+  const swatches = Array.from(
+    [
+      product.color
+        ? {
+            label: product.color,
+            colorValue: product.colorValue,
+          }
+        : null,
+      ...product.variants.map((variant) => ({
+        label: variant.label,
+        colorValue: variant.colorValue,
+      })),
+    ]
+      .filter(
+        (
+          swatch,
+        ): swatch is {
+          label: string;
+          colorValue: string | null;
+        } => Boolean(swatch?.label),
+      )
+      .reduce((swatchesByLabel, swatch) => {
+        const key = swatch.label.toLocaleLowerCase("es");
+
+        if (!swatchesByLabel.has(key)) {
+          swatchesByLabel.set(key, swatch);
+        }
+
+        return swatchesByLabel;
+      }, new Map<string, { label: string; colorValue: string | null }>())
+      .values(),
   ).slice(0, 5);
   const extraSwatches = Math.max(
     0,
     Array.from(
-      new Set(
-        [
-          product.color,
-          ...product.variants.map((variant) => variant.label),
-        ].filter(Boolean),
-      ),
-    ).length - swatchLabels.length,
+      [
+        product.color,
+        ...product.variants.map((variant) => variant.label),
+      ].reduce((labels, label) => {
+        if (label) {
+          labels.add(label.toLocaleLowerCase("es"));
+        }
+
+        return labels;
+      }, new Set<string>()),
+    ).length - swatches.length,
   );
   const badgeLabel =
     product.badge === "Sale"
@@ -89,7 +100,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       </Link>
 
         {/* Image container */}
-        <div className="relative aspect-[1.02] overflow-hidden border-b border-[#ebe7e0] bg-[#fcfaf7] px-6 pb-5 pt-16 dark:border-border dark:bg-muted/30">
+        <div className="relative aspect-[1.02] overflow-hidden border-b border-[#ebe7e0] bg-white px-6 pb-5 pt-16 dark:border-border dark:bg-white">
           {badgeLabel ? (
             <div className="absolute left-4 top-4 z-10 flex items-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-black/5 dark:bg-card">
               <span className="bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white">
@@ -164,13 +175,16 @@ export default function ProductCard({ product }: ProductCardProps) {
             ) : null}
           </div>
 
-          {swatchLabels.length > 0 ? (
+          {swatches.length > 0 ? (
             <div className="mt-4 flex items-center gap-2">
-              {swatchLabels.map((label) => (
+              {swatches.map((swatch) => (
                 <span
-                  key={label}
-                  title={label}
-                  className={`h-5 w-5 rounded-full border border-black/10 shadow-sm ${getSwatchClass(label)}`}
+                  key={swatch.label}
+                  title={swatch.label}
+                  className="h-5 w-5 rounded-full border border-black/10 shadow-sm"
+                  style={{
+                    backgroundColor: swatch.colorValue ?? "#cfd6dc",
+                  }}
                 />
               ))}
               {extraSwatches > 0 ? (

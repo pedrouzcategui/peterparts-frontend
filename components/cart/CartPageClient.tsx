@@ -25,12 +25,12 @@ export default function CartPageClient() {
           <p className="mt-6 text-sm uppercase tracking-[0.24em] text-muted-foreground">
             Tu carrito esta vacio
           </p>
-          <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">Arma tu cocina ideal</h1>
+          <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">Arma tu pedido de repuestos</h1>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Agrega electrodomesticos a tu carrito y revisa precios, cantidades y detalles de entrega antes de finalizar la compra.
+            Agrega repuestos, engranajes o batidoras a tu carrito y revisa precios, cantidades y detalles de entrega antes de finalizar la compra.
           </p>
           <Button asChild size="lg" className="mt-8">
-            <Link href="/products">Comprar productos</Link>
+            <Link href="/products">Explorar catalogo</Link>
           </Button>
         </div>
       </section>

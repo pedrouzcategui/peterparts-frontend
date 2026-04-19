@@ -114,10 +114,10 @@ export default function ForumLeftRail({
           </div>
           <div className="space-y-1.5">
             <h2 className="text-sm font-semibold text-foreground">
-              Centro de ayuda Peter Parts
+              Centro de ayuda PeterParts
             </h2>
             <p className="text-sm leading-6 text-muted-foreground">
-              Usa el foro para validar fallas y salta al catálogo cuando ya sabes la pieza.
+              Usa el foro para validar fallas, compatibilidad y numeros de pieza antes de comprar.
             </p>
           </div>
         </div>
@@ -126,7 +126,7 @@ export default function ForumLeftRail({
           href="/products"
           className="inline-flex w-full items-center justify-center rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
         >
-          Buscar repuestos
+          Ver repuestos y batidoras
         </Link>
       </div>
     </aside>

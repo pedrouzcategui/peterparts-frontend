@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
 const REMOTE_PRODUCT_PLACEHOLDER_SRC =
@@ -23,6 +23,10 @@ export default function ProductImageWithFallback({
   priority = false,
 }: ProductImageWithFallbackProps) {
   const [imageSrc, setImageSrc] = useState(src || REMOTE_PRODUCT_PLACEHOLDER_SRC);
+
+  useEffect(() => {
+    setImageSrc(src || REMOTE_PRODUCT_PLACEHOLDER_SRC);
+  }, [src]);
 
   return (
     <Image

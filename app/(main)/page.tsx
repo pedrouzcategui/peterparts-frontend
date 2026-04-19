@@ -6,6 +6,30 @@ import { getFeaturedProducts } from "@/lib/product-data";
 
 export const dynamic = "force-dynamic";
 
+const HOMEPAGE_BRANDS = [
+  {
+    name: "Cuisinart",
+    tagline: "Piezas y accesorios para mezclar y preparar",
+    href: "/products?brand=Cuisinart",
+    logoLightSrc: "/images/cuisinart-logo.png",
+    logoDarkSrc: "/images/cuisinart-logo-dark.png",
+  },
+  {
+    name: "Whirlpool",
+    tagline: "Repuestos confiables para mantenimiento y reparacion",
+    href: "/products?brand=Whirlpool",
+    logoLightSrc: "/images/whirlpool-logo.png",
+    logoDarkSrc: "/images/whirlpool-logo-dark.png",
+  },
+  {
+    name: "KitchenAid",
+    tagline: "Engranajes, accesorios y batidoras seleccionadas",
+    href: "/products?brand=KitchenAid",
+    logoLightSrc: "/images/kitchenaid-logo.png",
+    logoDarkSrc: "/images/kitchenaid-logo.png",
+  },
+] as const;
+
 /**
  * Home page — Server Component
  * Hero section + featured products for SEO and user engagement.
@@ -19,7 +43,7 @@ export default async function HomePage() {
       <section className="relative overflow-hidden">
         <Image
           src="/kitchenaid-hero.jpg"
-          alt="Escaparate principal de electrodomesticos KitchenAid"
+          alt="Escaparate principal de repuestos y batidoras PeterParts"
           fill
           priority
           sizes="100vw"
@@ -31,19 +55,19 @@ export default async function HomePage() {
         <div className="site-shell relative py-24 sm:py-32 lg:py-36">
           <div className="max-w-3xl text-white">
             <p className="text-sm font-medium uppercase tracking-[0.28em] text-white/75">
-              Seleccion KitchenAid
+              KitchenAid, Cuisinart y Whirlpool
             </p>
             <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-              Electrodomesticos de cocina premium
+              Repuestos, engranajes y batidoras
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-white/85 sm:text-lg">
-              Descubre lo mejor de Cuisinart, Whirlpool y KitchenAid. Equipos
-              de calidad para cada cocina, desde batidoras de pedestal de nivel
-              profesional hasta refrigeradores eficientes.
+              Encuentra piezas compatibles para reparar y mantener tus equipos,
+              junto con batidoras seleccionadas de KitchenAid, Cuisinart y
+              Whirlpool. PeterParts no vende electrodomesticos completos.
             </p>
             <div className="mt-8 flex items-center gap-4">
               <Button asChild size="lg">
-                <Link href="/products">Ver todos los productos</Link>
+                <Link href="/products">Explorar catalogo</Link>
               </Button>
             </div>
           </div>
@@ -73,30 +97,48 @@ export default async function HomePage() {
         <div className="site-shell py-16">
           <h2 className="text-2xl font-bold text-center mb-10">Nuestras marcas</h2>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-            {[
-              {
-                name: "Cuisinart",
-                tagline: "Precision para cada receta",
-                href: "/products?brand=Cuisinart",
-              },
-              {
-                name: "Whirlpool",
-                tagline: "Confianza para todos los dias",
-                href: "/products?brand=Whirlpool",
-              },
-              {
-                name: "KitchenAid",
-                tagline: "Hecho para crear",
-                href: "/products?brand=KitchenAid",
-              },
-            ].map((brand) => (
+            {HOMEPAGE_BRANDS.map((brand) => (
               <Link
                 key={brand.name}
                 href={brand.href}
-                className="group flex flex-col items-center p-8 rounded-lg border bg-background hover:shadow-md transition-shadow"
+                aria-label={`${brand.name}. ${brand.tagline}`}
+                className="group flex min-h-44 flex-col items-center justify-center rounded-lg border bg-background px-8 py-10 text-center transition-shadow hover:shadow-md"
               >
-                <span className="text-xl font-bold">{brand.name}</span>
-                <span className="mt-1 text-sm text-muted-foreground">
+                <span className="sr-only">{brand.name}</span>
+                <span
+                  className="flex h-16 w-full max-w-60 items-center justify-center sm:h-20"
+                  aria-hidden="true"
+                >
+                  <span className="relative block h-full w-full overflow-hidden">
+                    {brand.logoLightSrc === brand.logoDarkSrc ? (
+                      <Image
+                        src={brand.logoLightSrc}
+                        alt=""
+                        fill
+                        sizes="(max-width: 640px) 12rem, 15rem"
+                        className="object-contain object-center"
+                      />
+                    ) : (
+                      <>
+                        <Image
+                          src={brand.logoLightSrc}
+                          alt=""
+                          fill
+                          sizes="(max-width: 640px) 12rem, 15rem"
+                          className="object-contain object-center dark:hidden"
+                        />
+                        <Image
+                          src={brand.logoDarkSrc}
+                          alt=""
+                          fill
+                          sizes="(max-width: 640px) 12rem, 15rem"
+                          className="hidden object-contain object-center dark:block"
+                        />
+                      </>
+                    )}
+                  </span>
+                </span>
+                <span className="mt-5 text-sm text-muted-foreground">
                   {brand.tagline}
                 </span>
               </Link>

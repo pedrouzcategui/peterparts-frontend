@@ -1,6 +1,10 @@
 import type { Product } from "@/lib/types";
+import { getPrimaryProductImage } from "@/lib/product-gallery";
 
 export const CART_STORAGE_KEY = "peterparts-cart:v1";
+
+export const SHIPPING_ESTIMATE = 24.99;
+export const TAX_RATE = 0.08;
 
 const CART_STORAGE_VERSION = 1;
 
@@ -29,7 +33,7 @@ interface StoredCart {
   items: CartItem[];
 }
 
-function isCartItem(value: unknown): value is CartItem {
+export function isCartItem(value: unknown): value is CartItem {
   if (!value || typeof value !== "object") {
     return false;
   }
@@ -58,6 +62,17 @@ function isCartItem(value: unknown): value is CartItem {
   );
 }
 
+export function parseCartItems(value: unknown): CartItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter(isCartItem).map((item) => ({
+    ...item,
+    quantity: Math.max(1, Math.floor(item.quantity)),
+  }));
+}
+
 export function getCartLineId(productId: string, variantLabel?: string): string {
   return variantLabel ? `${productId}::${variantLabel}` : productId;
 }
@@ -65,7 +80,10 @@ export function getCartLineId(productId: string, variantLabel?: string): string 
 export function createCartItem(
   product: Product,
   variantLabel?: string,
+  selectedImage?: Product["images"][number],
 ): CartItem {
+  const image = selectedImage ?? getPrimaryProductImage(product, variantLabel);
+
   return {
     id: getCartLineId(product.id, variantLabel),
     productId: product.id,
@@ -76,8 +94,8 @@ export function createCartItem(
     price: product.price,
     originalPrice: product.originalPrice,
     image: {
-      src: product.images[0]?.src ?? "/images/placeholder.jpg",
-      alt: product.images[0]?.alt ?? product.name,
+      src: image?.src ?? "/images/placeholder.jpg",
+      alt: image?.alt ?? product.name,
     },
     quantity: 1,
     variantLabel,
@@ -102,10 +120,7 @@ export function parseStoredCart(storageValue: string | null): CartItem[] {
       return [];
     }
 
-    return parsed.items.filter(isCartItem).map((item) => ({
-      ...item,
-      quantity: Math.max(1, Math.floor(item.quantity)),
-    }));
+    return parseCartItems(parsed.items);
   } catch {
     return [];
   }
@@ -124,6 +139,29 @@ export function getCartItemCount(items: CartItem[]): number {
 
 export function getCartSubtotal(items: CartItem[]): number {
   return items.reduce((subtotal, item) => subtotal + item.price * item.quantity, 0);
+}
+
+export interface CartSummary {
+  itemCount: number;
+  subtotal: number;
+  shipping: number;
+  tax: number;
+  total: number;
+}
+
+export function getCartSummary(items: CartItem[]): CartSummary {
+  const itemCount = getCartItemCount(items);
+  const subtotal = getCartSubtotal(items);
+  const shipping = subtotal >= 500 ? 0 : SHIPPING_ESTIMATE;
+  const tax = subtotal * TAX_RATE;
+
+  return {
+    itemCount,
+    subtotal,
+    shipping,
+    tax,
+    total: subtotal + shipping + tax,
+  };
 }
 
 export function formatCurrency(amount: number): string {

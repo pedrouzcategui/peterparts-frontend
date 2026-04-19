@@ -4,10 +4,12 @@
 export interface ProductImage {
   src: string;
   alt: string;
+  variantLabels: string[];
 }
 
 export interface ProductVariant {
   label: string;
+  colorValue: string;
   available: boolean;
 }
 
@@ -18,6 +20,8 @@ export interface ProductReview {
 
 export interface Product {
   id: string;
+  databaseId: string;
+  sku: string;
   slug: string;
   name: string;
   brand: string;
@@ -32,6 +36,7 @@ export interface Product {
   description: string;
   features: string[];
   color: string;
+  colorValue: string | null;
   style: string;
   images: ProductImage[];
   variants: ProductVariant[];
@@ -45,6 +50,7 @@ export interface FilterOption {
   label: string;
   value: string;
   count?: number;
+  swatchValue?: string | null;
 }
 
 export interface FilterGroup {

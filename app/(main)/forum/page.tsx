@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Foro",
   description:
-    "Únete al foro de la comunidad Peter Parts. Haz preguntas, comparte consejos y recibe ayuda con tus electrodomésticos de cocina.",
+    "Únete al foro de la comunidad PeterParts. Haz preguntas, comparte consejos y recibe ayuda con repuestos, engranajes, batidoras y compatibilidad para KitchenAid, Cuisinart y Whirlpool.",
 };
 
 interface ForumPageProps {
@@ -86,7 +86,7 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
               </div>
 
               <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                Haz preguntas, comparte consejos y encuentra respuestas prácticas sobre mantenimiento, reparación y compatibilidad de repuestos.
+                Haz preguntas, comparte consejos y encuentra respuestas practicas sobre mantenimiento, reparacion, compatibilidad de repuestos y fallas comunes en batidoras y mezcladoras.
               </p>
 
               <div className="mt-5 flex flex-wrap gap-3">
@@ -111,7 +111,7 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Buscar fallas, marcas, repuestos o consejos en el foro"
+                placeholder="Buscar fallas, modelos, engranajes, repuestos o consejos en el foro"
                 className="h-13 rounded-full border-transparent bg-muted pl-12 pr-4 shadow-none focus-visible:border-primary/20"
               />
             </div>
