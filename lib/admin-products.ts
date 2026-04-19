@@ -21,6 +21,16 @@ export interface PlaceholderImportResult {
   skipped: number;
 }
 
+export interface BulkArchiveAdminProductsResult {
+  matchedCount: number;
+  archivedCount: number;
+}
+
+export interface BulkHardDeleteAdminProductsResult {
+  matchedCount: number;
+  deletedCount: number;
+}
+
 const FALLBACK_IMAGE_URL = "/images/placeholder.jpg";
 
 const PLACEHOLDER_IMPORT_PRODUCTS: AdminProductWriteInput[] = [
@@ -97,6 +107,22 @@ function normalizeText(value: string, fieldLabel: string): string {
   }
 
   return normalized;
+}
+
+function normalizeProductIds(productIds: string[]): string[] {
+  const uniqueIds = new Set<string>();
+
+  for (const productId of productIds) {
+    const normalizedId = productId.trim();
+
+    if (!normalizedId) {
+      continue;
+    }
+
+    uniqueIds.add(normalizedId);
+  }
+
+  return Array.from(uniqueIds);
 }
 
 function isValidImageUrl(value: string): boolean {
@@ -412,6 +438,59 @@ export async function archiveAdminProduct(productId: string): Promise<void> {
   }
 }
 
+export async function archiveAdminProducts(
+  productIds: string[],
+): Promise<BulkArchiveAdminProductsResult> {
+  const normalizedProductIds = normalizeProductIds(productIds);
+
+  if (normalizedProductIds.length === 0) {
+    throw new Error("Debes seleccionar al menos un producto.");
+  }
+
+  const existingProducts = await prisma.product.findMany({
+    where: {
+      id: {
+        in: normalizedProductIds,
+      },
+    },
+    select: {
+      id: true,
+      status: true,
+    },
+  });
+
+  if (existingProducts.length === 0) {
+    throw new Error("No se encontraron productos para archivar.");
+  }
+
+  const productIdsToArchive = existingProducts
+    .filter((product) => product.status !== ProductStatus.ARCHIVED)
+    .map((product) => product.id);
+
+  if (productIdsToArchive.length === 0) {
+    return {
+      matchedCount: existingProducts.length,
+      archivedCount: 0,
+    };
+  }
+
+  const result = await prisma.product.updateMany({
+    where: {
+      id: {
+        in: productIdsToArchive,
+      },
+    },
+    data: {
+      status: ProductStatus.ARCHIVED,
+    },
+  });
+
+  return {
+    matchedCount: existingProducts.length,
+    archivedCount: result.count,
+  };
+}
+
 export async function restoreAdminProduct(productId: string): Promise<void> {
   const result = await prisma.product.updateMany({
     where: { id: productId },
@@ -431,6 +510,45 @@ export async function hardDeleteAdminProduct(productId: string): Promise<void> {
   if (result.count === 0) {
     throw new Error("Producto no encontrado.");
   }
+}
+
+export async function hardDeleteAdminProducts(
+  productIds: string[],
+): Promise<BulkHardDeleteAdminProductsResult> {
+  const normalizedProductIds = normalizeProductIds(productIds);
+
+  if (normalizedProductIds.length === 0) {
+    throw new Error("Debes seleccionar al menos un producto.");
+  }
+
+  const existingProducts = await prisma.product.findMany({
+    where: {
+      id: {
+        in: normalizedProductIds,
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (existingProducts.length === 0) {
+    throw new Error("No se encontraron productos para eliminar.");
+  }
+
+  const existingProductIds = existingProducts.map((product) => product.id);
+  const result = await prisma.product.deleteMany({
+    where: {
+      id: {
+        in: existingProductIds,
+      },
+    },
+  });
+
+  return {
+    matchedCount: existingProducts.length,
+    deletedCount: result.count,
+  };
 }
 
 export async function importPlaceholderProducts(): Promise<PlaceholderImportResult> {

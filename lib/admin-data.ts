@@ -1,16 +1,5 @@
 // Admin dashboard types and fake data
 
-export interface AdminUser {
-  id: string;
-  name: string;
-  email: string;
-  role: "admin" | "user" | "moderator";
-  status: "active" | "inactive" | "suspended";
-  createdAt: string;
-  lastLogin: string;
-  avatar?: string;
-}
-
 export interface AdminOrder {
   id: string;
   orderNumber: string;
@@ -26,6 +15,7 @@ export interface AdminOrder {
 export interface AdminProduct {
   id: string;
   name: string;
+  imageUrl: string | null;
   brand: string;
   category: string;
   categories?: string[];
@@ -34,8 +24,64 @@ export interface AdminProduct {
   priceVes?: number;
   stock: number;
   status: "active" | "draft" | "archived";
+  featuredRank: number | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AdminManagedCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  productsCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminManagedCategoryOption {
+  id: string;
+  name: string;
+  slug: string;
+  displayName: string;
+}
+
+export interface AdminColorSuggestion {
+  label: string;
+  colorValue: string;
+}
+
+export interface AdminProductEditorImage {
+  id: string;
+  url: string;
+  altText: string;
+  colorIds: string[];
+}
+
+export interface AdminProductEditorColor {
+  id: string;
+  label: string;
+  colorValue: string;
+  available: boolean;
+}
+
+export interface AdminProductEditorData {
+  id: string;
+  name: string;
+  brand: string;
+  primaryCategoryId: string;
+  primaryCategoryName: string;
+  categoryLabels: string[];
+  primaryColor: string | null;
+  primaryColorValue: string | null;
+  colors: AdminProductEditorColor[];
+  priceUsd: number;
+  priceVes: number | null;
+  stock: number;
+  status: "active" | "draft" | "archived";
+  featuredRank: number | null;
+  description: string;
+  images: AdminProductEditorImage[];
 }
 
 export interface AdminExchangeRate {
@@ -55,82 +101,6 @@ export interface DashboardStats {
 }
 
 // Fake data for admin dashboard
-export const fakeUsers: AdminUser[] = [
-  {
-    id: "1",
-    name: "Marcus George",
-    email: "marcus.george@email.com",
-    role: "admin",
-    status: "active",
-    createdAt: "2024-01-15",
-    lastLogin: "2026-03-03",
-    avatar: "/images/avatars/marcus.jpg",
-  },
-  {
-    id: "2",
-    name: "Sarah Johnson",
-    email: "sarah.johnson@email.com",
-    role: "user",
-    status: "active",
-    createdAt: "2024-02-20",
-    lastLogin: "2026-03-02",
-  },
-  {
-    id: "3",
-    name: "Michael Chen",
-    email: "michael.chen@email.com",
-    role: "user",
-    status: "active",
-    createdAt: "2024-03-10",
-    lastLogin: "2026-03-01",
-  },
-  {
-    id: "4",
-    name: "Emily Rodriguez",
-    email: "emily.rodriguez@email.com",
-    role: "moderator",
-    status: "active",
-    createdAt: "2024-04-05",
-    lastLogin: "2026-02-28",
-  },
-  {
-    id: "5",
-    name: "James Wilson",
-    email: "james.wilson@email.com",
-    role: "user",
-    status: "inactive",
-    createdAt: "2024-05-12",
-    lastLogin: "2026-01-15",
-  },
-  {
-    id: "6",
-    name: "Lisa Anderson",
-    email: "lisa.anderson@email.com",
-    role: "user",
-    status: "suspended",
-    createdAt: "2024-06-18",
-    lastLogin: "2025-12-20",
-  },
-  {
-    id: "7",
-    name: "David Kim",
-    email: "david.kim@email.com",
-    role: "user",
-    status: "active",
-    createdAt: "2024-07-22",
-    lastLogin: "2026-03-03",
-  },
-  {
-    id: "8",
-    name: "Amanda Foster",
-    email: "amanda.foster@email.com",
-    role: "user",
-    status: "active",
-    createdAt: "2024-08-30",
-    lastLogin: "2026-03-02",
-  },
-];
-
 export const fakeOrders: AdminOrder[] = [
   {
     id: "1",
@@ -226,88 +196,104 @@ export const fakeProducts: AdminProduct[] = [
   {
     id: "1",
     name: "Cuisinart 14-Cup Coffee Maker",
+    imageUrl: null,
     brand: "Cuisinart",
     category: "Cafeteras",
     price: 99.99,
     stock: 45,
     status: "active",
+    featuredRank: 1,
     createdAt: "2024-01-10",
     updatedAt: "2026-02-15",
   },
   {
     id: "2",
     name: "KitchenAid Artisan Stand Mixer",
+    imageUrl: null,
     brand: "KitchenAid",
     category: "Batidoras",
     price: 449.99,
     stock: 23,
     status: "active",
+    featuredRank: 2,
     createdAt: "2024-02-15",
     updatedAt: "2026-03-01",
   },
   {
     id: "3",
     name: "Whirlpool French Door Refrigerator",
+    imageUrl: null,
     brand: "Whirlpool",
     category: "Refrigeradores",
     price: 2199.0,
     stock: 8,
     status: "active",
+    featuredRank: null,
     createdAt: "2024-03-20",
     updatedAt: "2026-02-28",
   },
   {
     id: "4",
     name: "Cuisinart Air Fryer Toaster Oven",
+    imageUrl: null,
     brand: "Cuisinart",
     category: "Hornos",
     price: 229.99,
     stock: 67,
     status: "active",
+    featuredRank: 3,
     createdAt: "2024-04-05",
     updatedAt: "2026-03-02",
   },
   {
     id: "5",
     name: "KitchenAid Pro Line Blender",
+    imageUrl: null,
     brand: "KitchenAid",
     category: "Licuadoras",
     price: 549.99,
     stock: 12,
     status: "active",
+    featuredRank: null,
     createdAt: "2024-05-12",
     updatedAt: "2026-02-20",
   },
   {
     id: "6",
     name: "Whirlpool Smart Dishwasher",
+    imageUrl: null,
     brand: "Whirlpool",
     category: "Lavavajillas",
     price: 899.0,
     stock: 0,
     status: "draft",
+    featuredRank: null,
     createdAt: "2024-06-18",
     updatedAt: "2026-01-15",
   },
   {
     id: "7",
     name: "Cuisinart Food Processor",
+    imageUrl: null,
     brand: "Cuisinart",
     category: "Procesadores de alimentos",
     price: 179.99,
     stock: 34,
     status: "active",
+    featuredRank: null,
     createdAt: "2024-07-22",
     updatedAt: "2026-03-03",
   },
   {
     id: "8",
     name: "KitchenAid Hand Mixer",
+    imageUrl: null,
     brand: "KitchenAid",
     category: "Batidoras",
     price: 79.99,
     stock: 89,
     status: "archived",
+    featuredRank: null,
     createdAt: "2024-08-30",
     updatedAt: "2025-12-10",
   },

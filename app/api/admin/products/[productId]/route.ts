@@ -1,15 +1,16 @@
-import { randomUUID } from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
-import { requireAdminApiAccess } from "@/lib/auth/admin";
 import { findAdminManagedCategoryById } from "@/lib/admin-categories";
+import { requireAdminApiAccess } from "@/lib/auth/admin";
 import {
   createUniqueSlug,
   getOrCreateBrand,
 } from "@/lib/admin-catalog";
 import { normalizeCategoryLabels } from "@/lib/category-labels";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { ProductStatus } from "@/lib/generated/prisma/enums";
 import {
   normalizeProductColorLabel,
@@ -56,21 +57,6 @@ interface FinalImageInput {
   clientId: string;
   url: string;
   altText: string;
-}
-
-async function createUniqueSku() {
-  let candidate = "";
-
-  do {
-    candidate = `PP-${Date.now().toString(36).toUpperCase()}-${randomUUID().slice(0, 4).toUpperCase()}`;
-  } while (
-    await prisma.product.findUnique({
-      where: { sku: candidate },
-      select: { id: true },
-    })
-  );
-
-  return candidate;
 }
 
 function getStringField(formData: FormData, key: string) {
@@ -144,6 +130,7 @@ function getProductColors(formData: FormData): ProductColorInput[] {
       parsedValue
         .filter(
           (value): value is {
+            id?: unknown;
             label?: unknown;
             colorValue?: unknown;
             available?: unknown;
@@ -226,16 +213,16 @@ function resolveImageColorAssignments(
   const assignmentsByImageId = new Map<string, ImageColorAssignmentInput>();
 
   for (const assignment of rawAssignments) {
-    const uniqueColorIds = Array.from(new Set(assignment.colorIds));
-
     assignmentsByImageId.set(assignment.imageId, {
       imageId: assignment.imageId,
       appliesToAllColors: assignment.appliesToAllColors,
-      colorIds: assignment.appliesToAllColors ? [] : uniqueColorIds,
+      colorIds: assignment.appliesToAllColors
+        ? []
+        : Array.from(new Set(assignment.colorIds)),
     });
   }
 
-  const assignments = images.map((image) => {
+  const assignments: ImageColorAssignmentInput[] = images.map((image) => {
     const assignment = assignmentsByImageId.get(image.clientId);
 
     if (!assignment || assignment.appliesToAllColors) {
@@ -243,7 +230,7 @@ function resolveImageColorAssignments(
         imageId: image.clientId,
         appliesToAllColors: true,
         colorIds: [],
-      } satisfies ImageColorAssignmentInput;
+      };
     }
 
     const validColorIds = assignment.colorIds.filter((colorId) =>
@@ -254,7 +241,7 @@ function resolveImageColorAssignments(
       imageId: image.clientId,
       appliesToAllColors: false,
       colorIds: validColorIds,
-    } satisfies ImageColorAssignmentInput;
+    };
   });
 
   const invalidSpecificImage = assignments.find(
@@ -441,13 +428,29 @@ async function saveImages(
   return uploads;
 }
 
-export async function POST(request: Request) {
+function getRetainedImageUrls(formData: FormData) {
+  return getStringArrayField(formData, "retainedImageUrls");
+}
+
+function isManagedUpload(url: string) {
+  return url.startsWith("/products/uploads/");
+}
+
+function resolveUploadFilePath(url: string) {
+  return path.join(process.cwd(), "public", ...url.replace(/^\//, "").split("/"));
+}
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ productId: string }> },
+) {
   const access = await requireAdminApiAccess("/admin/products");
 
   if (!access.ok) {
     return access.response;
   }
 
+  const productId = (await params).productId;
   const formData = await request.formData();
 
   const name = getStringField(formData, "name");
@@ -457,8 +460,7 @@ export async function POST(request: Request) {
   const description = getStringField(formData, "description");
   const statusValue = getStringField(formData, "status");
   const featuredRankValue = getStringField(formData, "featuredRank");
-  const priceUsdValue =
-    getStringField(formData, "priceUsd") || getStringField(formData, "price");
+  const priceUsdValue = getStringField(formData, "priceUsd");
   const priceVesValue = getStringField(formData, "priceVes");
   const stockValue = getStringField(formData, "stock");
   const imageFiles = getImageFiles(formData);
@@ -492,13 +494,6 @@ export async function POST(request: Request) {
   if (!description) {
     return NextResponse.json(
       { message: "La descripcion del producto es obligatoria." },
-      { status: 400 },
-    );
-  }
-
-  if (imageFiles.length === 0) {
-    return NextResponse.json(
-      { message: "Debes subir al menos una imagen del producto." },
       { status: 400 },
     );
   }
@@ -559,21 +554,55 @@ export async function POST(request: Request) {
     );
   }
 
+  const existingProduct = await prisma.product.findUnique({
+    where: { id: productId },
+    select: {
+      id: true,
+      images: {
+        orderBy: {
+          sortOrder: "asc",
+        },
+        select: {
+          url: true,
+          altText: true,
+        },
+      },
+    },
+  });
+
+  if (!existingProduct) {
+    return NextResponse.json(
+      { message: "Producto no encontrado." },
+      { status: 404 },
+    );
+  }
+
+  const allowedRetainedUrls = new Set(existingProduct.images.map((image) => image.url));
+  const retainedImageUrls = getRetainedImageUrls(formData).filter((url) =>
+    allowedRetainedUrls.has(url),
+  );
+
+  if (retainedImageUrls.length + imageFiles.length === 0) {
+    return NextResponse.json(
+      { message: "Debes conservar o subir al menos una imagen del producto." },
+      { status: 400 },
+    );
+  }
+
   const productSlug = await createUniqueSlug(name, async (candidate) => {
     const product = await prisma.product.findUnique({
       where: { slug: candidate },
       select: { id: true },
     });
 
-    return Boolean(product);
+    return Boolean(product && product.id !== productId);
   });
 
   const uploadedFiles: Awaited<ReturnType<typeof saveImages>> = [];
 
   try {
-    const [brandRecord, sku] = await Promise.all([
+    const [brandRecord] = await Promise.all([
       getOrCreateBrand(brand),
-      createUniqueSku(),
     ]);
 
     const effectiveNewImageIds =
@@ -583,27 +612,82 @@ export async function POST(request: Request) {
 
     uploadedFiles.push(...(await saveImages(imageFiles, productSlug, effectiveNewImageIds)));
 
+    const existingImageMap = new Map(
+      existingProduct.images.map((image) => [image.url, image]),
+    );
+    const existingImageIdsByUrl = new Map(
+      imageOrder
+        .filter((item) => item.kind === "existing" && item.sourceUrl)
+        .map((item) => [item.sourceUrl as string, item.id]),
+    );
     const uploadedFilesById = new Map(
       uploadedFiles.map((file) => [file.id, file]),
     );
-    const orderedUploadedFiles =
-      imageOrder.length > 0
-        ? imageOrder
-            .filter((item) => item.kind === "new")
-            .map((item) => uploadedFilesById.get(item.id))
-            .filter((file): file is (typeof uploadedFiles)[number] => Boolean(file))
-        : [];
-    const usedUploadedIds = new Set(orderedUploadedFiles.map((file) => file.id));
-    const finalUploadedFiles = [
-      ...orderedUploadedFiles,
-      ...uploadedFiles.filter((file) => !usedUploadedIds.has(file.id)),
-    ];
+    const finalImages: FinalImageInput[] = [];
+    const includedExistingUrls = new Set<string>();
+    const includedUploadedIds = new Set<string>();
+
+    if (imageOrder.length > 0) {
+      for (const item of imageOrder) {
+        if (
+          item.kind === "existing" &&
+          item.sourceUrl &&
+          retainedImageUrls.includes(item.sourceUrl) &&
+          !includedExistingUrls.has(item.sourceUrl)
+        ) {
+          finalImages.push({
+            clientId: item.id,
+            url: item.sourceUrl,
+            altText:
+              existingImageMap.get(item.sourceUrl)?.altText ??
+              `${name} imagen ${finalImages.length + 1}`,
+          });
+          includedExistingUrls.add(item.sourceUrl);
+          continue;
+        }
+
+        if (item.kind === "new") {
+          const uploadedFile = uploadedFilesById.get(item.id);
+
+          if (uploadedFile && !includedUploadedIds.has(uploadedFile.id)) {
+            finalImages.push({
+              clientId: item.id,
+              url: uploadedFile.url,
+              altText: `${name} imagen ${finalImages.length + 1}`,
+            });
+            includedUploadedIds.add(uploadedFile.id);
+          }
+        }
+      }
+    }
+
+    for (const retainedImageUrl of retainedImageUrls) {
+      if (!includedExistingUrls.has(retainedImageUrl)) {
+        finalImages.push({
+          clientId:
+            existingImageIdsByUrl.get(retainedImageUrl) ??
+            `existing-${retainedImageUrl}`,
+          url: retainedImageUrl,
+          altText:
+            existingImageMap.get(retainedImageUrl)?.altText ??
+            `${name} imagen ${finalImages.length + 1}`,
+        });
+        includedExistingUrls.add(retainedImageUrl);
+      }
+    }
+
+    for (const uploadedFile of uploadedFiles) {
+      if (!includedUploadedIds.has(uploadedFile.id)) {
+        finalImages.push({
+          clientId: uploadedFile.id,
+          url: uploadedFile.url,
+          altText: `${name} imagen ${finalImages.length + 1}`,
+        });
+        includedUploadedIds.add(uploadedFile.id);
+      }
+    }
+
     const primaryColor = resolvePrimaryColor(productColors, requestedPrimaryColor);
-    const finalImages: FinalImageInput[] = finalUploadedFiles.map((file, index) => ({
-      clientId: file.id,
-      url: file.url,
-      altText: `${name} imagen ${index + 1}`,
-    }));
     const resolvedAssignments = resolveImageColorAssignments(
       rawImageColorAssignments,
       finalImages,
@@ -617,10 +701,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const createdProduct = await prisma.$transaction(async (transaction) => {
-      const product = await transaction.product.create({
+    await prisma.$transaction(async (transaction) => {
+      await transaction.product.update({
+        where: { id: productId },
         data: {
-          sku,
           slug: productSlug,
           name,
           description,
@@ -637,13 +721,15 @@ export async function POST(request: Request) {
           featuredRank,
           brandId: brandRecord.id,
           categoryId: categoryRecord.id,
-          shippingInfo: "Envio a coordinar segun la zona.",
-          features: [],
         },
-        select: {
-          id: true,
-          slug: true,
-        },
+      });
+
+      await transaction.productVariant.deleteMany({
+        where: { productId },
+      });
+
+      await transaction.productImage.deleteMany({
+        where: { productId },
       });
 
       const createdVariants: Array<{ clientId: string; id: string }> = [];
@@ -651,7 +737,7 @@ export async function POST(request: Request) {
       for (const [index, color] of productColors.entries()) {
         const variant = await transaction.productVariant.create({
           data: {
-            productId: product.id,
+            productId,
             label: color.label,
             colorValue: color.colorValue,
             available: color.available,
@@ -673,7 +759,7 @@ export async function POST(request: Request) {
       for (const [index, image] of finalImages.entries()) {
         const createdImage = await transaction.productImage.create({
           data: {
-            productId: product.id,
+            productId,
             url: image.url,
             altText: image.altText,
             sortOrder: index,
@@ -696,19 +782,29 @@ export async function POST(request: Request) {
         createdVariants,
         resolvedAssignments.assignments,
       );
-
-      return product;
     });
+
+    const removedUrls = existingProduct.images
+      .map((image) => image.url)
+      .filter((url) => !retainedImageUrls.includes(url));
+
+    await Promise.all(
+      removedUrls.map(async (url) => {
+        if (!isManagedUpload(url)) {
+          return;
+        }
+
+        await unlink(resolveUploadFilePath(url)).catch(() => undefined);
+      }),
+    );
 
     revalidatePath("/admin/products");
     revalidatePath("/products");
+    revalidatePath(`/admin/products/${productId}/edit`);
 
     return NextResponse.json(
-      {
-        product: createdProduct,
-        message: "Producto creado correctamente.",
-      },
-      { status: 201 },
+      { message: "Producto actualizado correctamente." },
+      { status: 200 },
     );
   } catch (error) {
     await Promise.all(
@@ -718,7 +814,7 @@ export async function POST(request: Request) {
     );
 
     const message =
-      error instanceof Error ? error.message : "No se pudo crear el producto.";
+      error instanceof Error ? error.message : "No se pudo actualizar el producto.";
 
     return NextResponse.json({ message }, { status: 500 });
   }
