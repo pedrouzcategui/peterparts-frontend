@@ -1,54 +1,51 @@
-"use client";
-
-import { Bell, MessageSquare, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
+import { AdminModerationMenu } from "@/components/admin/AdminModerationMenu";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import type { AdminForumHeaderModerationSummary } from "@/lib/forum";
 
 interface AdminHeaderProps {
-  user: {
+  currentUser: {
     firstName: string | null;
     lastName: string | null;
     name: string | null;
     email: string;
   };
+  moderationSummary: AdminForumHeaderModerationSummary;
 }
 
-function getAdminDisplayName(user: AdminHeaderProps["user"]): string {
+function getAdminDisplayName(user: AdminHeaderProps["currentUser"]): string {
   const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ").trim();
 
   if (fullName) {
     return fullName;
   }
 
-  const normalizedName = user.name?.trim();
-
-  if (normalizedName) {
-    return normalizedName;
+  if (user.name?.trim()) {
+    return user.name.trim();
   }
 
-  return user.email;
+  return user.email.split("@")[0] ?? user.email;
 }
 
 function getAdminInitials(displayName: string): string {
-  const parts = displayName
-    .split(/\s+/)
-    .map((part) => part.trim())
-    .filter(Boolean);
+  const tokens = displayName.trim().split(/\s+/).filter(Boolean);
 
-  if (parts.length === 0) {
-    return "AD";
+  if (tokens.length === 0) {
+    return "PP";
   }
 
-  if (parts.length === 1) {
-    return parts[0].slice(0, 2).toUpperCase();
-  }
-
-  return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
+  return tokens
+    .slice(0, 2)
+    .map((token) => token.charAt(0).toUpperCase())
+    .join("");
 }
 
-export function AdminHeader({ user }: AdminHeaderProps) {
-  const displayName = getAdminDisplayName(user);
+export function AdminHeader({
+  currentUser,
+  moderationSummary,
+}: AdminHeaderProps) {
+  const displayName = getAdminDisplayName(currentUser);
   const initials = getAdminInitials(displayName);
 
   return (
@@ -65,13 +62,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
 
       {/* Right side */}
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" aria-label="Mensajes">
-          <MessageSquare className="h-5 w-5" />
-        </Button>
-        <Button variant="ghost" size="icon" className="relative" aria-label="Notificaciones">
-          <Bell className="h-5 w-5" />
-          <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
-        </Button>
+        <AdminModerationMenu moderationSummary={moderationSummary} />
         <ThemeToggle />
 
         {/* User */}

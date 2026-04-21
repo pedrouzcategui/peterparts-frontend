@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import ProductCard from "@/components/products/ProductCard";
+import { getBrandQueryValue } from "@/lib/brand-slugs";
 import { getFeaturedProducts } from "@/lib/product-data";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +25,7 @@ const HOMEPAGE_BRANDS = [
   {
     name: "KitchenAid",
     tagline: "Engranajes, accesorios y batidoras seleccionadas",
-    href: "/products?brand=KitchenAid",
+    href: `/products?brand=${getBrandQueryValue("KitchenAid")}`,
     logoLightSrc: "/images/kitchenaid-logo.png",
     logoDarkSrc: "/images/kitchenaid-logo.png",
   },

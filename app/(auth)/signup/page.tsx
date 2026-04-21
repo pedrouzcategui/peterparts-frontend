@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import SignUpPageClient from "@/components/auth/SignUpPageClient";
-import { isGoogleAuthEnabled } from "@/lib/auth/env";
 
 function getRedirectTo(value: string | string[] | undefined): string {
   if (typeof value !== "string") {
@@ -26,7 +25,6 @@ export default async function SignUpPage({
 
   return (
     <SignUpPageClient
-      googleEnabled={isGoogleAuthEnabled}
       redirectTo={redirectTo}
     />
   );

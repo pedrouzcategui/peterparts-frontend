@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
+import { products as staticCatalogProducts } from "@/lib/data";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { resolveVesAmount } from "@/lib/currency";
 import { ProductBadge, ProductStatus } from "@/lib/generated/prisma/enums";
@@ -17,6 +18,8 @@ import {
   PREDEFINED_PRODUCT_COLORS,
   resolveProductColorValue,
 } from "@/lib/product-colors";
+import { getBrandQueryValue } from "@/lib/brand-slugs";
+import { runStorefrontReadWithFallback } from "@/lib/storefront-query-resilience";
 import type { FilterGroup, Product } from "@/lib/types";
 import { prisma } from "@/lib/prisma";
 
@@ -262,6 +265,8 @@ export type DatabaseProduct = Prisma.ProductGetPayload<{
   include: typeof productInclude;
 }>;
 
+type StaticCatalogProduct = (typeof staticCatalogProducts)[number];
+
 const exchangeRateSelect = {
   rate: true,
   source: true,
@@ -316,6 +321,19 @@ function mapBadge(badge: ProductBadge | null): Product["badge"] {
     case ProductBadge.JUST_IN:
       return "Recien llegado";
     case ProductBadge.BEST_SELLER:
+      return "Mas vendido";
+    default:
+      return undefined;
+  }
+}
+
+function mapStaticBadge(badge?: string): Product["badge"] {
+  switch (badge) {
+    case "Sale":
+      return "Oferta";
+    case "Just In":
+      return "Recien llegado";
+    case "Best Seller":
       return "Mas vendido";
     default:
       return undefined;
@@ -436,6 +454,64 @@ export function mapProduct(
   };
 }
 
+function mapStaticProduct(
+  product: StaticCatalogProduct,
+  activeExchangeRate: number | null,
+): Product {
+  const translation = PRODUCT_TRANSLATIONS[product.slug];
+  const priceUsd = product.price;
+  const originalPriceUsd = product.originalPrice;
+  const priceVes = resolveVesAmount(undefined, priceUsd, activeExchangeRate);
+  const originalPriceVes = originalPriceUsd
+    ? resolveVesAmount(undefined, originalPriceUsd, activeExchangeRate)
+    : undefined;
+
+  return {
+    id: product.id,
+    databaseId: product.id,
+    sku: product.id,
+    slug: product.slug,
+    name: product.name,
+    brand: toBrand(product.brand),
+    category: product.category,
+    subcategory: product.subcategory,
+    price: priceUsd,
+    priceUsd,
+    priceVes,
+    originalPrice: originalPriceUsd,
+    originalPriceUsd,
+    originalPriceVes,
+    description: translation?.description ?? product.description,
+    features: translation?.features ?? product.features,
+    color: translateTerm(product.color),
+    colorValue: resolveProductColorValue(product.color, null),
+    style: product.style,
+    images: product.images.map((image) => ({
+      src: image.src,
+      alt: translateImageAlt(image.alt),
+      variantLabels: [],
+    })),
+    variants: product.variants.map((variant) => ({
+      label: translateTerm(variant.label),
+      colorValue: resolveProductColorValue(variant.label, null),
+      available: variant.available,
+    })),
+    reviews: {
+      rating: product.reviews.rating,
+      count: product.reviews.count,
+    },
+    badge: mapStaticBadge(product.badge),
+    inStock: product.inStock,
+    shippingInfo: translateShippingInfo(product.shippingInfo),
+  };
+}
+
+function getStaticProducts(activeExchangeRate: number | null): Product[] {
+  return staticCatalogProducts.map((product) =>
+    mapStaticProduct(product, activeExchangeRate),
+  );
+}
+
 function mapAdminStatus(status: ProductStatus): AdminProduct["status"] {
   switch (status) {
     case ProductStatus.ACTIVE:
@@ -477,9 +553,15 @@ const fetchActiveExchangeRate = cache(async () => {
 });
 
 export const getActiveExchangeRateValue = cache(async (): Promise<number | null> => {
-  const exchangeRate = await fetchActiveExchangeRate();
+  return runStorefrontReadWithFallback(
+    "active exchange rate",
+    async () => {
+      const exchangeRate = await fetchActiveExchangeRate();
 
-  return exchangeRate ? Number(exchangeRate.rate) : null;
+      return exchangeRate ? Number(exchangeRate.rate) : null;
+    },
+    () => null,
+  );
 });
 
 export const getAdminExchangeRate = cache(
@@ -500,57 +582,78 @@ export const getAdminExchangeRate = cache(
 );
 
 export const getProducts = cache(async (): Promise<Product[]> => {
-  const [products, activeExchangeRate] = await Promise.all([
-    fetchProducts(),
-    getActiveExchangeRateValue(),
-  ]);
+  return runStorefrontReadWithFallback(
+    "catalog products",
+    async () => {
+      const [products, activeExchangeRate] = await Promise.all([
+        fetchProducts(),
+        getActiveExchangeRateValue(),
+      ]);
 
-  return products.map((product) => mapProduct(product, activeExchangeRate));
+      return products.map((product) => mapProduct(product, activeExchangeRate));
+    },
+    async () => getStaticProducts(await getActiveExchangeRateValue()),
+  );
 });
 
 export const getFeaturedProducts = cache(async (): Promise<Product[]> => {
-  const [products, activeExchangeRate] = await Promise.all([
-    prisma.product.findMany({
-      where: {
-        status: ProductStatus.ACTIVE,
-        featuredRank: {
-          not: null,
-        },
-      },
-      include: productInclude,
-      orderBy: [
-        {
-          featuredRank: "asc",
-        },
-        {
-          createdAt: "desc",
-        },
-      ],
-      take: 6,
-    }),
-    getActiveExchangeRateValue(),
-  ]);
+  return runStorefrontReadWithFallback(
+    "featured products",
+    async () => {
+      const [products, activeExchangeRate] = await Promise.all([
+        prisma.product.findMany({
+          where: {
+            status: ProductStatus.ACTIVE,
+            featuredRank: {
+              not: null,
+            },
+          },
+          include: productInclude,
+          orderBy: [
+            {
+              featuredRank: "asc",
+            },
+            {
+              createdAt: "desc",
+            },
+          ],
+          take: 6,
+        }),
+        getActiveExchangeRateValue(),
+      ]);
 
-  return products.map((product) => mapProduct(product, activeExchangeRate));
+      return products.map((product) => mapProduct(product, activeExchangeRate));
+    },
+    async () => getStaticProducts(await getActiveExchangeRateValue()).slice(0, 6),
+  );
 });
 
 export const getProductBySlug = cache(
   async (slug: string): Promise<Product | null> => {
-    const [product, activeExchangeRate] = await Promise.all([
-      prisma.product.findUnique({
-        where: {
-          slug,
-        },
-        include: productInclude,
-      }),
-      getActiveExchangeRateValue(),
-    ]);
+    return runStorefrontReadWithFallback(
+      `product by slug (${slug})`,
+      async () => {
+        const [product, activeExchangeRate] = await Promise.all([
+          prisma.product.findUnique({
+            where: {
+              slug,
+            },
+            include: productInclude,
+          }),
+          getActiveExchangeRateValue(),
+        ]);
 
-    if (!product || product.status !== ProductStatus.ACTIVE) {
-      return null;
-    }
+        if (!product || product.status !== ProductStatus.ACTIVE) {
+          return null;
+        }
 
-    return mapProduct(product, activeExchangeRate);
+        return mapProduct(product, activeExchangeRate);
+      },
+      async () =>
+        getStaticProducts(await getActiveExchangeRateValue()).find(
+          (product) => product.slug === slug,
+        ) ?? null,
+    );
   },
 );
 
@@ -641,6 +744,7 @@ export const getAdminColorSuggestions = cache(
   },
 );
 
+
 export const getFilterGroups = cache(async (): Promise<FilterGroup[]> => {
   const products = await getProducts();
   const brandOptions = Array.from(
@@ -649,7 +753,7 @@ export const getFilterGroups = cache(async (): Promise<FilterGroup[]> => {
     .sort((left, right) => left.localeCompare(right, "es"))
     .map((brand) => ({
       label: brand,
-      value: brand,
+      value: getBrandQueryValue(brand),
       count: products.filter((product) => product.brand === brand).length,
     }));
 

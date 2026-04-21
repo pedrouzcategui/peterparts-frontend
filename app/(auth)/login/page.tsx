@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import LoginPageClient from "@/components/auth/LoginPageClient";
-import { isGoogleAuthEnabled, isResendConfigured } from "@/lib/auth/env";
+import { isResendConfigured } from "@/lib/auth/env";
 import { normalizeAuthRedirectTarget, resolvePostLoginRedirectTarget } from "@/lib/auth/service";
 
 export default async function LoginPage({
@@ -24,7 +24,6 @@ export default async function LoginPage({
 
   return (
     <LoginPageClient
-      googleEnabled={isGoogleAuthEnabled}
       magicLinkEnabled={isResendConfigured}
       redirectTo={redirectTo}
     />

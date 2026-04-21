@@ -1,7 +1,11 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
+import {
+  AdminExchangeRateValidationError,
+  createAdminExchangeRate,
+  getAdminExchangeRateHistory,
+} from "@/lib/admin-exchange-rates";
 import { requireAdminApiAccess } from "@/lib/auth/admin";
-import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
@@ -12,57 +16,29 @@ interface ExchangeRatePayload {
   fetchedAt?: string;
 }
 
-function parseDate(value: string | undefined, fallback: Date): Date {
-  if (!value) {
-    return fallback;
-  }
-
-  const parsedDate = new Date(value);
-
-  return Number.isNaN(parsedDate.getTime()) ? fallback : parsedDate;
-}
-
 export async function GET() {
-  const access = await requireAdminApiAccess("/admin/products");
+  const access = await requireAdminApiAccess("/admin/exchange-rates");
 
   if (!access.ok) {
     return access.response;
   }
 
-  const exchangeRate = await prisma.exchangeRate.findFirst({
-    where: {
-      baseCurrency: "USD",
-      quoteCurrency: "VES",
-      isActive: true,
-    },
-    orderBy: [{ effectiveAt: "desc" }, { createdAt: "desc" }],
-    select: {
-      id: true,
-      rate: true,
-      source: true,
-      effectiveAt: true,
-      fetchedAt: true,
-      updatedAt: true,
-    },
-  });
-
-  if (!exchangeRate) {
-    return NextResponse.json({ exchangeRate: null }, { status: 200 });
-  }
+  const exchangeRates = await getAdminExchangeRateHistory();
+  const activeExchangeRate = exchangeRates.find(
+    (exchangeRate) => exchangeRate.isActive,
+  );
 
   return NextResponse.json(
     {
-      exchangeRate: {
-        ...exchangeRate,
-        rate: Number(exchangeRate.rate),
-      },
+      exchangeRate: activeExchangeRate ?? null,
+      exchangeRates,
     },
     { status: 200 },
   );
 }
 
 export async function POST(request: Request) {
-  const access = await requireAdminApiAccess("/admin/products");
+  const access = await requireAdminApiAccess("/admin/exchange-rates");
 
   if (!access.ok) {
     return access.response;
@@ -71,63 +47,31 @@ export async function POST(request: Request) {
   const body = (await request
     .json()
     .catch(() => null)) as ExchangeRatePayload | null;
-  const numericRate = Number(body?.rate);
+  try {
+    const exchangeRate = await createAdminExchangeRate({
+      rate: body?.rate ?? "",
+      source: body?.source,
+      effectiveAt: body?.effectiveAt,
+      fetchedAt: body?.fetchedAt,
+    });
 
-  if (!Number.isFinite(numericRate) || numericRate <= 0) {
+    revalidatePath("/admin/exchange-rates");
+    revalidatePath("/admin/products");
+    revalidatePath("/products");
+
+    return NextResponse.json({ exchangeRate }, { status: 201 });
+  } catch (error) {
     return NextResponse.json(
-      { message: "La tasa debe ser un numero valido mayor a cero." },
-      { status: 400 },
+      {
+        message:
+          error instanceof Error
+            ? error.message
+            : "No se pudo registrar la tasa de cambio.",
+      },
+      {
+        status:
+          error instanceof AdminExchangeRateValidationError ? 400 : 500,
+      },
     );
   }
-
-  const now = new Date();
-  const effectiveAt = parseDate(body?.effectiveAt, now);
-  const fetchedAt = parseDate(body?.fetchedAt, now);
-  const source = body?.source?.trim() || "manual";
-
-  const exchangeRate = await prisma.$transaction(async (transaction) => {
-    await transaction.exchangeRate.updateMany({
-      where: {
-        baseCurrency: "USD",
-        quoteCurrency: "VES",
-        isActive: true,
-      },
-      data: {
-        isActive: false,
-      },
-    });
-
-    return transaction.exchangeRate.create({
-      data: {
-        baseCurrency: "USD",
-        quoteCurrency: "VES",
-        rate: numericRate.toFixed(6),
-        source,
-        effectiveAt,
-        fetchedAt,
-        isActive: true,
-      },
-      select: {
-        id: true,
-        rate: true,
-        source: true,
-        effectiveAt: true,
-        fetchedAt: true,
-        updatedAt: true,
-      },
-    });
-  });
-
-  revalidatePath("/admin/products");
-  revalidatePath("/products");
-
-  return NextResponse.json(
-    {
-      exchangeRate: {
-        ...exchangeRate,
-        rate: Number(exchangeRate.rate),
-      },
-    },
-    { status: 201 },
-  );
 }

@@ -1,4 +1,6 @@
-import { FilterGroup } from "./types";
+import type { StaticCatalogProduct } from "@/lib/catalog-types";
+import { mercadolibreSeller156535073Products } from "@/lib/vendor-catalog/mercadolibre-156535073";
+import type { FilterGroup } from "./types";
 
 interface SeedProductImage {
   src: string;
@@ -38,7 +40,7 @@ interface SeedProduct {
   shippingInfo: string;
 }
 
-export const products: SeedProduct[] = [
+const baseProducts: StaticCatalogProduct[] = [
   // ── Cuisinart Products ──
   {
     id: "cui-001",
@@ -570,67 +572,165 @@ export const products: SeedProduct[] = [
   },
 ];
 
-export const filterGroups: FilterGroup[] = [
-  {
-    name: "Brand",
-    key: "brand",
-    options: [
-      { label: "Cuisinart", value: "Cuisinart", count: 4 },
-      { label: "Whirlpool", value: "Whirlpool", count: 4 },
-      { label: "KitchenAid", value: "KitchenAid", count: 4 },
-    ],
-  },
-  {
-    name: "Category",
-    key: "category",
-    options: [
-      { label: "Food Processors", value: "Food Processors", count: 1 },
-      { label: "Coffee Makers", value: "Coffee Makers", count: 1 },
-      { label: "Grills & Griddles", value: "Grills & Griddles", count: 1 },
-      { label: "Blenders", value: "Blenders", count: 2 },
-      { label: "Refrigerators", value: "Refrigerators", count: 1 },
-      { label: "Ranges & Ovens", value: "Ranges & Ovens", count: 1 },
-      { label: "Dishwashers", value: "Dishwashers", count: 1 },
-      { label: "Microwaves", value: "Microwaves", count: 1 },
-      { label: "Stand Mixers", value: "Stand Mixers", count: 1 },
-      { label: "Toaster Ovens", value: "Toaster Ovens", count: 1 },
-      { label: "Hand Mixers", value: "Hand Mixers", count: 1 },
-    ],
-  },
-  {
-    name: "Shop by Price",
-    key: "price",
-    options: [
-      { label: "Under $100", value: "0-100", count: 3 },
-      { label: "$100 – $300", value: "100-300", count: 4 },
-      { label: "$300 – $500", value: "300-500", count: 2 },
-      { label: "$500 – $1000", value: "500-1000", count: 2 },
-      { label: "Over $1000", value: "1000-up", count: 1 },
-    ],
-  },
-  {
-    name: "Sale & Offers",
-    key: "sale",
-    options: [
-      { label: "On Sale", value: "sale", count: 3 },
-      { label: "New Arrivals", value: "new", count: 3 },
-    ],
-  },
-  {
-    name: "Color",
-    key: "color",
-    options: [
-      { label: "Stainless Steel", value: "stainless-steel" },
-      { label: "Black", value: "black" },
-      { label: "Red", value: "red" },
-      { label: "White", value: "white" },
-      { label: "Silver", value: "silver" },
-    ],
-  },
-];
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function mergeCatalogProducts(
+  currentProducts: StaticCatalogProduct[],
+  nextProducts: StaticCatalogProduct[],
+) {
+  const productsById = new Map<string, StaticCatalogProduct>();
+  const productIdToSlug = new Map<string, string>();
+  const productSlugToId = new Map<string, string>();
+
+  for (const product of [...currentProducts, ...nextProducts]) {
+    const existingSlug = productIdToSlug.get(product.id);
+
+    if (existingSlug && existingSlug !== product.slug) {
+      throw new Error(
+        `Catalog product id collision detected for ${product.id}.`,
+      );
+    }
+
+    const existingId = productSlugToId.get(product.slug);
+
+    if (existingId && existingId !== product.id) {
+      throw new Error(
+        `Catalog product slug collision detected for ${product.slug}.`,
+      );
+    }
+
+    productsById.set(product.id, product);
+    productIdToSlug.set(product.id, product.slug);
+    productSlugToId.set(product.slug, product.id);
+  }
+
+  return Array.from(productsById.values());
+}
+
+function createFilterGroups(values: StaticCatalogProduct[]): FilterGroup[] {
+  const brandOptions = Array.from(new Set(values.map((product) => product.brand)))
+    .sort((left, right) => left.localeCompare(right, "en"))
+    .map((brand) => ({
+      label: brand,
+      value: brand,
+      count: values.filter((product) => product.brand === brand).length,
+    }));
+
+  const categoryOptions = Array.from(
+    new Set(values.map((product) => product.subcategory)),
+  )
+    .sort((left, right) => left.localeCompare(right, "en"))
+    .map((subcategory) => ({
+      label: subcategory,
+      value: subcategory,
+      count: values.filter((product) => product.subcategory === subcategory).length,
+    }));
+
+  const priceBuckets = [
+    { label: "Under $100", value: "0-100", matches: (price: number) => price < 100 },
+    {
+      label: "$100 – $300",
+      value: "100-300",
+      matches: (price: number) => price >= 100 && price < 300,
+    },
+    {
+      label: "$300 – $500",
+      value: "300-500",
+      matches: (price: number) => price >= 300 && price < 500,
+    },
+    {
+      label: "$500 – $1000",
+      value: "500-1000",
+      matches: (price: number) => price >= 500 && price < 1000,
+    },
+    {
+      label: "Over $1000",
+      value: "1000-up",
+      matches: (price: number) => price >= 1000,
+    },
+  ] as const;
+
+  const priceOptions = priceBuckets.map((bucket) => ({
+    label: bucket.label,
+    value: bucket.value,
+    count: values.filter((product) => bucket.matches(product.price)).length,
+  }));
+
+  const saleOptions = [
+    {
+      label: "On Sale",
+      value: "sale",
+      count: values.filter((product) => product.badge === "Sale").length,
+    },
+    {
+      label: "New Arrivals",
+      value: "new",
+      count: values.filter((product) => product.badge === "Just In").length,
+    },
+  ];
+
+  const colorOptions = Array.from(
+    new Set(
+      values.flatMap((product) => [product.color, ...product.variants.map((variant) => variant.label)]),
+    ),
+  )
+    .sort((left, right) => left.localeCompare(right, "en"))
+    .map((color) => ({
+      label: color,
+      value: slugify(color),
+      count: values.filter(
+        (product) =>
+          product.color === color ||
+          product.variants.some((variant) => variant.label === color),
+      ).length,
+    }));
+
+  return [
+    {
+      name: "Brand",
+      key: "brand",
+      options: brandOptions,
+    },
+    {
+      name: "Category",
+      key: "category",
+      options: categoryOptions,
+    },
+    {
+      name: "Shop by Price",
+      key: "price",
+      options: priceOptions,
+    },
+    {
+      name: "Sale & Offers",
+      key: "sale",
+      options: saleOptions,
+    },
+    {
+      name: "Color",
+      key: "color",
+      options: colorOptions,
+    },
+  ];
+}
+
+export const products: StaticCatalogProduct[] = mergeCatalogProducts(
+  baseProducts,
+  mercadolibreSeller156535073Products,
+);
+
+export const filterGroups: FilterGroup[] = createFilterGroups(products);
 
 /** Look up a product by its slug. */
-export function getProductBySlug(slug: string): SeedProduct | undefined {
+export function getProductBySlug(
+  slug: string,
+): StaticCatalogProduct | undefined {
   return products.find((p) => p.slug === slug);
 }
 

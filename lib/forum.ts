@@ -2,12 +2,20 @@ import "server-only";
 
 import { cache } from "react";
 import { auth } from "@/auth";
-import { ForumVoteDirection, Prisma, UserRole } from "@/lib/generated/prisma/client";
+import {
+  ForumVoteDirection,
+  Prisma,
+} from "@/lib/generated/prisma/client";
+import {
+  ForumThreadStatus as PrismaForumThreadStatus,
+  UserRole,
+} from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import {
   type ForumComment,
   type ForumSort,
   type ForumThread,
+  type ForumThreadStatus,
   type ForumUser,
   type ForumVoteState,
   getFeaturedForumTags as getMockFeaturedForumTags,
@@ -22,6 +30,11 @@ const FORUM_REPLY_CONTENT_MIN_LENGTH = 6;
 const FORUM_DELETED_THREAD_PLACEHOLDER = "Publicacion retirada por el autor.";
 const FORUM_DELETED_REPLY_PLACEHOLDER = "Respuesta eliminada por el autor.";
 
+type ForumThreadPathInput = {
+  id: string;
+  slug: string;
+};
+
 type ForumAuthorRecord = {
   id: string;
   name: string | null;
@@ -34,6 +47,8 @@ type ForumAuthorRecord = {
 type ForumThreadRecord = {
   id: string;
   slug: string;
+  status: PrismaForumThreadStatus;
+  moderatedAt: Date | null;
   title: string;
   content: string;
   tags: string[];
@@ -65,6 +80,12 @@ type ForumReplyRecord = {
   votes?: Array<{
     direction: ForumVoteDirection;
   }>;
+  thread?: {
+    id: string;
+    slug: string;
+    status: PrismaForumThreadStatus;
+    deletedAt: Date | null;
+  };
 };
 
 export interface ForumCurrentUser {
@@ -86,17 +107,98 @@ export interface CastForumVoteResult {
   currentUserVote: ForumVoteState;
 }
 
+export interface AdminForumThreadSummary {
+  id: string;
+  slug: string;
+  title: string;
+  preview: string;
+  tags: string[];
+  status: ForumThreadStatus;
+  createdAt: string;
+  moderatedAt: string | null;
+  commentCount: number;
+  isDeleted: boolean;
+  authorName: string;
+  authorEmail: string;
+  path: string;
+}
+
+export interface AdminForumModerationData {
+  pendingThreads: AdminForumThreadSummary[];
+  reviewedThreads: AdminForumThreadSummary[];
+  counts: {
+    pending: number;
+    approved: number;
+    rejected: number;
+  };
+}
+
+export interface AdminForumHeaderPendingThread {
+  id: string;
+  title: string;
+  authorName: string;
+  createdAt: string;
+  path: string;
+}
+
+export interface AdminForumHeaderModerationSummary {
+  pendingCount: number;
+  recentPendingThreads: AdminForumHeaderPendingThread[];
+}
+
 type ForumVoteTargetType = "thread" | "reply";
+type ModeratableForumThreadStatus = "APPROVED" | "REJECTED";
+
+const ADMIN_FORUM_HEADER_PENDING_THREADS_LIMIT = 5;
 
 function isForumUnavailableError(error: unknown): boolean {
   return (
     error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === "P2021"
+    (error.code === "P2021" || error.code === "P2022")
   );
 }
 
+function mapForumThreadStatus(
+  status: PrismaForumThreadStatus,
+): ForumThreadStatus {
+  if (status === PrismaForumThreadStatus.PENDING) {
+    return "pending";
+  }
+
+  if (status === PrismaForumThreadStatus.REJECTED) {
+    return "rejected";
+  }
+
+  return "approved";
+}
+
+function canViewForumThread({
+  authorId,
+  status,
+  viewerId,
+  viewerRole,
+}: {
+  authorId: string;
+  status: PrismaForumThreadStatus;
+  viewerId: string | null;
+  viewerRole: UserRole | null;
+}): boolean {
+  if (status === PrismaForumThreadStatus.APPROVED) {
+    return true;
+  }
+
+  if (!viewerId) {
+    return false;
+  }
+
+  return viewerId === authorId || viewerRole === UserRole.ADMIN;
+}
+
 function getDisplayName(author: ForumAuthorRecord): string {
-  const fullName = [author.firstName, author.lastName].filter(Boolean).join(" ").trim();
+  const fullName = [author.firstName, author.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
 
   if (fullName) {
     return fullName;
@@ -133,7 +235,9 @@ function mapForumUser(author: ForumAuthorRecord): ForumUser {
   };
 }
 
-function mapVoteDirection(direction: ForumVoteDirection | undefined): ForumVoteState {
+function mapVoteDirection(
+  direction: ForumVoteDirection | undefined,
+): ForumVoteState {
   if (direction === ForumVoteDirection.UP) {
     return "up";
   }
@@ -145,7 +249,9 @@ function mapVoteDirection(direction: ForumVoteDirection | undefined): ForumVoteS
   return null;
 }
 
-function toForumVoteDirection(direction: Exclude<ForumVoteState, null>): ForumVoteDirection {
+function toForumVoteDirection(
+  direction: Exclude<ForumVoteState, null>,
+): ForumVoteDirection {
   return direction === "up" ? ForumVoteDirection.UP : ForumVoteDirection.DOWN;
 }
 
@@ -224,6 +330,8 @@ function mapForumThread(
   return {
     id: thread.id,
     slug: thread.slug,
+    status: mapForumThreadStatus(thread.status),
+    moderatedAt: thread.moderatedAt?.toISOString() ?? null,
     title: thread.title,
     content: thread.deletedAt ? FORUM_DELETED_THREAD_PLACEHOLDER : thread.content,
     author: mapForumUser(thread.author),
@@ -238,7 +346,31 @@ function mapForumThread(
     isEdited: isForumEntryEdited(thread),
     canEdit: !thread.deletedAt && viewerId === thread.authorId,
     canDelete: !thread.deletedAt && viewerId === thread.authorId,
+    canReply:
+      !thread.deletedAt && thread.status === PrismaForumThreadStatus.APPROVED,
     comments,
+  };
+}
+
+function mapAdminForumThreadSummary(
+  thread: ForumThreadRecord,
+): AdminForumThreadSummary {
+  const authorName = getDisplayName(thread.author);
+
+  return {
+    id: thread.id,
+    slug: thread.slug,
+    title: thread.title,
+    preview: thread.content.slice(0, 220),
+    tags: thread.tags,
+    status: mapForumThreadStatus(thread.status),
+    createdAt: thread.createdAt.toISOString(),
+    moderatedAt: thread.moderatedAt?.toISOString() ?? null,
+    commentCount: thread._count?.replies ?? 0,
+    isDeleted: Boolean(thread.deletedAt),
+    authorName,
+    authorEmail: thread.author.email,
+    path: buildForumThreadPath(thread),
   };
 }
 
@@ -287,40 +419,15 @@ function slugifyForumThreadTitle(value: string): string {
     .slice(0, 80);
 }
 
-async function resolveUniqueForumThreadSlug(title: string): Promise<string> {
-  const rootSlug = slugifyForumThreadTitle(title) || "pregunta";
-  let candidate = rootSlug;
-  let suffix = 2;
-
-  while (true) {
-    const existing = await prisma.forumThread.findUnique({
-      where: { slug: candidate },
-      select: { id: true },
-    });
-
-    if (!existing) {
-      return candidate;
-    }
-
-    candidate = `${rootSlug}-${suffix}`;
-    suffix += 1;
-  }
-}
-
-async function resolveForumThread(threadIdOrSlug: string): Promise<{ id: string; slug: string } | null> {
-  return prisma.forumThread.findFirst({
-    where: {
-      OR: [{ id: threadIdOrSlug }, { slug: threadIdOrSlug }],
-    },
-    select: {
-      id: true,
-      slug: true,
-    },
-  });
-}
-
 export function buildForumLoginRedirectPath(redirectTo: string): string {
   return `/login?redirectTo=${encodeURIComponent(redirectTo)}`;
+}
+
+export function buildForumThreadPath({
+  id,
+  slug,
+}: ForumThreadPathInput): string {
+  return `/forum/${id}/${encodeURIComponent(slug || "pregunta")}`;
 }
 
 export const getCurrentForumUser = cache(async (): Promise<ForumCurrentUser | null> => {
@@ -359,11 +466,6 @@ export const getCurrentForumUser = cache(async (): Promise<ForumCurrentUser | nu
   };
 });
 
-const getCurrentForumViewerId = cache(async (): Promise<string | null> => {
-  const currentUser = await getCurrentForumUser();
-  return currentUser?.id ?? null;
-});
-
 export async function getForumFeedData({
   sort = "hot",
   tag,
@@ -374,10 +476,12 @@ export async function getForumFeedData({
   authorId?: string;
 } = {}): Promise<ForumThread[]> {
   try {
-    const viewerId = await getCurrentForumViewerId();
+    const currentUser = await getCurrentForumUser();
+    const viewerId = currentUser?.id ?? null;
     const normalizedTag = typeof tag === "string" && tag.length > 0 ? tag : null;
     const threads = await prisma.forumThread.findMany({
       where: {
+        status: PrismaForumThreadStatus.APPROVED,
         ...(authorId ? { authorId } : {}),
       },
       include: {
@@ -414,7 +518,9 @@ export async function getForumFeedData({
       },
     });
 
-    const mappedThreads = threads.map((thread) => mapForumThread(thread, undefined, viewerId));
+    const mappedThreads = threads.map((thread) =>
+      mapForumThread(thread, undefined, viewerId),
+    );
     const filteredThreads = normalizedTag
       ? mappedThreads.filter((thread) =>
           thread.tags.some((threadTag) => slugifyForumTag(threadTag) === normalizedTag),
@@ -434,6 +540,9 @@ export async function getForumFeedData({
 export async function getFeaturedForumTagsData(limit = 8): Promise<string[]> {
   try {
     const threads = await prisma.forumThread.findMany({
+      where: {
+        status: PrismaForumThreadStatus.APPROVED,
+      },
       select: {
         tags: true,
       },
@@ -450,7 +559,7 @@ export async function getFeaturedForumTagsData(limit = 8): Promise<string[]> {
     return [...counts.entries()]
       .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
       .slice(0, limit)
-      .map(([tag]) => tag);
+      .map(([tagValue]) => tagValue);
   } catch (error) {
     if (isForumUnavailableError(error)) {
       return getMockFeaturedForumTags(limit);
@@ -465,13 +574,15 @@ export async function getRecentForumThreads(limit = 4): Promise<ForumThread[]> {
 }
 
 export async function getForumThreadData(
-  idOrSlug: string,
+  threadId: string,
 ): Promise<(ForumThread & { comments: ForumComment[] }) | null> {
   try {
-    const viewerId = await getCurrentForumViewerId();
-    const thread = await prisma.forumThread.findFirst({
+    const currentUser = await getCurrentForumUser();
+    const viewerId = currentUser?.id ?? null;
+    const viewerRole = currentUser?.role ?? null;
+    const thread = await prisma.forumThread.findUnique({
       where: {
-        OR: [{ id: idOrSlug }, { slug: idOrSlug }],
+        id: threadId,
       },
       include: {
         author: {
@@ -532,6 +643,17 @@ export async function getForumThreadData(
       return null;
     }
 
+    if (
+      !canViewForumThread({
+        authorId: thread.authorId,
+        status: thread.status,
+        viewerId,
+        viewerRole,
+      })
+    ) {
+      return null;
+    }
+
     const comments = thread.replies.map((reply) => mapForumReply(reply));
 
     return {
@@ -540,7 +662,7 @@ export async function getForumThreadData(
     };
   } catch (error) {
     if (isForumUnavailableError(error)) {
-      return getMockThreadById(idOrSlug);
+      return getMockThreadById(threadId);
     }
 
     throw error;
@@ -557,15 +679,56 @@ export async function getForumQuestionSummaryForUser(
     };
   }
 
-  const threads = await getForumFeedData({
-    sort: "new",
-    authorId,
-  });
+  try {
+    const currentUser = await getCurrentForumUser();
+    const viewerId = currentUser?.id ?? null;
+    const canSeeHidden =
+      currentUser?.role === UserRole.ADMIN || viewerId === authorId;
+    const threads = await prisma.forumThread.findMany({
+      where: {
+        authorId,
+        ...(canSeeHidden ? {} : { status: PrismaForumThreadStatus.APPROVED }),
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            createdAt: true,
+          },
+        },
+        _count: {
+          select: {
+            replies: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-  return {
-    count: threads.length,
-    recentThreads: threads.slice(0, 3),
-  };
+    const mappedThreads = threads.map((thread) =>
+      mapForumThread(thread, undefined, viewerId),
+    );
+
+    return {
+      count: mappedThreads.length,
+      recentThreads: mappedThreads.slice(0, 3),
+    };
+  } catch (error) {
+    if (isForumUnavailableError(error)) {
+      return {
+        count: 0,
+        recentThreads: [],
+      };
+    }
+
+    throw error;
+  }
 }
 
 export async function createForumThread({
@@ -578,7 +741,7 @@ export async function createForumThread({
   title: string;
   content: string;
   tags: string;
-}): Promise<{ id: string; slug: string }> {
+}): Promise<ForumThreadPathInput> {
   const normalizedTitle = normalizeForumText(title);
   const normalizedContent = normalizeForumText(content);
 
@@ -591,12 +754,13 @@ export async function createForumThread({
   }
 
   const parsedTags = parseForumTags(tags);
-  const slug = await resolveUniqueForumThreadSlug(normalizedTitle);
+  const slug = slugifyForumThreadTitle(normalizedTitle) || "pregunta";
 
   return prisma.forumThread.create({
     data: {
       authorId,
       slug,
+      status: PrismaForumThreadStatus.PENDING,
       title: normalizedTitle,
       content: normalizedContent,
       tags: parsedTags,
@@ -610,23 +774,41 @@ export async function createForumThread({
 
 export async function createForumReply({
   authorId,
-  threadIdOrSlug,
+  threadId,
   content,
 }: {
   authorId: string;
-  threadIdOrSlug: string;
+  threadId: string;
   content: string;
-}): Promise<{ slug: string }> {
+}): Promise<ForumThreadPathInput> {
   const normalizedContent = normalizeForumText(content);
 
   if (normalizedContent.length < FORUM_REPLY_CONTENT_MIN_LENGTH) {
     throw new Error("La respuesta debe tener al menos 6 caracteres.");
   }
 
-  const thread = await resolveForumThread(threadIdOrSlug);
+  const thread = await prisma.forumThread.findUnique({
+    where: {
+      id: threadId,
+    },
+    select: {
+      id: true,
+      slug: true,
+      status: true,
+      deletedAt: true,
+    },
+  });
 
   if (!thread) {
     throw new Error("No encontramos el hilo que intentas responder.");
+  }
+
+  if (thread.deletedAt) {
+    throw new Error("No puedes responder a una publicacion retirada.");
+  }
+
+  if (thread.status !== PrismaForumThreadStatus.APPROVED) {
+    throw new Error("Solo puedes responder a publicaciones aprobadas.");
   }
 
   await prisma.forumReply.create({
@@ -638,23 +820,24 @@ export async function createForumReply({
   });
 
   return {
+    id: thread.id,
     slug: thread.slug,
   };
 }
 
 export async function updateForumThread({
   authorId,
-  threadIdOrSlug,
+  threadId,
   title,
   content,
   tags,
 }: {
   authorId: string;
-  threadIdOrSlug: string;
+  threadId: string;
   title: string;
   content: string;
   tags: string;
-}): Promise<{ slug: string }> {
+}): Promise<ForumThreadPathInput> {
   const normalizedTitle = normalizeForumText(title);
   const normalizedContent = normalizeForumText(content);
 
@@ -666,9 +849,9 @@ export async function updateForumThread({
     throw new Error("La pregunta debe tener al menos 30 caracteres.");
   }
 
-  const existingThread = await prisma.forumThread.findFirst({
+  const existingThread = await prisma.forumThread.findUnique({
     where: {
-      OR: [{ id: threadIdOrSlug }, { slug: threadIdOrSlug }],
+      id: threadId,
     },
     select: {
       id: true,
@@ -690,11 +873,14 @@ export async function updateForumThread({
     throw new Error("No puedes editar una publicacion retirada.");
   }
 
+  const slug = slugifyForumThreadTitle(normalizedTitle) || "pregunta";
+
   await prisma.forumThread.update({
     where: {
       id: existingThread.id,
     },
     data: {
+      slug,
       title: normalizedTitle,
       content: normalizedContent,
       tags: parseForumTags(tags),
@@ -702,20 +888,21 @@ export async function updateForumThread({
   });
 
   return {
-    slug: existingThread.slug,
+    id: existingThread.id,
+    slug,
   };
 }
 
 export async function softDeleteForumThread({
   authorId,
-  threadIdOrSlug,
+  threadId,
 }: {
   authorId: string;
-  threadIdOrSlug: string;
-}): Promise<{ slug: string }> {
-  const existingThread = await prisma.forumThread.findFirst({
+  threadId: string;
+}): Promise<ForumThreadPathInput> {
+  const existingThread = await prisma.forumThread.findUnique({
     where: {
-      OR: [{ id: threadIdOrSlug }, { slug: threadIdOrSlug }],
+      id: threadId,
     },
     select: {
       id: true,
@@ -745,16 +932,17 @@ export async function softDeleteForumThread({
   }
 
   return {
+    id: existingThread.id,
     slug: existingThread.slug,
   };
 }
 
 export async function hardDeleteForumThread({
   actorId,
-  threadIdOrSlug,
+  threadId,
 }: {
   actorId: string;
-  threadIdOrSlug: string;
+  threadId: string;
 }): Promise<void> {
   const actingUser = await prisma.user.findUnique({
     where: {
@@ -769,9 +957,9 @@ export async function hardDeleteForumThread({
     throw new Error("Solo los administradores pueden eliminar publicaciones definitivamente.");
   }
 
-  const existingThread = await prisma.forumThread.findFirst({
+  const existingThread = await prisma.forumThread.findUnique({
     where: {
-      OR: [{ id: threadIdOrSlug }, { slug: threadIdOrSlug }],
+      id: threadId,
     },
     select: {
       id: true,
@@ -797,7 +985,7 @@ export async function updateForumReply({
   authorId: string;
   replyId: string;
   content: string;
-}): Promise<{ slug: string }> {
+}): Promise<ForumThreadPathInput> {
   const normalizedContent = normalizeForumText(content);
 
   if (normalizedContent.length < FORUM_REPLY_CONTENT_MIN_LENGTH) {
@@ -814,7 +1002,9 @@ export async function updateForumReply({
       deletedAt: true,
       thread: {
         select: {
+          id: true,
           slug: true,
+          deletedAt: true,
         },
       },
     },
@@ -832,6 +1022,10 @@ export async function updateForumReply({
     throw new Error("No puedes editar una respuesta eliminada.");
   }
 
+  if (existingReply.thread.deletedAt) {
+    throw new Error("No puedes editar una respuesta de una publicacion retirada.");
+  }
+
   await prisma.forumReply.update({
     where: {
       id: replyId,
@@ -842,6 +1036,7 @@ export async function updateForumReply({
   });
 
   return {
+    id: existingReply.thread.id,
     slug: existingReply.thread.slug,
   };
 }
@@ -852,7 +1047,7 @@ export async function softDeleteForumReply({
 }: {
   authorId: string;
   replyId: string;
-}): Promise<{ slug: string }> {
+}): Promise<ForumThreadPathInput> {
   const existingReply = await prisma.forumReply.findUnique({
     where: {
       id: replyId,
@@ -863,7 +1058,9 @@ export async function softDeleteForumReply({
       deletedAt: true,
       thread: {
         select: {
+          id: true,
           slug: true,
+          deletedAt: true,
         },
       },
     },
@@ -875,6 +1072,10 @@ export async function softDeleteForumReply({
 
   if (existingReply.authorId !== authorId) {
     throw new Error("No puedes eliminar una respuesta que no te pertenece.");
+  }
+
+  if (existingReply.thread.deletedAt) {
+    throw new Error("No puedes eliminar una respuesta de una publicacion retirada.");
   }
 
   if (!existingReply.deletedAt) {
@@ -889,7 +1090,174 @@ export async function softDeleteForumReply({
   }
 
   return {
+    id: existingReply.thread.id,
     slug: existingReply.thread.slug,
+  };
+}
+
+export async function getAdminForumModerationData(): Promise<AdminForumModerationData> {
+  try {
+    const threads = await prisma.forumThread.findMany({
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            createdAt: true,
+          },
+        },
+        _count: {
+          select: {
+            replies: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    const mappedThreads = threads.map((thread) =>
+      mapAdminForumThreadSummary(thread),
+    );
+    const pendingThreads = mappedThreads.filter(
+      (thread) => thread.status === "pending",
+    );
+    const reviewedThreads = mappedThreads
+      .filter((thread) => thread.status !== "pending")
+      .sort((left, right) => {
+        const leftDate = new Date(left.moderatedAt ?? left.createdAt).getTime();
+        const rightDate = new Date(right.moderatedAt ?? right.createdAt).getTime();
+        return rightDate - leftDate;
+      });
+
+    return {
+      pendingThreads,
+      reviewedThreads,
+      counts: {
+        pending: pendingThreads.length,
+        approved: mappedThreads.filter((thread) => thread.status === "approved")
+          .length,
+        rejected: mappedThreads.filter((thread) => thread.status === "rejected")
+          .length,
+      },
+    };
+  } catch (error) {
+    if (isForumUnavailableError(error)) {
+      return {
+        pendingThreads: [],
+        reviewedThreads: [],
+        counts: {
+          pending: 0,
+          approved: 0,
+          rejected: 0,
+        },
+      };
+    }
+
+    throw error;
+  }
+}
+
+export async function getAdminHeaderModerationSummary(): Promise<AdminForumHeaderModerationSummary> {
+  try {
+    const [pendingCount, pendingThreads] = await prisma.$transaction([
+      prisma.forumThread.count({
+        where: {
+          status: PrismaForumThreadStatus.PENDING,
+        },
+      }),
+      prisma.forumThread.findMany({
+        where: {
+          status: PrismaForumThreadStatus.PENDING,
+        },
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          createdAt: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              createdAt: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: ADMIN_FORUM_HEADER_PENDING_THREADS_LIMIT,
+      }),
+    ]);
+
+    return {
+      pendingCount,
+      recentPendingThreads: pendingThreads.map((thread) => ({
+        id: thread.id,
+        title: thread.title,
+        authorName: getDisplayName(thread.author),
+        createdAt: thread.createdAt.toISOString(),
+        path: buildForumThreadPath(thread),
+      })),
+    };
+  } catch (error) {
+    if (isForumUnavailableError(error)) {
+      return {
+        pendingCount: 0,
+        recentPendingThreads: [],
+      };
+    }
+
+    throw error;
+  }
+}
+
+export async function updateForumThreadModerationStatus({
+  threadId,
+  status,
+}: {
+  threadId: string;
+  status: ModeratableForumThreadStatus;
+}): Promise<ForumThreadPathInput> {
+  const existingThread = await prisma.forumThread.findUnique({
+    where: {
+      id: threadId,
+    },
+    select: {
+      id: true,
+      slug: true,
+      deletedAt: true,
+    },
+  });
+
+  if (!existingThread) {
+    throw new Error("No encontramos la publicacion que intentas moderar.");
+  }
+
+  if (existingThread.deletedAt) {
+    throw new Error("No puedes moderar una publicacion retirada.");
+  }
+
+  await prisma.forumThread.update({
+    where: {
+      id: existingThread.id,
+    },
+    data: {
+      status,
+      moderatedAt: new Date(),
+    },
+  });
+
+  return {
+    id: existingThread.id,
+    slug: existingThread.slug,
   };
 }
 
@@ -914,12 +1282,18 @@ export async function castForumVote({
         },
         select: {
           id: true,
+          deletedAt: true,
+          status: true,
           upvotes: true,
           downvotes: true,
         },
       });
 
-      if (!thread) {
+      if (
+        !thread ||
+        thread.deletedAt ||
+        thread.status !== PrismaForumThreadStatus.APPROVED
+      ) {
         throw new Error("No encontramos el hilo que intentas votar.");
       }
 
@@ -936,7 +1310,8 @@ export async function castForumVote({
         },
       });
 
-      const nextDirection = existingVote?.direction === requestedDirection ? null : direction;
+      const nextDirection =
+        existingVote?.direction === requestedDirection ? null : direction;
       const nextCounts = applyVoteCountUpdate({
         upvotes: thread.upvotes,
         downvotes: thread.downvotes,
@@ -993,10 +1368,21 @@ export async function castForumVote({
         deletedAt: true,
         upvotes: true,
         downvotes: true,
+        thread: {
+          select: {
+            deletedAt: true,
+            status: true,
+          },
+        },
       },
     });
 
-    if (!reply || reply.deletedAt) {
+    if (
+      !reply ||
+      reply.deletedAt ||
+      reply.thread.deletedAt ||
+      reply.thread.status !== PrismaForumThreadStatus.APPROVED
+    ) {
       throw new Error("No encontramos la respuesta que intentas votar.");
     }
 
@@ -1013,7 +1399,8 @@ export async function castForumVote({
       },
     });
 
-    const nextDirection = existingVote?.direction === requestedDirection ? null : direction;
+    const nextDirection =
+      existingVote?.direction === requestedDirection ? null : direction;
     const nextCounts = applyVoteCountUpdate({
       upvotes: reply.upvotes,
       downvotes: reply.downvotes,

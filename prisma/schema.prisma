@@ -26,6 +26,12 @@ enum ForumVoteDirection {
   DOWN
 }
 
+enum ForumThreadStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum OrderStatus {
   PENDING
   PROCESSING
@@ -120,6 +126,19 @@ model Category {
 
   @@unique([parentId, name])
   @@index([parentId])
+}
+
+model CatalogColor {
+  id              String   @id @default(cuid())
+  label           String   @unique
+  normalizedLabel String   @unique
+  colorValue      String
+  isBasePalette   Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([isBasePalette])
+  @@index([createdAt])
 }
 
 model Product {
@@ -394,7 +413,9 @@ model PasswordResetToken {
 
 model ForumThread {
   id        String            @id @default(cuid())
-  slug      String            @unique
+  slug      String
+  status    ForumThreadStatus @default(PENDING)
+  moderatedAt DateTime?
   title     String
   content   String            @db.Text
   tags      String[]          @default([])
@@ -409,6 +430,8 @@ model ForumThread {
   updatedAt DateTime          @updatedAt
 
   @@index([authorId])
+  @@index([slug])
+  @@index([status, createdAt])
   @@index([createdAt])
 }
 

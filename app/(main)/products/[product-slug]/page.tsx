@@ -7,6 +7,7 @@ import {
   getCurrentFavouriteUser,
   getFavouriteProductIdsForUser,
 } from "@/lib/favourites";
+import { getBrandQueryValue } from "@/lib/brand-slugs";
 import { getProductBySlug } from "@/lib/product-data";
 import { getStorefrontSettings } from "@/lib/storefront-settings-store";
 import {
@@ -125,7 +126,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href={`/products?brand=${product.brand}`}>
+                <Link href={`/products?brand=${getBrandQueryValue(product.brand)}`}>
                   {product.brand}
                 </Link>
               </BreadcrumbLink>

@@ -334,8 +334,13 @@ export default function AdminProductsTableClient({
           <p className="mt-1 text-sm text-muted-foreground">
             {latestExchangeRate
               ? `Tasa activa: 1 USD = ${formatExchangeRate(latestExchangeRate.rate)} VES${latestExchangeRate.source ? ` · Fuente: ${latestExchangeRate.source}` : ""}`
-              : "No hay una tasa USD/VES activa. Puedes registrar una luego con POST /api/admin/exchange-rates."}
+              : "No hay una tasa USD/VES activa. Registra una para autocalcular precios en bolivares."}
           </p>
+          <div className="mt-2">
+            <Button asChild variant="link" className="h-auto px-0 text-sm">
+              <Link href="/admin/exchange-rates">Gestionar exchange rates</Link>
+            </Button>
+          </div>
         </div>
         <Button asChild>
           <Link href="/admin/products/new">

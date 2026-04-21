@@ -61,17 +61,7 @@ export function SocialButtons({
   isLoading = false,
 }: SocialButtonsProps) {
   if (!googleEnabled) {
-    return (
-      <p className="rounded-2xl border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
-        Google Login/Register estara disponible cuando configures
-        {" "}
-        AUTH_GOOGLE_ID
-        {" "}
-        y
-        {" "}
-        AUTH_GOOGLE_SECRET.
-      </p>
-    );
+    return null;
   }
 
   return (

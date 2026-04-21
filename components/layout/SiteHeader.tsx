@@ -5,8 +5,9 @@ import { getFavouriteCountForUser } from "@/lib/favourites";
 import { prisma } from "@/lib/prisma";
 import CartButton from "@/components/cart/CartButton";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { BrandLogo } from "@/components/layout/BrandLogo";
+import MobileNavMenu from "@/components/layout/MobileNavMenu";
 import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_LINKS = [
@@ -91,7 +92,7 @@ export default async function SiteHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-[#e7e1d8] bg-white text-[#1A1714] shadow-[0_10px_30px_rgba(26,23,20,0.05)] dark:border-border dark:bg-background/95 dark:text-foreground dark:shadow-none dark:supports-backdrop-filter:bg-background/60">
       {/* Main navigation */}
       <div className="border-b border-primary/30 bg-primary text-primary-foreground dark:border-border dark:bg-background">
-        <div className="site-shell grid h-24 grid-cols-[auto_1fr_auto] items-center gap-8">
+        <div className="site-shell grid h-24 grid-cols-[auto_1fr_auto] items-center gap-3 sm:gap-8">
           {/* Logo */}
           <BrandLogo
             priority
@@ -119,88 +120,93 @@ export default async function SiteHeader() {
           </nav>
 
           {/* Right icons */}
-          <TooltipProvider>
-            <div className="flex items-center justify-end gap-1 sm:gap-2">
-              {isSignedIn ? (
-                <Link
-                  href={accountHref}
-                  className="hidden items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold tracking-[0.06em] text-white transition-colors hover:bg-white/20 sm:flex dark:border-border dark:bg-accent/40 dark:text-foreground dark:hover:bg-accent/60"
+          <div className="flex items-center justify-end gap-0.5 sm:gap-2">
+            {isSignedIn ? (
+              <Link
+                href={accountHref}
+                className="hidden items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold tracking-[0.06em] text-white transition-colors hover:bg-white/20 sm:flex dark:border-border dark:bg-accent/40 dark:text-foreground dark:hover:bg-accent/60"
+              >
+                <UserRound className="h-4 w-4" />
+                <span>{firstName ? `Hola, ${firstName}` : "Mi cuenta"}</span>
+              </Link>
+            ) : null}
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={searchTooltip}
+                  className="hidden text-primary-foreground hover:bg-white/10 hover:text-white md:inline-flex dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
                 >
-                  <UserRound className="h-4 w-4" />
-                  <span>{firstName ? `Hola, ${firstName}` : "Mi cuenta"}</span>
-                </Link>
-              ) : null}
+                  <Search className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{searchTooltip}</p>
+              </TooltipContent>
+            </Tooltip>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={searchTooltip}
-                    className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
-                  >
-                    <Search className="h-5 w-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{searchTooltip}</p>
-                </TooltipContent>
-              </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="icon"
+                  aria-label={accountTooltip}
+                  className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
+                >
+                  <Link href={accountHref}>
+                    <UserRound className="h-5 w-5" />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{accountTooltip}</p>
+              </TooltipContent>
+            </Tooltip>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    asChild
-                    variant="ghost"
-                    size="icon"
-                    aria-label={accountTooltip}
-                    className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
-                  >
-                    <Link href={accountHref}>
-                      <UserRound className="h-5 w-5" />
-                    </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{accountTooltip}</p>
-                </TooltipContent>
-              </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="icon"
+                  aria-label={favouritesTooltip}
+                  className="relative text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
+                >
+                  <Link href={favouritesHref}>
+                    <Heart className="h-5 w-5" />
+                    {favouriteCount > 0 ? (
+                      <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[10px] font-semibold text-primary dark:bg-primary dark:text-primary-foreground">
+                        {favouriteCount > 9 ? "9+" : favouriteCount}
+                      </span>
+                    ) : null}
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{favouritesTooltip}</p>
+              </TooltipContent>
+            </Tooltip>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    asChild
-                    variant="ghost"
-                    size="icon"
-                    aria-label={favouritesTooltip}
-                    className="relative text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
-                  >
-                    <Link href={favouritesHref}>
-                      <Heart className="h-5 w-5" />
-                      {favouriteCount > 0 ? (
-                        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[10px] font-semibold text-primary dark:bg-primary dark:text-primary-foreground">
-                          {favouriteCount > 9 ? "9+" : favouriteCount}
-                        </span>
-                      ) : null}
-                    </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{favouritesTooltip}</p>
-                </TooltipContent>
-              </Tooltip>
-
-              <CartButton
-                title="Carrito"
-                className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
-                badgeClassName="bg-white text-primary dark:bg-primary dark:text-primary-foreground"
-              />
-              <ThemeToggle
-                title="Cambiar tema"
-                className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
-              />
-            </div>
-          </TooltipProvider>
+            <CartButton
+              title="Carrito"
+              className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
+              badgeClassName="bg-white text-primary dark:bg-primary dark:text-primary-foreground"
+            />
+            <ThemeToggle
+              title="Cambiar tema"
+              className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
+            />
+            <MobileNavMenu
+              accountHref={accountHref}
+              favouritesHref={favouritesHref}
+              favouriteCount={favouriteCount}
+              firstName={firstName}
+              isSignedIn={isSignedIn}
+            />
+          </div>
         </div>
       </div>
     </header>

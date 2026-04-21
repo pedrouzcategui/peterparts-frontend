@@ -11,6 +11,7 @@ export interface ForumUser {
 }
 
 export type ForumVoteState = "up" | "down" | null;
+export type ForumThreadStatus = "pending" | "approved" | "rejected";
 
 export interface ForumComment {
   id: string;
@@ -29,7 +30,9 @@ export interface ForumComment {
 
 export interface ForumThread {
   id: string;
-  slug?: string;
+  slug: string;
+  status: ForumThreadStatus;
+  moderatedAt?: string | null;
   title: string;
   content: string;
   author: ForumUser;
@@ -44,6 +47,7 @@ export interface ForumThread {
   isEdited?: boolean;
   canEdit?: boolean;
   canDelete?: boolean;
+  canReply?: boolean;
   comments?: ForumComment[];
 }
 
@@ -55,6 +59,18 @@ export interface RecentPublication {
 }
 
 export type ForumSort = "hot" | "new" | "top";
+
+export function getForumThreadStatusLabel(status: ForumThreadStatus): string {
+  if (status === "pending") {
+    return "Pendiente";
+  }
+
+  if (status === "rejected") {
+    return "Rechazada";
+  }
+
+  return "Aprobada";
+}
 
 // Mock users
 export const mockUsers: ForumUser[] = [
@@ -94,6 +110,8 @@ export const mockUsers: ForumUser[] = [
 export const mockThreads: ForumThread[] = [
   {
     id: "thread-1",
+    slug: "cuales-son-los-mejores-repuestos-para-una-kitchenaid-stand-mixer",
+    status: "approved",
     title: "¿Cuales son los mejores repuestos para una KitchenAid Stand Mixer?",
     content:
       "Tengo una KitchenAid Artisan Stand Mixer de unos 5 anos. El accesorio batidor ya muestra desgaste y estoy buscando repuestos de buena calidad. ¿Alguien ha probado piezas de terceros frente a repuestos originales? Busco recomendaciones sobre donde comprar y que evitar.",
@@ -106,87 +124,101 @@ export const mockThreads: ForumThread[] = [
   },
   {
     id: "thread-2",
-    title: "La cuchilla de mi Cuisinart no gira. ¿Sera el acople?",
+    slug: "la-cuchilla-de-mi-procesador-cuisinart-no-gira-ayuda",
+    status: "approved",
+    title: "La cuchilla de mi procesador Cuisinart no gira. ¡Ayuda!",
     content:
-      "Mi equipo Cuisinart enciende, pero la cuchilla no gira. Ya revise el seguro y todo parece estar bien, asi que sospecho del acople o de algun engranaje interno. ¿A alguien le ha pasado? ¿Que pieza conviene revisar primero?",
+      "Mi procesador de alimentos Cuisinart de 14 tazas dejo de funcionar de repente. El motor enciende, pero la cuchilla no gira. Ya revise el seguro y parece estar bien. ¿A alguien le ha pasado esto? ¿Vale la pena repararlo o mejor compro uno nuevo?",
     author: mockUsers[1],
     createdAt: "2026-03-03T08:15:00Z",
     upvotes: 15,
     downvotes: 1,
     commentCount: 12,
-    tags: ["Cuisinart", "Reparacion", "Acople"],
+    tags: ["Cuisinart", "Reparacion", "Procesador de alimentos"],
   },
   {
     id: "thread-3",
-    title: "Mi batidora Whirlpool perdio fuerza en velocidad media",
+    slug: "mi-refrigerador-whirlpool-hace-ruidos-extranos",
+    status: "approved",
+    title: "Mi refrigerador Whirlpool hace ruidos extranos",
     content:
-      "Desde hace unos dias mi batidora Whirlpool suena normal, pero en velocidad media le cuesta mover mezclas ligeras. Antes no hacia eso. ¿Podria ser desgaste del engranaje, carbones o algun problema de regulacion?",
+      "Desde hace una semana, mi refrigerador Whirlpool side-by-side hace un ruido de clic cada pocos minutos. Sigue enfriando bien, pero el ruido me preocupa. ¿Alguna idea de que puede estar causandolo? El equipo tiene unos 3 anos.",
     author: mockUsers[2],
     createdAt: "2026-03-02T22:45:00Z",
     upvotes: 31,
     downvotes: 0,
     commentCount: 15,
-    tags: ["Whirlpool", "Batidora", "Engranaje"],
+    tags: ["Whirlpool", "Refrigerador", "Ruido"],
   },
   {
     id: "thread-4",
-    title: "¿Donde conseguir repuestos descontinuados para una batidora Cuisinart?",
+    slug: "donde-conseguir-repuestos-descontinuados-para-un-lavavajillas-bosch",
+    status: "approved",
+    title: "¿Donde conseguir repuestos descontinuados para un lavavajillas Bosch?",
     content:
-      "Tengo una batidora Cuisinart de 2018 y necesito cambiar una pieza del tren de engranajes. El modelo fue descontinuado y me esta costando encontrar el repuesto exacto. ¿Alguien conoce fuentes confiables para piezas viejas o equivalencias que si funcionen?",
+      "Tengo un lavavajillas Bosch de 2018 que necesita un nuevo brazo rociador. El modelo fue descontinuado y me esta costando encontrar la pieza exacta. ¿Alguien conoce fuentes confiables para repuestos Bosch descontinuados? Por lo demas el equipo funciona muy bien.",
     author: mockUsers[3],
     createdAt: "2026-03-02T16:20:00Z",
     upvotes: 18,
     downvotes: 3,
     commentCount: 6,
-    tags: ["Cuisinart", "Repuestos", "Descontinuado"],
+    tags: ["Bosch", "Lavavajillas", "Descontinuado"],
   },
   {
     id: "thread-5",
-    title: "¿Consejos para mantener tazones y accesorios de acero inoxidable?",
+    slug: "consejos-para-mantener-electrodomesticos-de-acero-inoxidable",
+    status: "approved",
+    title: "¿Consejos para mantener electrodomesticos de acero inoxidable?",
     content:
-      "Quiero mantener en buen estado los tazones y accesorios de acero inoxidable de mis batidoras. ¿Que productos recomiendan para limpiarlos sin rayarlos? ¿Tienen algun truco para evitar manchas, grasa pegada o marcas de agua?",
+      "Acabo de renovar mi cocina con electrodomesticos de acero inoxidable. Busco consejos para mantenerlos como nuevos. ¿Que productos de limpieza recomiendan? ¿Tienen trucos para evitar huellas y marcas de agua?",
     author: mockUsers[4],
     createdAt: "2026-03-02T14:00:00Z",
     upvotes: 42,
     downvotes: 1,
     commentCount: 23,
-    tags: ["Mantenimiento", "Acero inoxidable", "Accesorios"],
+    tags: ["Mantenimiento", "Acero inoxidable", "Consejos"],
   },
   {
     id: "thread-6",
-    title: "Mi KitchenAid cambia de velocidad sola. ¿Problema de gobernador?",
+    slug: "mi-horno-ge-no-calienta-parejo-problema-de-calibracion",
+    status: "approved",
+    title: "Mi horno GE no calienta parejo. ¿Problema de calibracion?",
     content:
-      "Mi KitchenAid empieza mezclando bien, pero a mitad del uso sube o baja de velocidad sin que yo toque la palanca. He visto que algunos hablan del gobernador o del centrifugo. ¿Alguien ha cambiado esa pieza y soluciono el problema?",
+      "Mi horno GE Profile parece tener puntos calientes. Los horneados salen cocidos de manera desigual. Ya probe con un termometro y la temperatura en el centro parece correcta. ¿Sera un problema de calibracion o del elemento calefactor?",
     author: mockUsers[0],
     createdAt: "2026-03-01T11:30:00Z",
     upvotes: 27,
     downvotes: 2,
     commentCount: 11,
-    tags: ["KitchenAid", "Gobernador", "Velocidad"],
+    tags: ["GE", "Horno", "Calentamiento"],
   },
   {
     id: "thread-7",
-    title: "Mi KitchenAid esta botando grasa por el cabezal",
+    slug: "el-hacedor-de-hielo-samsung-se-sigue-congelando",
+    status: "approved",
+    title: "El hacedor de hielo Samsung se sigue congelando",
     content:
-      "Mi KitchenAid empezo a botar grasa por el cabezal despues de varios meses sin uso. Funciona, pero me preocupa dañar la mezcla o que falte lubricacion interna. ¿Conviene limpiar y relubricar o cambiar algun sello o engranaje de una vez?",
+      "El hacedor de hielo de mi refrigerador Samsung French Door se congela y deja de producir hielo. Ya lo descongele manualmente dos veces, pero el problema vuelve. ¿Existe una solucion definitiva? Parece ser una falla comun en Samsung.",
     author: mockUsers[1],
     createdAt: "2026-03-01T09:15:00Z",
     upvotes: 56,
     downvotes: 4,
     commentCount: 34,
-    tags: ["KitchenAid", "Grasa", "Mantenimiento"],
+    tags: ["Samsung", "Hacedor de hielo", "Congelador"],
   },
   {
     id: "thread-8",
-    title: "¿Que accesorio vale mas la pena para una batidora?",
+    slug: "alguna-recomendacion-de-campana-extractora-silenciosa",
+    status: "approved",
+    title: "¿Alguna recomendacion de campana extractora silenciosa?",
     content:
-      "Quiero comprar un accesorio nuevo para mi batidora y estoy entre el batidor de borde flexible, el globo y el gancho amasador. Si solo pudieran empezar con uno, ¿cual les ha dado mas utilidad en la cocina diaria?",
+      "Quiero reemplazar mi campana extractora vieja y ruidosa. ¿Que modelos recomiendan que sean silenciosos pero potentes? Mi presupuesto esta entre $500 y $800. La cocina mide unos 200 pies cuadrados y tiene una estufa estandar de 30 pulgadas.",
     author: mockUsers[2],
     createdAt: "2026-02-28T20:00:00Z",
     upvotes: 19,
     downvotes: 0,
     commentCount: 9,
-    tags: ["Accesorios", "Batidora", "Recomendacion"],
+    tags: ["Campana extractora", "Recomendacion", "Cocina"],
   },
 ];
 
@@ -225,7 +257,7 @@ export const mockCommentsThread1: ForumComment[] = [
     id: "comment-2",
     author: mockUsers[3],
     content:
-      "De hecho me ha ido muy bien comprando repuestos en PeterParts. Tienen buena seleccion de accesorios, engranajes y piezas para KitchenAid, Cuisinart y Whirlpool, con envio rapido.",
+      "De hecho me ha ido muy bien comprando repuestos en PeterParts. Tienen una gran seleccion de accesorios KitchenAid, precios competitivos y envio rapido.",
     createdAt: "2026-03-03T12:00:00Z",
     upvotes: 8,
     downvotes: 1,
@@ -256,19 +288,19 @@ export const mockCommentsThread1: ForumComment[] = [
 export const mockRecentPublications: RecentPublication[] = [
   {
     id: "recent-1",
-    title: "Mi KitchenAid esta botando grasa por el cabezal",
+    title: "El hacedor de hielo Samsung se sigue congelando",
     threadId: "thread-7",
     visitedAt: "2026-03-03T09:00:00Z",
   },
   {
     id: "recent-2",
-    title: "¿Consejos para mantener tazones y accesorios de acero inoxidable?",
+    title: "¿Consejos para mantener electrodomesticos de acero inoxidable?",
     threadId: "thread-5",
     visitedAt: "2026-03-02T18:30:00Z",
   },
   {
     id: "recent-3",
-    title: "Mi batidora Whirlpool perdio fuerza en velocidad media",
+    title: "Mi refrigerador Whirlpool hace ruidos extranos",
     threadId: "thread-3",
     visitedAt: "2026-03-02T15:00:00Z",
   },
@@ -285,7 +317,7 @@ function getHotScore(thread: ForumThread): number {
 }
 
 export function normalizeForumSort(
-  value: string | string[] | null | undefined
+  value: string | string[] | null | undefined,
 ): ForumSort {
   if (value === "new" || value === "top") {
     return value;
@@ -313,7 +345,7 @@ export function getForumFeed({
 } = {}): ForumThread[] {
   const filteredThreads = tag
     ? mockThreads.filter((thread) =>
-        thread.tags.some((threadTag) => slugifyForumTag(threadTag) === tag)
+        thread.tags.some((threadTag) => slugifyForumTag(threadTag) === tag),
       )
     : mockThreads;
 
@@ -342,7 +374,7 @@ export function getFeaturedForumTags(limit = 8): string[] {
   return [...tagCounts.entries()]
     .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
     .slice(0, limit)
-    .map(([tag]) => tag);
+    .map(([tagValue]) => tagValue);
 }
 
 // Helper function to format relative time
@@ -385,11 +417,15 @@ export function formatRelativeTime(dateString: string): string {
 }
 
 // Get thread by ID with comments
-export function getThreadById(id: string): (ForumThread & { comments: ForumComment[] }) | null {
-  const thread = mockThreads.find((t) => t.id === id);
-  if (!thread) return null;
+export function getThreadById(
+  id: string,
+): (ForumThread & { comments: ForumComment[] }) | null {
+  const thread = mockThreads.find((candidate) => candidate.id === id);
 
-  // For demo, only thread-1 has detailed comments
+  if (!thread) {
+    return null;
+  }
+
   const comments = id === "thread-1" ? mockCommentsThread1 : [];
 
   return {

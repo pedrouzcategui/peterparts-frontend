@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { Separator } from "@/components/ui/separator";
+import { getBrandQueryValue } from "@/lib/brand-slugs";
 
 const FOOTER_LINKS = [
   {
@@ -26,7 +27,10 @@ const FOOTER_LINKS = [
     links: [
       { label: "Cuisinart", href: "/products?brand=Cuisinart" },
       { label: "Whirlpool", href: "/products?brand=Whirlpool" },
-      { label: "KitchenAid", href: "/products?brand=KitchenAid" },
+      {
+        label: "KitchenAid",
+        href: `/products?brand=${getBrandQueryValue("KitchenAid")}`,
+      },
     ],
   },
 ] as const;

@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import ProductGrid from "@/components/products/ProductGrid";
 import Pagination from "@/components/products/Pagination";
+import { getBrandQueryValue } from "@/lib/brand-slugs";
 import { buildProductColorFilterValue } from "@/lib/product-colors";
 import type { Product } from "@/lib/types";
 
@@ -36,9 +37,14 @@ export default function ProductsContent({ allProducts }: ProductsContentProps) {
     }
 
     // Brand filter
-    const brands = searchParams.get("brand")?.split(",");
+    const brands = searchParams
+      .get("brand")
+      ?.split(",")
+      .map((brand) => getBrandQueryValue(brand));
     if (brands?.length) {
-      result = result.filter((p) => brands.includes(p.brand));
+      result = result.filter((product) =>
+        brands.includes(getBrandQueryValue(product.brand)),
+      );
     }
 
     // Category filter (subcategory in our data model)
