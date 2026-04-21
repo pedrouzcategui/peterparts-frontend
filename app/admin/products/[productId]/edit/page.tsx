@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import AdminProductForm from "@/components/admin/AdminProductForm";
 import { Button } from "@/components/ui/button";
+import type { AdminManagedCategoryOption } from "@/lib/admin-data";
 import { getAdminManagedCategoryOptions } from "@/lib/admin-categories";
 import {
   getAdminBrands,
@@ -13,6 +14,25 @@ import {
 } from "@/lib/product-data";
 
 export const dynamic = "force-dynamic";
+
+function ensureCurrentCategoryOption(
+  managedCategories: AdminManagedCategoryOption[],
+  product: NonNullable<Awaited<ReturnType<typeof getAdminProductById>>>,
+) {
+  if (managedCategories.some((category) => category.id === product.primaryCategoryId)) {
+    return managedCategories;
+  }
+
+  return [
+    ...managedCategories,
+    {
+      id: product.primaryCategoryId,
+      name: product.primaryCategoryName,
+      slug: product.primaryCategoryName,
+      displayName: `${product.primaryCategoryName} (existente)`,
+    },
+  ].sort((left, right) => left.displayName.localeCompare(right.displayName, "es"));
+}
 
 export default async function AdminEditProductPage({
   params,
@@ -40,6 +60,8 @@ export default async function AdminEditProductPage({
     notFound();
   }
 
+  const categoryOptions = ensureCurrentCategoryOption(managedCategories, product);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
@@ -61,7 +83,7 @@ export default async function AdminEditProductPage({
         mode="edit"
         initialProduct={product}
         existingBrands={brands}
-        managedCategories={managedCategories}
+        managedCategories={categoryOptions}
         categoryLabelSuggestions={categoryLabelSuggestions}
         colorSuggestions={colorSuggestions}
         latestExchangeRate={latestExchangeRate}

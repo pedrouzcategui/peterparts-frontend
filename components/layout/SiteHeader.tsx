@@ -5,6 +5,7 @@ import { getFavouriteCountForUser } from "@/lib/favourites";
 import { prisma } from "@/lib/prisma";
 import CartButton from "@/components/cart/CartButton";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -81,6 +82,10 @@ export default async function SiteHeader() {
   const favouriteCount = currentUser?.id
     ? await getFavouriteCountForUser(currentUser.id)
     : 0;
+  const searchTooltip = "Buscar";
+  const accountTooltip = isSignedIn ? "Mi cuenta" : "Iniciar sesion";
+  const favouritesTooltip =
+    favouriteCount > 0 ? `Favoritos (${favouriteCount})` : "Favoritos";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#e7e1d8] bg-white text-[#1A1714] shadow-[0_10px_30px_rgba(26,23,20,0.05)] dark:border-border dark:bg-background/95 dark:text-foreground dark:shadow-none dark:supports-backdrop-filter:bg-background/60">
@@ -114,61 +119,88 @@ export default async function SiteHeader() {
           </nav>
 
           {/* Right icons */}
-          <div className="flex items-center justify-end gap-1 sm:gap-2">
-            {isSignedIn ? (
-              <Link
-                href={accountHref}
-                className="hidden items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold tracking-[0.06em] text-white transition-colors hover:bg-white/20 sm:flex dark:border-border dark:bg-accent/40 dark:text-foreground dark:hover:bg-accent/60"
-              >
-                <UserRound className="h-4 w-4" />
-                <span>{firstName ? `Hola, ${firstName}` : "Mi cuenta"}</span>
-              </Link>
-            ) : null}
+          <TooltipProvider>
+            <div className="flex items-center justify-end gap-1 sm:gap-2">
+              {isSignedIn ? (
+                <Link
+                  href={accountHref}
+                  className="hidden items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold tracking-[0.06em] text-white transition-colors hover:bg-white/20 sm:flex dark:border-border dark:bg-accent/40 dark:text-foreground dark:hover:bg-accent/60"
+                >
+                  <UserRound className="h-4 w-4" />
+                  <span>{firstName ? `Hola, ${firstName}` : "Mi cuenta"}</span>
+                </Link>
+              ) : null}
 
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Buscar"
-              className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
-            >
-              <Search className="h-5 w-5" />
-            </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={searchTooltip}
+                    className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
+                  >
+                    <Search className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{searchTooltip}</p>
+                </TooltipContent>
+              </Tooltip>
 
-            <Button
-              asChild
-              variant="ghost"
-              size="icon"
-              aria-label={isSignedIn ? (firstName ? `Sesion iniciada como ${firstName}` : "Sesion iniciada") : "Cuenta"}
-              className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
-            >
-              <Link href={accountHref}>
-                <UserRound className="h-5 w-5" />
-              </Link>
-            </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="icon"
+                    aria-label={accountTooltip}
+                    className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
+                  >
+                    <Link href={accountHref}>
+                      <UserRound className="h-5 w-5" />
+                    </Link>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{accountTooltip}</p>
+                </TooltipContent>
+              </Tooltip>
 
-            <Button
-              asChild
-              variant="ghost"
-              size="icon"
-              aria-label={isSignedIn ? `Favoritos (${favouriteCount})` : "Favoritos"}
-              className="relative text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
-            >
-              <Link href={favouritesHref}>
-                <Heart className="h-5 w-5" />
-                {favouriteCount > 0 ? (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[10px] font-semibold text-primary dark:bg-primary dark:text-primary-foreground">
-                    {favouriteCount > 9 ? "9+" : favouriteCount}
-                  </span>
-                ) : null}
-              </Link>
-            </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="icon"
+                    aria-label={favouritesTooltip}
+                    className="relative text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
+                  >
+                    <Link href={favouritesHref}>
+                      <Heart className="h-5 w-5" />
+                      {favouriteCount > 0 ? (
+                        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[10px] font-semibold text-primary dark:bg-primary dark:text-primary-foreground">
+                          {favouriteCount > 9 ? "9+" : favouriteCount}
+                        </span>
+                      ) : null}
+                    </Link>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{favouritesTooltip}</p>
+                </TooltipContent>
+              </Tooltip>
 
-            <CartButton
-              className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
-              badgeClassName="bg-white text-primary dark:bg-primary dark:text-primary-foreground"
-            />
-            <ThemeToggle className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground" />
-          </div>
+              <CartButton
+                title="Carrito"
+                className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
+                badgeClassName="bg-white text-primary dark:bg-primary dark:text-primary-foreground"
+              />
+              <ThemeToggle
+                title="Cambiar tema"
+                className="text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
+              />
+            </div>
+          </TooltipProvider>
         </div>
       </div>
     </header>

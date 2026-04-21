@@ -16,13 +16,20 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await requireAdminPageAccess("/admin");
+  const user = await requireAdminPageAccess("/admin");
 
   return (
     <div className="min-h-screen bg-muted/30">
       <AdminSidebar />
       <div className="pl-64">
-        <AdminHeader />
+        <AdminHeader
+          user={{
+            firstName: user.firstName,
+            lastName: user.lastName,
+            name: user.name,
+            email: user.email,
+          }}
+        />
         <main className="p-6">{children}</main>
       </div>
     </div>

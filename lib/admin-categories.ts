@@ -54,12 +54,6 @@ const categoryOptionSelect = {
   id: true,
   name: true,
   slug: true,
-  parentId: true,
-  parent: {
-    select: {
-      name: true,
-    },
-  },
 } as const;
 
 function normalizeCategoryName(name: string): string {
@@ -193,17 +187,20 @@ export const getAdminManagedCategories = cache(
 export const getAdminManagedCategoryOptions = cache(
   async (): Promise<AdminManagedCategoryOption[]> => {
     const categories = await prisma.category.findMany({
+      where: {
+        parentId: null,
+      },
       select: categoryOptionSelect,
-      orderBy: [{ parentId: "asc" }, { name: "asc" }],
+      orderBy: {
+        name: "asc",
+      },
     });
 
     return categories.map((category) => ({
       id: category.id,
       name: category.name,
       slug: category.slug,
-      displayName: category.parent?.name
-        ? `${category.parent.name} / ${category.name}`
-        : category.name,
+      displayName: category.name,
     }));
   },
 );
