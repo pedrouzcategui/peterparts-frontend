@@ -11,6 +11,10 @@ import {
   getFavouriteProductsForUser,
 } from "@/lib/favourites";
 import { formatUsd, formatVes } from "@/lib/currency";
+import {
+  getDefaultSelectedVariantLabel,
+  getPrimaryProductImage,
+} from "@/lib/product-gallery";
 
 function formatSavedDate(value: Date): string {
   return new Intl.DateTimeFormat("es-VE", {
@@ -90,6 +94,11 @@ export default async function FavouritesPage() {
           <section className="grid gap-5 lg:grid-cols-2">
             {favourites.map(({ savedAt, product }) => {
               const priceUsd = product.priceUsd ?? product.price;
+              const defaultVariantLabel = getDefaultSelectedVariantLabel(product);
+              const primaryImage = getPrimaryProductImage(
+                product,
+                defaultVariantLabel,
+              );
               const priceVes =
                 typeof product.priceVes === "number" && product.priceVes > 0
                   ? formatVes(product.priceVes)
@@ -106,8 +115,8 @@ export default async function FavouritesPage() {
                       className="relative flex min-h-55 items-center justify-center border-b border-[#ebe7e0] bg-[#fcfaf7] p-6 sm:border-b-0 sm:border-r dark:border-border dark:bg-muted/30"
                     >
                       <ProductImageWithFallback
-                        src={product.images[0]?.src}
-                        alt={product.images[0]?.alt ?? product.name}
+                        src={primaryImage?.src}
+                        alt={primaryImage?.alt ?? product.name}
                         sizes="(max-width: 768px) 100vw, 220px"
                         className="object-contain p-3"
                       />

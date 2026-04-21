@@ -41,5 +41,12 @@ export function getPrimaryProductImage(
   product: Product,
   variantLabel?: string | null,
 ) {
-  return getVisibleProductImages(product, variantLabel)[0] ?? product.images[0] ?? null;
+  const resolvedVariantLabel =
+    variantLabel ?? getDefaultSelectedVariantLabel(product);
+
+  return (
+    getVisibleProductImages(product, resolvedVariantLabel)[0] ??
+    product.images[0] ??
+    null
+  );
 }

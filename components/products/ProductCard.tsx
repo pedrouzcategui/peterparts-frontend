@@ -4,6 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import ProductCardQuickAdd from "./ProductCardQuickAdd";
 import ProductImageWithFallback from "@/components/products/ProductImageWithFallback";
 import { formatUsd, formatVes } from "@/lib/currency";
+import {
+  getDefaultSelectedVariantLabel,
+  getPrimaryProductImage,
+} from "@/lib/product-gallery";
 import type { Product } from "@/lib/types";
 
 interface ProductCardProps {
@@ -20,6 +24,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const priceVes = product.priceVes;
   const originalPriceUsd = product.originalPriceUsd ?? product.originalPrice;
   const formattedPrice = formatUsd(priceUsd);
+  const defaultVariantLabel = getDefaultSelectedVariantLabel(product);
+  const primaryImage = getPrimaryProductImage(product, defaultVariantLabel);
 
   const formattedOriginalPrice = originalPriceUsd
     ? formatUsd(originalPriceUsd)
@@ -115,8 +121,8 @@ export default function ProductCard({ product }: ProductCardProps) {
           ) : null}
 
           <ProductImageWithFallback
-            src={product.images[0]?.src}
-            alt={product.images[0]?.alt ?? product.name}
+            src={primaryImage?.src}
+            alt={primaryImage?.alt ?? product.name}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-contain p-4 transition-transform duration-300 group-hover:scale-105"
           />
