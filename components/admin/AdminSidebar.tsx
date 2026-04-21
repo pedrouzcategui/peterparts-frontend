@@ -21,7 +21,7 @@ const mainNavItems = [
   { href: "/admin/orders", label: "Pedidos", icon: ShoppingCart },
   { href: "/admin/forum", label: "Foro", icon: MessageSquareText },
   { href: "/admin/products", label: "Productos", icon: Package },
-  { href: "/admin/exchange-rates", label: "Exchange Rates", icon: ArrowLeftRight },
+  { href: "/admin/exchange-rates", label: "Tasas de cambio", icon: ArrowLeftRight },
   { href: "/admin/colors", label: "Colores", icon: Palette },
   { href: "/admin/categories", label: "Categorias", icon: Tags },
   { href: "/admin/users", label: "Users", icon: Users },

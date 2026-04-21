@@ -338,7 +338,7 @@ export default function AdminProductsTableClient({
           </p>
           <div className="mt-2">
             <Button asChild variant="link" className="h-auto px-0 text-sm">
-              <Link href="/admin/exchange-rates">Gestionar exchange rates</Link>
+              <Link href="/admin/exchange-rates">Gestionar tasas de cambio</Link>
             </Button>
           </div>
         </div>

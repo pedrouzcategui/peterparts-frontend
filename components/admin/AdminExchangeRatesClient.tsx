@@ -288,7 +288,7 @@ export default function AdminExchangeRatesClient({
     <div className="space-y-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Exchange Rates</h1>
+          <h1 className="text-2xl font-bold">Tasas de cambio</h1>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
             Administra la tasa USD/VES que se usa como referencia al crear y editar
             productos. Cada nuevo registro se guarda en el historial y queda activo
