@@ -11,6 +11,7 @@ import type {
   AdminProduct,
   AdminProductEditorColor,
   AdminProductEditorData,
+  AdminProductPromotionBadge,
   AdminProductEditorReview,
 } from "@/lib/admin-data";
 import { normalizeCategoryLabels } from "@/lib/category-labels";
@@ -524,6 +525,21 @@ function mapAdminStatus(status: ProductStatus): AdminProduct["status"] {
   }
 }
 
+function mapAdminBadge(
+  badge: ProductBadge | null,
+): AdminProductPromotionBadge {
+  switch (badge) {
+    case ProductBadge.SALE:
+      return "sale";
+    case ProductBadge.JUST_IN:
+      return "just_in";
+    case ProductBadge.BEST_SELLER:
+      return "best_seller";
+    default:
+      return null;
+  }
+}
+
 const fetchProducts = cache(async () => {
   return prisma.product.findMany({
     where: {
@@ -980,6 +996,9 @@ export const getAdminProductById = cache(
       createdAt: review.createdAt.toISOString(),
     }));
     const priceUsd = Number(product.price);
+    const compareAtPriceUsd = product.compareAtPrice
+      ? Number(product.compareAtPrice)
+      : null;
 
     return {
       id: product.id,
@@ -997,8 +1016,20 @@ export const getAdminProductById = cache(
         priceUsd,
         activeExchangeRate,
       ),
+      compareAtPriceUsd,
+      compareAtPriceVes:
+        compareAtPriceUsd === null && !product.compareAtPriceVes
+          ? null
+          : resolveVesAmount(
+              product.compareAtPriceVes
+                ? Number(product.compareAtPriceVes)
+                : undefined,
+              compareAtPriceUsd ?? 0,
+              activeExchangeRate,
+            ),
       stock: product.stockQuantity,
       status: mapAdminStatus(product.status),
+      badge: mapAdminBadge(product.badge),
       featuredRank: product.featuredRank,
       description: product.description,
       images: product.images.map((image) => ({

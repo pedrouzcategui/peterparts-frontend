@@ -9,7 +9,7 @@ import {
 } from "@/lib/admin-catalog";
 import { normalizeCategoryLabels } from "@/lib/category-labels";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import { ProductStatus } from "@/lib/generated/prisma/enums";
+import { ProductBadge, ProductStatus } from "@/lib/generated/prisma/enums";
 import { deleteProductImageAssets } from "@/lib/product-image-storage.server";
 import {
   normalizeProductColorLabel,
@@ -26,6 +26,12 @@ const STATUS_MAP: Record<string, ProductStatus> = {
   active: ProductStatus.ACTIVE,
   draft: ProductStatus.DRAFT,
   archived: ProductStatus.ARCHIVED,
+};
+
+const BADGE_MAP: Record<string, ProductBadge> = {
+  sale: ProductBadge.SALE,
+  just_in: ProductBadge.JUST_IN,
+  best_seller: ProductBadge.BEST_SELLER,
 };
 
 export const runtime = "nodejs";
@@ -101,6 +107,32 @@ function getStringArrayField(formData: FormData, key: string) {
   } catch {
     return [];
   }
+}
+
+function resolveCompareAtPriceVes(
+  compareAtPriceUsd: number | null,
+  compareAtPriceVes: number | null,
+  priceUsd: number,
+  priceVes: number,
+) {
+  if (compareAtPriceUsd === null) {
+    return null;
+  }
+
+  if (compareAtPriceVes !== null) {
+    return compareAtPriceVes;
+  }
+
+  if (
+    !Number.isFinite(priceUsd) ||
+    priceUsd <= 0 ||
+    !Number.isFinite(priceVes) ||
+    priceVes <= 0
+  ) {
+    return null;
+  }
+
+  return Math.round(((compareAtPriceUsd / priceUsd) * priceVes) * 100) / 100;
 }
 
 function normalizeProductColors(values: ProductColorInput[]): ProductColorInput[] {
@@ -434,10 +466,13 @@ export async function POST(request: Request) {
   const categoryLabels = getStringArrayField(formData, "categoryLabels");
   const description = getStringField(formData, "description");
   const statusValue = getStringField(formData, "status");
+  const badgeValue = getStringField(formData, "badge");
   const featuredRankValue = getStringField(formData, "featuredRank");
   const priceUsdValue =
     getStringField(formData, "priceUsd") || getStringField(formData, "price");
   const priceVesValue = getStringField(formData, "priceVes");
+  const compareAtPriceUsdValue = getStringField(formData, "compareAtPriceUsd");
+  const compareAtPriceVesValue = getStringField(formData, "compareAtPriceVes");
   const stockValue = getStringField(formData, "stock");
   const uploadedImages = getUploadedImages(formData);
   const imageOrder = getImageOrder(formData);
@@ -494,8 +529,15 @@ export async function POST(request: Request) {
 
   const priceUsd = Number(priceUsdValue);
   const priceVes = Number(priceVesValue);
+  const compareAtPriceUsd = compareAtPriceUsdValue
+    ? Number(compareAtPriceUsdValue)
+    : null;
+  const compareAtPriceVes = compareAtPriceVesValue
+    ? Number(compareAtPriceVesValue)
+    : null;
   const stock = Number.parseInt(stockValue, 10);
   const status = STATUS_MAP[statusValue];
+  const badge = badgeValue ? BADGE_MAP[badgeValue] ?? null : null;
   const categoryRecord = await findAdminManagedCategoryById(primaryCategoryId);
   let featuredRank: number | null = null;
 
@@ -524,6 +566,43 @@ export async function POST(request: Request) {
     );
   }
 
+  if (
+    compareAtPriceUsd !== null &&
+    (!Number.isFinite(compareAtPriceUsd) || compareAtPriceUsd < 0)
+  ) {
+    return NextResponse.json(
+      { message: "El precio original USD debe ser un numero valido." },
+      { status: 400 },
+    );
+  }
+
+  if (
+    compareAtPriceVes !== null &&
+    (!Number.isFinite(compareAtPriceVes) || compareAtPriceVes < 0)
+  ) {
+    return NextResponse.json(
+      { message: "El precio original VES debe ser un numero valido." },
+      { status: 400 },
+    );
+  }
+
+  if (compareAtPriceUsd === null && compareAtPriceVes !== null) {
+    return NextResponse.json(
+      { message: "Debes indicar primero el precio original USD." },
+      { status: 400 },
+    );
+  }
+
+  if (compareAtPriceUsd !== null && compareAtPriceUsd <= priceUsd) {
+    return NextResponse.json(
+      {
+        message:
+          "El precio original USD debe ser mayor al precio actual para marcar oferta por precio.",
+      },
+      { status: 400 },
+    );
+  }
+
   if (!Number.isInteger(stock) || stock < 0) {
     return NextResponse.json(
       {
@@ -537,6 +616,13 @@ export async function POST(request: Request) {
   if (!status) {
     return NextResponse.json(
       { message: "El estado seleccionado no es valido." },
+      { status: 400 },
+    );
+  }
+
+  if (badgeValue && !badge) {
+    return NextResponse.json(
+      { message: "El badge promocional seleccionado no es valido." },
       { status: 400 },
     );
   }
@@ -579,6 +665,12 @@ export async function POST(request: Request) {
       ...uploadedImages.filter((image) => !usedUploadedIds.has(image.id)),
     ];
     const primaryColor = resolvePrimaryColor(productColors, requestedPrimaryColor);
+    const resolvedCompareAtPriceVes = resolveCompareAtPriceVes(
+      compareAtPriceUsd,
+      compareAtPriceVes,
+      priceUsd,
+      priceVes,
+    );
     const reviewSummary = summarizePublishedProductReviews(productReviews);
     const finalImages: FinalImageInput[] = finalUploadedFiles.map((image, index) => ({
       clientId: image.id,
@@ -611,10 +703,17 @@ export async function POST(request: Request) {
           ),
           price: priceUsd.toFixed(2),
           priceVes: priceVes.toFixed(2),
+          compareAtPrice:
+            compareAtPriceUsd === null ? null : compareAtPriceUsd.toFixed(2),
+          compareAtPriceVes:
+            resolvedCompareAtPriceVes === null
+              ? null
+              : resolvedCompareAtPriceVes.toFixed(2),
           primaryColor: primaryColor?.label ?? null,
           primaryColorValue: primaryColor?.colorValue ?? null,
           stockQuantity: stock,
           status,
+          badge,
           featuredRank,
           averageRating: reviewSummary.averageRating.toFixed(2),
           reviewCount: reviewSummary.reviewCount,

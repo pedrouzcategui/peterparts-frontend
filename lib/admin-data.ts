@@ -94,6 +94,12 @@ export interface AdminProductEditorReview {
   createdAt: string;
 }
 
+export type AdminProductPromotionBadge =
+  | "sale"
+  | "just_in"
+  | "best_seller"
+  | null;
+
 export interface AdminProductEditorData {
   id: string;
   name: string;
@@ -106,8 +112,11 @@ export interface AdminProductEditorData {
   colors: AdminProductEditorColor[];
   priceUsd: number;
   priceVes: number | null;
+  compareAtPriceUsd: number | null;
+  compareAtPriceVes: number | null;
   stock: number;
   status: "active" | "draft" | "archived";
+  badge: AdminProductPromotionBadge;
   featuredRank: number | null;
   description: string;
   images: AdminProductEditorImage[];

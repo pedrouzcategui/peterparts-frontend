@@ -36,6 +36,7 @@ import type {
   AdminManagedCategoryOption,
   AdminProductEditorColor,
   AdminProductEditorData,
+  AdminProductPromotionBadge,
   AdminProductEditorReview,
 } from "@/lib/admin-data";
 import { formatExchangeRate, roundMoney } from "@/lib/currency";
@@ -55,6 +56,7 @@ import {
 } from "@/lib/product-image-storage";
 
 type ProductStatus = "active" | "draft" | "archived";
+type ProductPromotionBadge = NonNullable<AdminProductPromotionBadge> | "none";
 
 interface ProductFormState {
   name: string;
@@ -63,8 +65,11 @@ interface ProductFormState {
   categoryLabels: string[];
   priceUsd: string;
   priceVes: string;
+  compareAtPriceUsd: string;
+  compareAtPriceVes: string;
   stock: string;
   status: ProductStatus;
+  badge: ProductPromotionBadge;
   featuredRank: string;
   description: string;
 }
@@ -95,8 +100,30 @@ interface AdminProductFormProps {
 }
 
 const ADD_BRAND_VALUE = "__add_brand__";
+const NO_PRODUCT_BADGE_VALUE = "none";
 const DEFAULT_COLOR_PICKER_VALUE =
   PREDEFINED_PRODUCT_COLORS[0]?.colorValue ?? "#cfd6dc";
+const PRODUCT_BADGE_OPTIONS: Array<{
+  value: ProductPromotionBadge;
+  label: string;
+}> = [
+  {
+    value: NO_PRODUCT_BADGE_VALUE,
+    label: "Sin badge promocional",
+  },
+  {
+    value: "sale",
+    label: "Oferta",
+  },
+  {
+    value: "just_in",
+    label: "Recien llegado",
+  },
+  {
+    value: "best_seller",
+    label: "Mas vendido",
+  },
+];
 
 function sortBrands(values: string[]) {
   return [...values].sort((left, right) => left.localeCompare(right, "es"));
@@ -338,8 +365,11 @@ function createInitialFormState(
       categoryLabels: [],
       priceUsd: "",
       priceVes: "",
+      compareAtPriceUsd: "",
+      compareAtPriceVes: "",
       stock: "0",
       status: "draft",
+      badge: NO_PRODUCT_BADGE_VALUE,
       featuredRank: "",
       description: "",
     };
@@ -355,8 +385,17 @@ function createInitialFormState(
       typeof initialProduct.priceVes === "number"
         ? initialProduct.priceVes.toFixed(2)
         : "",
+    compareAtPriceUsd:
+      typeof initialProduct.compareAtPriceUsd === "number"
+        ? initialProduct.compareAtPriceUsd.toFixed(2)
+        : "",
+    compareAtPriceVes:
+      typeof initialProduct.compareAtPriceVes === "number"
+        ? initialProduct.compareAtPriceVes.toFixed(2)
+        : "",
     stock: String(initialProduct.stock),
     status: initialProduct.status,
+    badge: initialProduct.badge ?? NO_PRODUCT_BADGE_VALUE,
     featuredRank:
       typeof initialProduct.featuredRank === "number"
         ? String(initialProduct.featuredRank)
@@ -446,6 +485,9 @@ export default function AdminProductForm({
   const [isSyncingImages, setIsSyncingImages] = useState(false);
   const [hasManualVesPrice, setHasManualVesPrice] = useState(
     Boolean(initialProduct?.priceVes),
+  );
+  const [hasManualCompareAtVesPrice, setHasManualCompareAtVesPrice] = useState(
+    Boolean(initialProduct?.compareAtPriceVes),
   );
   const [isNavigating, startTransition] = useTransition();
   const selectedImagesRef = useRef<AdminProductFormImage[]>(selectedImages);
@@ -541,6 +583,7 @@ export default function AdminProductForm({
     isCreatingBrand ||
     isCreatingCategory ||
     isSyncingImages;
+  const hasCompareAtPrice = formValues.compareAtPriceUsd.trim().length > 0;
   const isFeaturedProduct = formValues.featuredRank.trim().length > 0;
   const categorySuggestions = categoryLabelSuggestions;
   const normalizedProductReviews = normalizeAdminProductReviews(productReviews);
@@ -665,6 +708,67 @@ export default function AdminProductForm({
   const handleVesPriceChange = (value: string) => {
     setHasManualVesPrice(true);
     handleInputChange("priceVes", value);
+  };
+
+  const applyCurrentExchangeRateToCompareAtPrice = () => {
+    if (!latestExchangeRate) {
+      toast.info(
+        "No hay una tasa activa para calcular el precio original en bolivares.",
+      );
+      return;
+    }
+
+    const compareAtPriceUsd = Number(formValues.compareAtPriceUsd);
+
+    if (!Number.isFinite(compareAtPriceUsd) || compareAtPriceUsd < 0) {
+      toast.error("Ingresa primero un precio original USD valido.");
+      return;
+    }
+
+    setFormValues((currentValues) => ({
+      ...currentValues,
+      compareAtPriceVes: roundMoney(
+        compareAtPriceUsd * latestExchangeRate.rate,
+      ).toFixed(2),
+    }));
+    setHasManualCompareAtVesPrice(false);
+  };
+
+  const handleCompareAtUsdPriceChange = (value: string) => {
+    if (value.trim() === "") {
+      setHasManualCompareAtVesPrice(false);
+      setFormValues((currentValues) => ({
+        ...currentValues,
+        compareAtPriceUsd: "",
+        compareAtPriceVes: "",
+      }));
+      return;
+    }
+
+    setFormValues((currentValues) => {
+      if (hasManualCompareAtVesPrice || !latestExchangeRate) {
+        return {
+          ...currentValues,
+          compareAtPriceUsd: value,
+        };
+      }
+
+      const parsedPrice = Number(value);
+
+      return {
+        ...currentValues,
+        compareAtPriceUsd: value,
+        compareAtPriceVes:
+          Number.isFinite(parsedPrice) && parsedPrice >= 0
+            ? roundMoney(parsedPrice * latestExchangeRate.rate).toFixed(2)
+            : "",
+      };
+    });
+  };
+
+  const handleCompareAtVesPriceChange = (value: string) => {
+    setHasManualCompareAtVesPrice(true);
+    handleInputChange("compareAtPriceVes", value);
   };
 
   const handleFeaturedToggle = (checked: boolean) => {
@@ -1215,6 +1319,45 @@ export default function AdminProductForm({
       }
     }
 
+    const compareAtPriceUsd = formValues.compareAtPriceUsd.trim()
+      ? Number(formValues.compareAtPriceUsd)
+      : null;
+    const compareAtPriceVes = formValues.compareAtPriceVes.trim()
+      ? Number(formValues.compareAtPriceVes)
+      : null;
+
+    if (
+      compareAtPriceUsd !== null &&
+      (!Number.isFinite(compareAtPriceUsd) || compareAtPriceUsd < 0)
+    ) {
+      toast.error("El precio original USD debe ser un numero valido.");
+      return;
+    }
+
+    if (
+      compareAtPriceVes !== null &&
+      (!Number.isFinite(compareAtPriceVes) || compareAtPriceVes < 0)
+    ) {
+      toast.error("El precio original VES debe ser un numero valido.");
+      return;
+    }
+
+    if (compareAtPriceUsd === null && compareAtPriceVes !== null) {
+      toast.error("Ingresa primero el precio original USD.");
+      return;
+    }
+
+    if (
+      compareAtPriceUsd !== null &&
+      Number.isFinite(Number(formValues.priceUsd)) &&
+      compareAtPriceUsd <= Number(formValues.priceUsd)
+    ) {
+      toast.error(
+        "El precio original USD debe ser mayor al precio actual para marcar oferta por precio.",
+      );
+      return;
+    }
+
     const reviewValidationError = validateAdminProductReviews(
       normalizedProductReviews,
     );
@@ -1232,8 +1375,14 @@ export default function AdminProductForm({
     payload.append("categoryLabels", JSON.stringify(formValues.categoryLabels));
     payload.append("priceUsd", formValues.priceUsd);
     payload.append("priceVes", formValues.priceVes);
+    payload.append("compareAtPriceUsd", formValues.compareAtPriceUsd.trim());
+    payload.append("compareAtPriceVes", formValues.compareAtPriceVes.trim());
     payload.append("stock", formValues.stock);
     payload.append("status", formValues.status);
+    payload.append(
+      "badge",
+      formValues.badge === NO_PRODUCT_BADGE_VALUE ? "" : formValues.badge,
+    );
     payload.append("featuredRank", formValues.featuredRank.trim());
     payload.append("description", formValues.description);
     payload.append(
@@ -1516,6 +1665,59 @@ export default function AdminProductForm({
                 </div>
               </div>
               <div className="space-y-4 rounded-xl border border-border/70 bg-muted/20 p-4 md:col-span-2">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">
+                    Promocion y visibilidad comercial
+                  </label>
+                  <p className="text-xs text-muted-foreground">
+                    Controla si el producto entra en los filtros de ofertas o de
+                    recien llegados del storefront.
+                  </p>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label htmlFor="badge" className="text-sm font-medium">
+                      Badge comercial
+                    </label>
+                    <Select
+                      value={formValues.badge}
+                      onValueChange={(value) =>
+                        handleInputChange(
+                          "badge",
+                          value as ProductPromotionBadge,
+                        )
+                      }
+                    >
+                      <SelectTrigger id="badge" className="w-full" aria-label="Badge comercial">
+                        <SelectValue placeholder="Selecciona un badge" />
+                      </SelectTrigger>
+                      <SelectContent align="start">
+                        {PRODUCT_BADGE_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Recien llegado depende de este badge. Oferta puede venir
+                      del badge o del precio original.
+                    </p>
+                  </div>
+                  <div className="space-y-2 rounded-lg border border-border/70 bg-background px-4 py-3">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Como aparece en filtros
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      En oferta: {formValues.badge === "sale" || hasCompareAtPrice ? "si" : "no"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Recien llegados: {formValues.badge === "just_in" ? "si" : "no"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4 rounded-xl border border-border/70 bg-muted/20 p-4 md:col-span-2">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="space-y-1">
                     <label htmlFor="product-colors" className="text-sm font-medium">
@@ -1756,6 +1958,60 @@ export default function AdminProductForm({
                   {latestExchangeRate
                     ? `Referencia actual: 1 USD = ${formatExchangeRate(latestExchangeRate.rate)} VES.`
                     : "Ingresa el precio en bolivares manualmente o registra una tasa activa para autocalcularlo."}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="compare-at-price-usd" className="text-sm font-medium">
+                  Precio original USD
+                </label>
+                <Input
+                  id="compare-at-price-usd"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formValues.compareAtPriceUsd}
+                  onChange={(event) =>
+                    handleCompareAtUsdPriceChange(event.target.value)
+                  }
+                  placeholder="Opcional"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Si defines un precio original mayor al precio actual, el
+                  producto entra en En oferta aunque no tenga badge.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <label htmlFor="compare-at-price-ves" className="text-sm font-medium">
+                    Precio original VES
+                  </label>
+                  {latestExchangeRate ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto px-0 text-xs"
+                      onClick={applyCurrentExchangeRateToCompareAtPrice}
+                      disabled={isBusy || !hasCompareAtPrice}
+                    >
+                      Usar tasa actual
+                    </Button>
+                  ) : null}
+                </div>
+                <Input
+                  id="compare-at-price-ves"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formValues.compareAtPriceVes}
+                  onChange={(event) =>
+                    handleCompareAtVesPriceChange(event.target.value)
+                  }
+                  placeholder="Opcional"
+                  disabled={!hasCompareAtPrice}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Puedes dejarlo vacio y se calculara con la misma relacion USD/VES al guardar.
                 </p>
               </div>
               <div className="space-y-2">
