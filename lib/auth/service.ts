@@ -124,7 +124,7 @@ export async function resolvePostLoginRedirectTarget({
     },
   });
 
-  return user?.role === UserRole.ADMIN ? "/admin" : normalizedRedirectTo;
+  return user?.role === UserRole.ADMIN ? "/admin/orders" : normalizedRedirectTo;
 }
 
 function validateEmail(email: string): string | null {
