@@ -11,6 +11,7 @@ import type {
   AdminProduct,
   AdminProductEditorColor,
   AdminProductEditorData,
+  AdminProductEditorReview,
 } from "@/lib/admin-data";
 import { normalizeCategoryLabels } from "@/lib/category-labels";
 import {
@@ -921,6 +922,11 @@ export const getAdminProductById = cache(
         include: {
           brand: true,
           category: true,
+          reviews: {
+            orderBy: {
+              createdAt: "desc",
+            },
+          },
           variants: {
             orderBy: {
               sortOrder: "asc",
@@ -964,6 +970,15 @@ export const getAdminProductById = cache(
       colorValue: resolveProductColorValue(variant.label, variant.colorValue),
       available: variant.available,
     }));
+    const reviews: AdminProductEditorReview[] = product.reviews.map((review) => ({
+      id: review.id,
+      reviewerName: review.reviewerName ?? "",
+      title: review.title ?? "",
+      body: review.body ?? "",
+      rating: review.rating,
+      isPublished: review.isPublished,
+      createdAt: review.createdAt.toISOString(),
+    }));
     const priceUsd = Number(product.price);
 
     return {
@@ -994,6 +1009,7 @@ export const getAdminProductById = cache(
           (assignment) => assignment.productVariant.id,
         ),
       })),
+      reviews,
     };
   },
 );

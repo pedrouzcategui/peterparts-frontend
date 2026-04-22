@@ -1,9 +1,10 @@
 import "server-only";
 
-const STOREFRONT_READ_TIMEOUT_MS = 4000;
+const STOREFRONT_READ_TIMEOUT_MS =
+  process.env.NODE_ENV === "production" ? 4000 : 30000;
 const STOREFRONT_READ_BACKOFF_MS = 30000;
 
-let storefrontReadBackoffUntil = 0;
+const storefrontReadBackoffUntilByKey = new Map<string, number>();
 
 class StorefrontReadTimeoutError extends Error {
   constructor(label: string) {
@@ -12,16 +13,26 @@ class StorefrontReadTimeoutError extends Error {
   }
 }
 
-function shouldBypassStorefrontReads() {
-  return Date.now() < storefrontReadBackoffUntil;
+function shouldBypassStorefrontReads(backoffKey: string) {
+  const backoffUntil = storefrontReadBackoffUntilByKey.get(backoffKey) ?? 0;
+
+  if (Date.now() >= backoffUntil) {
+    storefrontReadBackoffUntilByKey.delete(backoffKey);
+    return false;
+  }
+
+  return true;
 }
 
-function markStorefrontReadFailure() {
-  storefrontReadBackoffUntil = Date.now() + STOREFRONT_READ_BACKOFF_MS;
+function markStorefrontReadFailure(backoffKey: string) {
+  storefrontReadBackoffUntilByKey.set(
+    backoffKey,
+    Date.now() + STOREFRONT_READ_BACKOFF_MS,
+  );
 }
 
-function markStorefrontReadSuccess() {
-  storefrontReadBackoffUntil = 0;
+function markStorefrontReadSuccess(backoffKey: string) {
+  storefrontReadBackoffUntilByKey.delete(backoffKey);
 }
 
 function isRecoverableStorefrontError(error: unknown) {
@@ -51,8 +62,13 @@ export async function runStorefrontReadWithFallback<T>(
   label: string,
   query: () => Promise<T>,
   fallback: () => T | Promise<T>,
+  options?: {
+    backoffKey?: string;
+  },
 ): Promise<T> {
-  if (shouldBypassStorefrontReads()) {
+  const backoffKey = options?.backoffKey ?? label;
+
+  if (shouldBypassStorefrontReads(backoffKey)) {
     return fallback();
   }
 
@@ -72,15 +88,18 @@ export async function runStorefrontReadWithFallback<T>(
       }),
     ]);
 
-    markStorefrontReadSuccess();
+    markStorefrontReadSuccess(backoffKey);
     return result;
   } catch (error) {
     if (!isRecoverableStorefrontError(error)) {
       throw error;
     }
 
-    markStorefrontReadFailure();
-    console.error(
+    markStorefrontReadFailure(backoffKey);
+    const logRecoverableStorefrontError =
+      process.env.NODE_ENV === "production" ? console.error : console.warn;
+
+    logRecoverableStorefrontError(
       `[storefront] Falling back after recoverable read failure in ${label}.`,
       error,
     );

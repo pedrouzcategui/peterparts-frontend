@@ -36,12 +36,18 @@ import type {
   AdminManagedCategoryOption,
   AdminProductEditorColor,
   AdminProductEditorData,
+  AdminProductEditorReview,
 } from "@/lib/admin-data";
 import { formatExchangeRate, roundMoney } from "@/lib/currency";
 import {
   PREDEFINED_PRODUCT_COLORS,
   resolveProductColorValue,
 } from "@/lib/product-colors";
+import {
+  normalizeAdminProductReviews,
+  summarizePublishedProductReviews,
+  validateAdminProductReviews,
+} from "@/lib/product-reviews";
 import {
   buildProductImageUploadPath,
   getProductImageExtension,
@@ -75,6 +81,8 @@ interface ProductColorState {
   colorValue: string;
   available: boolean;
 }
+
+type ProductReviewState = AdminProductEditorReview;
 
 interface AdminProductFormProps {
   mode: "create" | "edit";
@@ -156,6 +164,38 @@ function createInitialColors(
     colorValue: resolveProductColorValue(color.label, color.colorValue),
     available: color.available,
   }));
+}
+
+function createInitialReviews(
+  initialProduct?: AdminProductEditorData,
+): ProductReviewState[] {
+  return normalizeAdminProductReviews(initialProduct?.reviews ?? []);
+}
+
+function createEmptyReview(): ProductReviewState {
+  return {
+    id: createClientStateId("review"),
+    reviewerName: "",
+    title: "",
+    body: "",
+    rating: 5,
+    isPublished: true,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function formatReviewDate(value: string) {
+  const parsedValue = new Date(value);
+
+  if (Number.isNaN(parsedValue.getTime())) {
+    return "Sin fecha";
+  }
+
+  return new Intl.DateTimeFormat("es-VE", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(parsedValue);
 }
 
 function resolvePrimaryColorId(
@@ -386,6 +426,9 @@ export default function AdminProductForm({
   const [productColors, setProductColors] = useState<ProductColorState[]>(() =>
     initialColors,
   );
+  const [productReviews, setProductReviews] = useState<ProductReviewState[]>(
+    () => createInitialReviews(initialProduct),
+  );
   const [colorDraftLabel, setColorDraftLabel] = useState("");
   const [colorDraftValue, setColorDraftValue] = useState(
     DEFAULT_COLOR_PICKER_VALUE,
@@ -500,6 +543,12 @@ export default function AdminProductForm({
     isSyncingImages;
   const isFeaturedProduct = formValues.featuredRank.trim().length > 0;
   const categorySuggestions = categoryLabelSuggestions;
+  const normalizedProductReviews = normalizeAdminProductReviews(productReviews);
+  const publishedReviewSummary = summarizePublishedProductReviews(
+    normalizedProductReviews,
+  );
+  const unpublishedReviewCount =
+    normalizedProductReviews.length - publishedReviewSummary.reviewCount;
   const selectedPrimaryColor = productColors.find(
     (color) => color.id === primaryColorId,
   );
@@ -979,6 +1028,31 @@ export default function AdminProductForm({
     );
   };
 
+  const handleAddReview = () => {
+    setProductReviews((currentReviews) => [
+      ...currentReviews,
+      createEmptyReview(),
+    ]);
+  };
+
+  const handleReviewChange = <Key extends keyof ProductReviewState>(
+    reviewId: string,
+    key: Key,
+    value: ProductReviewState[Key],
+  ) => {
+    setProductReviews((currentReviews) =>
+      currentReviews.map((review) =>
+        review.id === reviewId ? { ...review, [key]: value } : review,
+      ),
+    );
+  };
+
+  const handleRemoveReview = (reviewId: string) => {
+    setProductReviews((currentReviews) =>
+      currentReviews.filter((review) => review.id !== reviewId),
+    );
+  };
+
   const handleSetPrimaryColor = (colorId: string) => {
     setPrimaryColorId(colorId);
   };
@@ -1141,6 +1215,15 @@ export default function AdminProductForm({
       }
     }
 
+    const reviewValidationError = validateAdminProductReviews(
+      normalizedProductReviews,
+    );
+
+    if (reviewValidationError) {
+      toast.error(reviewValidationError);
+      return;
+    }
+
     const payload = new FormData();
 
     payload.append("name", formValues.name);
@@ -1211,6 +1294,7 @@ export default function AdminProductForm({
           })),
       ),
     );
+    payload.append("reviews", JSON.stringify(normalizedProductReviews));
 
     try {
       setIsSubmitting(true);
@@ -1741,6 +1825,195 @@ export default function AdminProductForm({
                   La descripcion se guarda en markdown para que tambien pueda
                   renderizarse en la tienda.
                 </p>
+              </div>
+              <div className="space-y-4 rounded-xl border border-border/70 bg-muted/20 p-4 md:col-span-2">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">Resenas</label>
+                    <p className="text-xs text-muted-foreground">
+                      Agrega resenas manuales para este producto. Solo las
+                      publicadas actualizan la calificacion visible en la tienda.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddReview}
+                    disabled={isBusy}
+                  >
+                    Agregar resena
+                  </Button>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-lg border border-border/70 bg-background px-4 py-3">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Publicadas
+                    </p>
+                    <p className="mt-1 text-2xl font-semibold">
+                      {publishedReviewSummary.reviewCount}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-border/70 bg-background px-4 py-3">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      No publicadas
+                    </p>
+                    <p className="mt-1 text-2xl font-semibold">
+                      {unpublishedReviewCount}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-border/70 bg-background px-4 py-3">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Promedio visible
+                    </p>
+                    <p className="mt-1 text-2xl font-semibold">
+                      {publishedReviewSummary.averageRating.toFixed(1)}
+                    </p>
+                  </div>
+                </div>
+                {productReviews.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Este producto todavia no tiene resenas configuradas en el
+                    panel administrativo.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {productReviews.map((review, index) => (
+                      <div
+                        key={review.id}
+                        className="space-y-4 rounded-xl border border-border/70 bg-background p-4"
+                      >
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <p className="text-sm font-medium">
+                              Resena {index + 1}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Registrada el {formatReviewDate(review.createdAt)}
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="xs"
+                            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            onClick={() => handleRemoveReview(review.id)}
+                            disabled={isBusy}
+                          >
+                            Eliminar
+                          </Button>
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_140px]">
+                          <div className="space-y-2">
+                            <label
+                              htmlFor={`reviewer-${review.id}`}
+                              className="text-xs font-medium text-muted-foreground"
+                            >
+                              Nombre del cliente
+                            </label>
+                            <Input
+                              id={`reviewer-${review.id}`}
+                              value={review.reviewerName}
+                              onChange={(event) =>
+                                handleReviewChange(
+                                  review.id,
+                                  "reviewerName",
+                                  event.target.value,
+                                )
+                              }
+                              placeholder="Ejemplo: Maria G."
+                              disabled={isBusy}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label
+                              htmlFor={`review-title-${review.id}`}
+                              className="text-xs font-medium text-muted-foreground"
+                            >
+                              Titulo
+                            </label>
+                            <Input
+                              id={`review-title-${review.id}`}
+                              value={review.title}
+                              onChange={(event) =>
+                                handleReviewChange(
+                                  review.id,
+                                  "title",
+                                  event.target.value,
+                                )
+                              }
+                              placeholder="Resumen corto de la experiencia"
+                              disabled={isBusy}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label
+                              htmlFor={`review-rating-${review.id}`}
+                              className="text-xs font-medium text-muted-foreground"
+                            >
+                              Calificacion
+                            </label>
+                            <select
+                              id={`review-rating-${review.id}`}
+                              value={String(review.rating)}
+                              onChange={(event) =>
+                                handleReviewChange(
+                                  review.id,
+                                  "rating",
+                                  Number(event.target.value),
+                                )
+                              }
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                              disabled={isBusy}
+                            >
+                              {[1, 2, 3, 4, 5].map((rating) => (
+                                <option key={rating} value={rating}>
+                                  {rating} estrella{rating === 1 ? "" : "s"}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label
+                            htmlFor={`review-body-${review.id}`}
+                            className="text-xs font-medium text-muted-foreground"
+                          >
+                            Comentario
+                          </label>
+                          <textarea
+                            id={`review-body-${review.id}`}
+                            className="min-h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-sm leading-6"
+                            value={review.body}
+                            onChange={(event) =>
+                              handleReviewChange(
+                                review.id,
+                                "body",
+                                event.target.value,
+                              )
+                            }
+                            placeholder="Describe la experiencia del cliente con el producto."
+                            disabled={isBusy}
+                          />
+                        </div>
+                        <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                          <Checkbox
+                            checked={review.isPublished}
+                            onCheckedChange={(checked) =>
+                              handleReviewChange(
+                                review.id,
+                                "isPublished",
+                                checked === true,
+                              )
+                            }
+                            disabled={isBusy}
+                          />
+                          Publicar en la tienda
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex gap-2">

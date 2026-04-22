@@ -15,6 +15,11 @@ import {
   normalizeProductColorLabel,
   resolveProductColorValue,
 } from "@/lib/product-colors";
+import {
+  parseAdminProductReviews,
+  summarizePublishedProductReviews,
+  validateAdminProductReviews,
+} from "@/lib/product-reviews";
 import { prisma } from "@/lib/prisma";
 
 const STATUS_MAP: Record<string, ProductStatus> = {
@@ -439,6 +444,9 @@ export async function POST(request: Request) {
   const requestedPrimaryColor = getStringField(formData, "primaryColor");
   const productColors = getProductColors(formData);
   const rawImageColorAssignments = getImageColorAssignments(formData);
+  const productReviews = parseAdminProductReviews(
+    getStringField(formData, "reviews"),
+  );
 
   if (!name) {
     return NextResponse.json(
@@ -464,6 +472,15 @@ export async function POST(request: Request) {
   if (!description) {
     return NextResponse.json(
       { message: "La descripcion del producto es obligatoria." },
+      { status: 400 },
+    );
+  }
+
+  const reviewsValidationError = validateAdminProductReviews(productReviews);
+
+  if (reviewsValidationError) {
+    return NextResponse.json(
+      { message: reviewsValidationError },
       { status: 400 },
     );
   }
@@ -562,6 +579,7 @@ export async function POST(request: Request) {
       ...uploadedImages.filter((image) => !usedUploadedIds.has(image.id)),
     ];
     const primaryColor = resolvePrimaryColor(productColors, requestedPrimaryColor);
+    const reviewSummary = summarizePublishedProductReviews(productReviews);
     const finalImages: FinalImageInput[] = finalUploadedFiles.map((image, index) => ({
       clientId: image.id,
       url: image.url,
@@ -598,6 +616,8 @@ export async function POST(request: Request) {
           stockQuantity: stock,
           status,
           featuredRank,
+          averageRating: reviewSummary.averageRating.toFixed(2),
+          reviewCount: reviewSummary.reviewCount,
           brandId: brandRecord.id,
           categoryId: categoryRecord.id,
           shippingInfo: "Envio a coordinar segun la zona.",
@@ -653,6 +673,20 @@ export async function POST(request: Request) {
         });
       }
 
+      if (productReviews.length > 0) {
+        await transaction.productReview.createMany({
+          data: productReviews.map((review) => ({
+            productId: product.id,
+            reviewerName: review.reviewerName,
+            title: review.title || null,
+            body: review.body || null,
+            rating: review.rating,
+            isPublished: review.isPublished,
+            createdAt: new Date(review.createdAt),
+          })),
+        });
+      }
+
       await createImageVariantAssignments(
         transaction,
         createdImages,
@@ -665,6 +699,7 @@ export async function POST(request: Request) {
 
     revalidatePath("/admin/products");
     revalidatePath("/products");
+    revalidatePath(`/products/${createdProduct.slug}`);
 
     return NextResponse.json(
       {

@@ -84,6 +84,16 @@ export interface AdminProductEditorColor {
   available: boolean;
 }
 
+export interface AdminProductEditorReview {
+  id: string;
+  reviewerName: string;
+  title: string;
+  body: string;
+  rating: number;
+  isPublished: boolean;
+  createdAt: string;
+}
+
 export interface AdminProductEditorData {
   id: string;
   name: string;
@@ -101,6 +111,7 @@ export interface AdminProductEditorData {
   featuredRank: number | null;
   description: string;
   images: AdminProductEditorImage[];
+  reviews: AdminProductEditorReview[];
 }
 
 export interface AdminExchangeRate {

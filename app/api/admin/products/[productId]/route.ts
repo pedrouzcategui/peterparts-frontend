@@ -14,6 +14,11 @@ import {
   normalizeProductColorLabel,
   resolveProductColorValue,
 } from "@/lib/product-colors";
+import {
+  parseAdminProductReviews,
+  summarizePublishedProductReviews,
+  validateAdminProductReviews,
+} from "@/lib/product-reviews";
 import { prisma } from "@/lib/prisma";
 
 const STATUS_MAP: Record<string, ProductStatus> = {
@@ -430,6 +435,9 @@ export async function PATCH(
   const requestedPrimaryColor = getStringField(formData, "primaryColor");
   const productColors = getProductColors(formData);
   const rawImageColorAssignments = getImageColorAssignments(formData);
+  const productReviews = parseAdminProductReviews(
+    getStringField(formData, "reviews"),
+  );
 
   if (!name) {
     return NextResponse.json(
@@ -455,6 +463,15 @@ export async function PATCH(
   if (!description) {
     return NextResponse.json(
       { message: "La descripcion del producto es obligatoria." },
+      { status: 400 },
+    );
+  }
+
+  const reviewsValidationError = validateAdminProductReviews(productReviews);
+
+  if (reviewsValidationError) {
+    return NextResponse.json(
+      { message: reviewsValidationError },
       { status: 400 },
     );
   }
@@ -519,6 +536,7 @@ export async function PATCH(
     where: { id: productId },
     select: {
       id: true,
+      slug: true,
       images: {
         orderBy: {
           sortOrder: "asc",
@@ -640,6 +658,7 @@ export async function PATCH(
     }
 
     const primaryColor = resolvePrimaryColor(productColors, requestedPrimaryColor);
+    const reviewSummary = summarizePublishedProductReviews(productReviews);
     const resolvedAssignments = resolveImageColorAssignments(
       rawImageColorAssignments,
       finalImages,
@@ -671,9 +690,15 @@ export async function PATCH(
           stockQuantity: stock,
           status,
           featuredRank,
+          averageRating: reviewSummary.averageRating.toFixed(2),
+          reviewCount: reviewSummary.reviewCount,
           brandId: brandRecord.id,
           categoryId: categoryRecord.id,
         },
+      });
+
+      await transaction.productReview.deleteMany({
+        where: { productId },
       });
 
       await transaction.productVariant.deleteMany({
@@ -728,6 +753,20 @@ export async function PATCH(
         });
       }
 
+      if (productReviews.length > 0) {
+        await transaction.productReview.createMany({
+          data: productReviews.map((review) => ({
+            productId,
+            reviewerName: review.reviewerName,
+            title: review.title || null,
+            body: review.body || null,
+            rating: review.rating,
+            isPublished: review.isPublished,
+            createdAt: new Date(review.createdAt),
+          })),
+        });
+      }
+
       await createImageVariantAssignments(
         transaction,
         createdImages,
@@ -744,6 +783,10 @@ export async function PATCH(
 
     revalidatePath("/admin/products");
     revalidatePath("/products");
+    revalidatePath(`/products/${productSlug}`);
+    if (existingProduct.slug !== productSlug) {
+      revalidatePath(`/products/${existingProduct.slug}`);
+    }
     revalidatePath(`/admin/products/${productId}/edit`);
 
     return NextResponse.json(

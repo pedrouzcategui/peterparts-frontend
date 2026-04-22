@@ -65,3 +65,5 @@ export type SortOption =
   | "price-low-high"
   | "price-high-low"
   | "top-rated";
+
+export type ProductCurrency = "usd" | "ves";

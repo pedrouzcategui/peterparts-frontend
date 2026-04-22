@@ -8,10 +8,11 @@ import {
   getDefaultSelectedVariantLabel,
   getPrimaryProductImage,
 } from "@/lib/product-gallery";
-import type { Product } from "@/lib/types";
+import type { Product, ProductCurrency } from "@/lib/types";
 
 interface ProductCardProps {
   product: Product;
+  currency?: ProductCurrency;
 }
 
 /**
@@ -19,26 +20,56 @@ interface ProductCardProps {
  * Renders a single product in the grid listing.
  * Designed for SEO: uses semantic markup, alt text, and structured headings.
  */
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({
+  product,
+  currency = "usd",
+}: ProductCardProps) {
   const priceUsd = product.priceUsd ?? product.price;
   const priceVes = product.priceVes;
   const originalPriceUsd = product.originalPriceUsd ?? product.originalPrice;
-  const formattedPrice = formatUsd(priceUsd);
+  const originalPriceVes = product.originalPriceVes;
+  const formattedUsdPrice = formatUsd(priceUsd);
   const defaultVariantLabel = getDefaultSelectedVariantLabel(product);
   const primaryImage = getPrimaryProductImage(product, defaultVariantLabel);
 
-  const formattedOriginalPrice = originalPriceUsd
+  const formattedOriginalUsdPrice = originalPriceUsd
     ? formatUsd(originalPriceUsd)
     : null;
   const formattedVesPrice =
     typeof priceVes === "number" && priceVes > 0 ? formatVes(priceVes) : null;
+  const formattedOriginalVesPrice =
+    typeof originalPriceVes === "number" && originalPriceVes > 0
+      ? formatVes(originalPriceVes)
+      : null;
+  const activeCurrency: ProductCurrency =
+    currency === "ves" && formattedVesPrice ? "ves" : "usd";
+  const formattedPrice =
+    activeCurrency === "ves" ? formattedVesPrice : formattedUsdPrice;
+  const formattedOriginalPrice =
+    activeCurrency === "ves"
+      ? formattedOriginalVesPrice
+      : formattedOriginalUsdPrice;
+  const alternatePrice =
+    activeCurrency === "ves" ? formattedUsdPrice : formattedVesPrice;
+  const alternatePriceLabel =
+    activeCurrency === "ves"
+      ? "Tambien disponible en USD"
+      : "Precio en bolivares";
 
   const shortDescription = product.description.slice(0, 120).trim();
   const showEllipsis = product.description.length > 120;
   const rating = product.reviews.rating.toFixed(1);
-  const savings = originalPriceUsd
-    ? formatUsd(originalPriceUsd - priceUsd)
-    : null;
+  const savings =
+    activeCurrency === "ves"
+      ? typeof originalPriceVes === "number" &&
+        originalPriceVes > 0 &&
+        typeof priceVes === "number" &&
+        priceVes > 0
+        ? formatVes(originalPriceVes - priceVes)
+        : null
+      : originalPriceUsd
+        ? formatUsd(originalPriceUsd - priceUsd)
+        : null;
   const swatches = Array.from(
     [
       product.color
@@ -213,9 +244,9 @@ export default function ProductCard({ product }: ProductCardProps) {
                   </span>
                 ) : null}
               </div>
-              {formattedVesPrice ? (
+              {alternatePrice ? (
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Precio en bolivares: {formattedVesPrice}
+                  {alternatePriceLabel}: {alternatePrice}
                 </p>
               ) : null}
 

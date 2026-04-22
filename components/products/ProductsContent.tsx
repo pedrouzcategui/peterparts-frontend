@@ -6,7 +6,7 @@ import ProductGrid from "@/components/products/ProductGrid";
 import Pagination from "@/components/products/Pagination";
 import { getBrandQueryValue } from "@/lib/brand-slugs";
 import { buildProductColorFilterValue } from "@/lib/product-colors";
-import type { Product } from "@/lib/types";
+import type { Product, ProductCurrency } from "@/lib/types";
 
 const PRODUCTS_PER_PAGE = 6;
 
@@ -20,6 +20,8 @@ interface ProductsContentProps {
  */
 export default function ProductsContent({ allProducts }: ProductsContentProps) {
   const searchParams = useSearchParams();
+  const displayCurrency: ProductCurrency =
+    searchParams.get("currency") === "ves" ? "ves" : "usd";
 
   // Filter products based on search params
   const filteredProducts = useMemo(() => {
@@ -142,7 +144,7 @@ export default function ProductsContent({ allProducts }: ProductsContentProps) {
         )}
       </p>
 
-      <ProductGrid products={paginatedProducts} />
+      <ProductGrid products={paginatedProducts} currency={displayCurrency} />
       <Pagination currentPage={currentPage} totalPages={totalPages} />
     </div>
   );

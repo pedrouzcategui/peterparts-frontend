@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import FilterSidebar from "@/components/products/FilterSidebar";
+import ProductsCurrencyToggle from "@/components/products/ProductsCurrencyToggle";
 import SortDropdown from "@/components/products/SortDropdown";
 import MobileFilterSheet from "@/components/products/MobileFilterSheet";
 import SearchInput from "@/components/products/SearchInput";
@@ -47,9 +48,12 @@ export default async function ProductsPage() {
             Explora piezas compatibles, engranajes y batidoras de marcas confiables, con filtros por categoria, precio y ofertas vigentes. No vendemos electrodomesticos completos.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 sm:justify-end">
           <Suspense fallback={<Skeleton className="h-10 w-24 lg:hidden" />}>
             <MobileFilterSheet filterGroups={filterGroups} />
+          </Suspense>
+          <Suspense fallback={<Skeleton className="h-10 w-44" />}>
+            <ProductsCurrencyToggle />
           </Suspense>
           <Suspense fallback={<Skeleton className="h-10 w-45" />}>
             <SortDropdown />

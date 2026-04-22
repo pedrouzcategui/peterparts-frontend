@@ -1,17 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { Star } from "lucide-react";
 import { useCart } from "@/components/providers/CartProvider";
 import FavouriteToggleButton from "@/components/products/FavouriteToggleButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import MarkdownContent from "@/components/products/MarkdownContent";
 import { formatUsd, formatVes } from "@/lib/currency";
 import { cn } from "@/lib/utils";
@@ -59,6 +54,9 @@ export default function ProductInfo({
     typeof originalPriceVes === "number" && originalPriceVes > 0
       ? formatVes(originalPriceVes)
       : null;
+  const displayedColorLabel = activeVariant?.label ?? product.color;
+  const displayedColorValue = activeVariant?.colorValue ?? product.colorValue;
+  const roundedReviewRating = Math.round(product.reviews.rating);
 
   const handleAddToBag = () => {
     addProduct(product, selectedVariant ?? undefined, 1, selectedImage ?? undefined);
@@ -70,6 +68,18 @@ export default function ProductInfo({
       <div>
         <h1 className="text-2xl font-bold">{product.name}</h1>
         <p className="text-sm text-muted-foreground">{product.subcategory}</p>
+        <div
+          className="mt-2 flex items-center gap-1 text-[#f4b321]"
+          aria-label={`Calificacion promedio de ${product.reviews.rating} sobre 5`}
+        >
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Star
+              key={index}
+              className="h-4 w-4"
+              fill={index < roundedReviewRating ? "currentColor" : "none"}
+            />
+          ))}
+        </div>
         <div className="mt-3 space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-lg font-semibold">{formattedPrice}</span>
@@ -171,110 +181,22 @@ export default function ProductInfo({
       {/* Description */}
       <div>
         <MarkdownContent content={product.description} />
-        <ul className="mt-3 space-y-1">
-          <li className="text-sm text-muted-foreground">
+        {displayedColorLabel ? (
+          <p className="mt-3 text-sm text-muted-foreground">
             <span className="font-medium text-foreground">Color mostrado:</span>{" "}
             <span className="inline-flex items-center gap-2">
-              {product.colorValue ? (
+              {displayedColorValue ? (
                 <span
                   className="h-3.5 w-3.5 rounded-full border border-black/10"
-                  style={{ backgroundColor: product.colorValue }}
+                  style={{ backgroundColor: displayedColorValue }}
                   aria-hidden="true"
                 />
               ) : null}
-              <span>{product.color}</span>
+              <span>{displayedColorLabel}</span>
             </span>
-          </li>
-          <li className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">Modelo:</span>{" "}
-            {product.style}
-          </li>
-        </ul>
+          </p>
+        ) : null}
       </div>
-
-      {/* Expandable sections */}
-      <Accordion type="multiple" className="w-full">
-        <AccordionItem value="details">
-          <AccordionTrigger className="text-sm font-semibold">
-            Detalles del producto
-          </AccordionTrigger>
-          <AccordionContent>
-            <ul className="space-y-1.5">
-              {product.features.map((feature) => (
-                <li
-                  key={feature}
-                  className="flex items-start gap-2 text-sm text-muted-foreground"
-                >
-                  <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-foreground" />
-                  {feature}
-                </li>
-              ))}
-            </ul>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="shipping">
-          <AccordionTrigger className="text-sm font-semibold">
-            Envio y devoluciones
-          </AccordionTrigger>
-          <AccordionContent>
-            <p className="text-sm text-muted-foreground">
-              {product.shippingInfo}. La entrega estandar tarda entre 3 y 7 dias
-              habiles. Se aceptan devoluciones dentro de los 30 dias posteriores
-              a la entrega. Los articulos deben estar sin usar y en su empaque
-              original.
-            </p>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="reviews">
-          <AccordionTrigger className="text-sm font-semibold">
-            Resenas ({product.reviews.count})
-            <span className="ml-auto mr-2 flex items-center gap-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <span
-                  key={i}
-                  className={cn(
-                    "text-xs",
-                    i < Math.round(product.reviews.rating)
-                      ? "text-foreground"
-                      : "text-muted-foreground/30",
-                  )}
-                >
-                  ★
-                </span>
-              ))}
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold">
-                {product.reviews.rating}
-              </span>
-              <div>
-                <div className="flex gap-0.5">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <span
-                      key={i}
-                      className={cn(
-                        "text-sm",
-                        i < Math.round(product.reviews.rating)
-                          ? "text-foreground"
-                          : "text-muted-foreground/30",
-                      )}
-                    >
-                      ★
-                    </span>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Basado en {product.reviews.count} resenas
-                </p>
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
 
       {/* Brand badge */}
       <div className="mt-2">
