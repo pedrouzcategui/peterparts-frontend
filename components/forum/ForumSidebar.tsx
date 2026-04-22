@@ -108,7 +108,7 @@ export default async function ForumSidebar({
           >
             <Link href={createThreadHref}>
               <PenSquare className="mr-2 h-4 w-4" />
-              {currentUser ? "Crear hilo" : "Inicia sesion para participar"}
+              {currentUser ? "Crear hilo" : "Inicia sesión para participar"}
             </Link>
           </Button>
 
@@ -185,7 +185,7 @@ export default async function ForumSidebar({
           <div className="space-y-2">
             {recentThreads.length === 0 ? (
               <p className="rounded-2xl bg-muted/50 px-3 py-4 text-sm text-muted-foreground">
-                Todavia no hay publicaciones recientes en el foro.
+                Todavía no hay publicaciones recientes en el foro.
               </p>
             ) : null}
             {recentThreads.map((thread, index) => (

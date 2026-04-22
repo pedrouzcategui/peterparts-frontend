@@ -12,7 +12,7 @@ import {
 
 const SORT_OPTIONS = [
   { label: "Destacados", value: "featured" },
-  { label: "Mas recientes", value: "newest" },
+  { label: "Más recientes", value: "newest" },
   { label: "Precio: menor a mayor", value: "price-low-high" },
   { label: "Precio: mayor a menor", value: "price-high-low" },
   { label: "Mejor valorados", value: "top-rated" },

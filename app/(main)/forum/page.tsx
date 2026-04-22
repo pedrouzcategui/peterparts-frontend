@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Foro",
   description:
-    "Únete al foro de la comunidad PeterParts. Haz preguntas, comparte consejos y recibe ayuda con repuestos, engranajes, batidoras y compatibilidad para KitchenAid, Cuisinart y Whirlpool.",
+    "Únete al foro de la comunidad Peter Parts. Haz preguntas, comparte consejos y recibe ayuda con tus electrodomésticos de cocina.",
 };
 
 interface ForumPageProps {
@@ -81,12 +81,12 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
                   href={createThreadHref}
                   className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
                 >
-                  {currentUser ? "Crear hilo" : "Inicia sesion para preguntar"}
+                  {currentUser ? "Crear hilo" : "Inicia sesión para preguntar"}
                 </Link>
               </div>
 
               <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                Haz preguntas, comparte consejos y encuentra respuestas practicas sobre mantenimiento, reparacion, compatibilidad de repuestos y fallas comunes en batidoras y mezcladoras.
+                Haz preguntas, comparte consejos y encuentra respuestas prácticas sobre mantenimiento, reparación y compatibilidad de repuestos.
               </p>
 
               <div className="mt-5 flex flex-wrap gap-3">
@@ -111,7 +111,7 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Buscar fallas, modelos, engranajes, repuestos o consejos en el foro"
+                placeholder="Buscar fallas, marcas, repuestos o consejos en el foro"
                 className="h-13 rounded-full border-transparent bg-muted pl-12 pr-4 shadow-none focus-visible:border-primary/20"
               />
             </div>
@@ -171,15 +171,6 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
                 thread={thread}
               />
             ))}
-          </div>
-
-          <div className="text-center">
-            <button
-              type="button"
-              className="inline-flex h-11 items-center justify-center rounded-full border border-border/70 px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
-            >
-              Cargar más hilos
-            </button>
           </div>
         </div>
       </div>

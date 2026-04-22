@@ -7,6 +7,7 @@ import FavouriteToggleButton from "@/components/products/FavouriteToggleButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { getCartLineId } from "@/lib/cart";
 import MarkdownContent from "@/components/products/MarkdownContent";
 import { formatUsd, formatVes } from "@/lib/currency";
 import { cn } from "@/lib/utils";
@@ -31,13 +32,17 @@ export default function ProductInfo({
   onSelectedVariantChange,
   selectedImage,
 }: ProductInfoProps) {
-  const { addProduct, itemCount } = useCart();
+  const { addProduct, itemCount, items } = useCart();
 
   const activeVariant = product.variants.find(
     (variant) => variant.label === selectedVariant,
   );
+  const cartLineId = getCartLineId(product.id, selectedVariant ?? undefined);
+  const quantityInCart = items.find((item) => item.id === cartLineId)?.quantity ?? 0;
+  const remainingInventory = Math.max(0, product.stockQuantity - quantityInCart);
   const canAddToBag =
     product.inStock &&
+    remainingInventory > 0 &&
     (product.variants.length === 0 || Boolean(activeVariant?.available));
   const priceUsd = product.priceUsd ?? product.price;
   const priceVes = product.priceVes;
@@ -70,7 +75,7 @@ export default function ProductInfo({
         <p className="text-sm text-muted-foreground">{product.subcategory}</p>
         <div
           className="mt-2 flex items-center gap-1 text-[#f4b321]"
-          aria-label={`Calificacion promedio de ${product.reviews.rating} sobre 5`}
+          aria-label={`Calificación promedio de ${product.reviews.rating} sobre 5`}
         >
           {Array.from({ length: 5 }).map((_, index) => (
             <Star
@@ -91,7 +96,7 @@ export default function ProductInfo({
           </div>
           {formattedVesPrice ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Precio en bolivares: {formattedVesPrice}</span>
+              <span>Precio en bolívares: {formattedVesPrice}</span>
               {formattedOriginalVesPrice ? (
                 <span className="line-through">
                   {formattedOriginalVesPrice}
@@ -105,7 +110,7 @@ export default function ProductInfo({
       {/* Variant selector */}
       {product.variants.length > 0 ? (
         <div>
-          <h2 className="text-sm font-semibold mb-2">Selecciona una opcion</h2>
+          <h2 className="mb-2 text-sm font-semibold">Selecciona una opción</h2>
           <div className="grid grid-cols-2 gap-2">
             {product.variants.map((variant) => (
               <button
@@ -144,7 +149,11 @@ export default function ProductInfo({
           disabled={!canAddToBag}
           onClick={handleAddToBag}
         >
-          {product.inStock ? "Anadir al carrito" : "No disponible por ahora"}
+          {!product.inStock
+            ? "No disponible por ahora"
+            : remainingInventory === 0
+              ? "Inventario máximo alcanzado"
+              : "Añadir al carrito"}
         </Button>
         <FavouriteToggleButton
           productId={product.databaseId}
@@ -155,7 +164,7 @@ export default function ProductInfo({
         />
         {itemCount > 0 ? (
           <p className="text-center text-sm text-muted-foreground">
-            {itemCount} articulo{itemCount === 1 ? "" : "s"} en tu carrito.{" "}
+            {itemCount} artículo{itemCount === 1 ? "" : "s"} en tu carrito.{" "}
             <Link
               href="/cart"
               className="font-medium text-foreground underline underline-offset-2"
@@ -168,7 +177,7 @@ export default function ProductInfo({
 
       {/* Shipping info */}
       <div className="space-y-1">
-        <p className="text-sm font-semibold">Envio</p>
+        <p className="text-sm font-semibold">Envío</p>
         <p className="text-sm text-muted-foreground">{product.shippingInfo}</p>
         <p className="text-sm font-semibold mt-2">Retiro coordinado</p>
         <button type="button" className="text-sm underline underline-offset-2">

@@ -6,6 +6,7 @@ import {
   Heart,
   Menu,
   PackageSearch,
+  ShieldCheck,
   ShoppingBag,
   Sparkles,
   UserRound,
@@ -28,6 +29,12 @@ const MOBILE_NAV_LINKS = [
     href: "/products",
     description: "Explora repuestos, engranajes y equipos seleccionados.",
     icon: PackageSearch,
+  },
+  {
+    label: "Sobre nosotros",
+    href: "/about",
+    description: "Conoce nuestra misión, visión y forma de trabajo.",
+    icon: ShieldCheck,
   },
   {
     label: "Foro",
@@ -82,7 +89,7 @@ export default function MobileNavMenu({
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Abrir menu"
+          aria-label="Abrir menú"
           className="lg:hidden text-primary-foreground hover:bg-white/10 hover:text-white dark:text-foreground dark:hover:bg-accent/50 dark:hover:text-accent-foreground"
         >
           <Menu className="h-5 w-5" />
@@ -106,16 +113,16 @@ export default function MobileNavMenu({
                 className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white transition-colors hover:bg-white/18 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
               >
                 <X className="h-5 w-5" />
-                <span className="sr-only">Cerrar menu</span>
+                <span className="sr-only">Cerrar menú</span>
               </button>
             </div>
 
             <SheetHeader className="relative p-0 pr-14 text-left">
               <SheetTitle className="font-heading text-[1.9rem] leading-none text-white">
-                {isSignedIn && firstName ? `Hola, ${firstName}` : "Menu Peter Parts"}
+                {isSignedIn && firstName ? `Hola, ${firstName}` : "Menú Peter Parts"}
               </SheetTitle>
               <SheetDescription className="mt-3 max-w-[18rem] text-sm leading-6 text-white/80">
-                Accede rapido al catalogo, al foro y a tu actividad desde el telefono.
+                Accede rápido al catálogo, al foro y a tu actividad desde el teléfono.
               </SheetDescription>
             </SheetHeader>
           </div>
@@ -152,7 +159,7 @@ export default function MobileNavMenu({
 
             <section className="rounded-[2rem] border border-white/55 bg-[#fff7f1]/88 p-4 shadow-[0_14px_38px_rgba(26,23,20,0.06)] backdrop-blur-sm dark:border-border/70 dark:bg-[#251a17]/82">
               <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Accesos rapidos
+                Accesos rápidos
               </p>
 
               <div className="space-y-2.5">

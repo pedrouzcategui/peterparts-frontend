@@ -90,7 +90,7 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
   const replyLabel = canReply
     ? isSignedIn
       ? "Responder"
-      : "Inicia sesion para responder"
+      : "Inicia sesión para responder"
     : undefined;
   const replyAuthorName = currentUser?.name ?? "Tu cuenta";
   const decorateComments = (comments: ForumComment[]): ForumComment[] =>
@@ -111,19 +111,19 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
   const moderationMessage =
     thread.status === "pending"
       ? currentUser?.id === thread.author.id
-        ? "Tu publicacion esta pendiente de aprobacion. Solo tu y el equipo administrador pueden verla por ahora."
-        : "Esta publicacion esta pendiente de aprobacion. Solo el autor y los administradores pueden verla por ahora."
+        ? "Tu publicación está pendiente de aprobación. Solo tú y el equipo administrador pueden verla por ahora."
+        : "Esta publicación está pendiente de aprobación. Solo el autor y los administradores pueden verla por ahora."
       : thread.status === "rejected"
         ? currentUser?.id === thread.author.id
-          ? "Tu publicacion fue rechazada y sigue oculta para el resto de la comunidad."
-          : "Esta publicacion fue rechazada y sigue oculta para el resto de la comunidad."
+          ? "Tu publicación fue rechazada y sigue oculta para el resto de la comunidad."
+          : "Esta publicación fue rechazada y sigue oculta para el resto de la comunidad."
         : null;
   const replyAvailabilityMessage = thread.isDeleted
-    ? "No se pueden agregar respuestas a una publicacion retirada."
+    ? "No se pueden agregar respuestas a una publicación retirada."
     : thread.status === "pending"
-      ? "Las respuestas se habilitaran cuando un administrador apruebe esta publicacion."
+      ? "Las respuestas se habilitarán cuando un administrador apruebe esta publicación."
       : thread.status === "rejected"
-        ? "Esta publicacion fue rechazada y no acepta respuestas mientras permanezca oculta."
+        ? "Esta publicación fue rechazada y no acepta respuestas mientras permanezca oculta."
         : null;
 
   return (
@@ -219,10 +219,10 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
                         <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-300/60 bg-white/60 px-3 py-3 text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-100">
                           <div>
                             <p className="text-sm font-semibold">
-                              Puedes aprobar esta publicacion desde aqui.
+                              Puedes aprobar esta publicación desde aquí.
                             </p>
                             <p className="mt-1 text-xs text-emerald-800/90 dark:text-emerald-200/90">
-                              Al aprobarla, el hilo quedara visible para toda la comunidad y se habilitaran las respuestas.
+                              Al aprobarla, el hilo quedará visible para toda la comunidad y se habilitarán las respuestas.
                             </p>
                           </div>
                           <form action={approveAdminForumThreadAction}>
@@ -276,7 +276,7 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
                     <details className="group mt-4">
                       <summary className="flex w-fit list-none items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted cursor-pointer">
                         <Pencil className="h-3.5 w-3.5" />
-                        Editar publicacion
+                        Editar publicación
                       </summary>
                       <form
                         action={updateForumThreadAction}
@@ -285,9 +285,9 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
                         <input type="hidden" name="threadId" value={thread.id} />
                         <input type="hidden" name="threadPath" value={threadPath} />
                         <div className="mb-3">
-                          <p className="font-medium text-foreground">Editar publicacion</p>
+                          <p className="font-medium text-foreground">Editar publicación</p>
                           <p className="text-xs text-muted-foreground">
-                            Ajusta el titulo, el contenido y las etiquetas sin perder las respuestas del hilo.
+                            Ajusta el título, el contenido y las etiquetas sin perder las respuestas del hilo.
                           </p>
                         </div>
                         <div className="space-y-3">
@@ -359,11 +359,11 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
                 ) : (
                   <div className="space-y-3">
                     <p className="text-sm text-muted-foreground">
-                      Inicia sesion para responder esta pregunta y participar en la comunidad.
+                      Inicia sesión para responder esta pregunta y participar en la comunidad.
                     </p>
                     <Button asChild>
                       <Link href={buildForumLoginRedirectPath(threadPath)}>
-                        Iniciar sesion para responder
+                        Iniciar sesión para responder
                       </Link>
                     </Button>
                   </div>
@@ -404,7 +404,7 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
                 <CardContent className="p-8 text-center">
                   <MessageSquare className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
                   <p className="text-muted-foreground">
-                    Aun no hay comentarios. Se el primero en compartir tu opinion.
+                    Aún no hay comentarios. Sé el primero en compartir tu opinión.
                   </p>
                 </CardContent>
               </Card>

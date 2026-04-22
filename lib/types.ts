@@ -43,6 +43,7 @@ export interface Product {
   reviews: ProductReview;
   badge?: string;
   inStock: boolean;
+  stockQuantity: number;
   shippingInfo: string;
 }
 

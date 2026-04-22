@@ -42,7 +42,7 @@ export default async function NewForumThreadPage() {
                   Publica tu consulta en el foro
                 </h1>
                 <p className="mt-2 text-sm text-white/80 sm:text-base">
-                  Estas publicando como {authorName}. Explica el modelo, el sintoma y lo que ya intentaste. Un administrador revisara la publicacion antes de que aparezca en el foro publico.
+                  Estás publicando como {authorName}. Explica el modelo, el síntoma y lo que ya intentaste. Un administrador revisará la publicación antes de que aparezca en el foro público.
                 </p>
               </div>
             </div>
@@ -51,14 +51,14 @@ export default async function NewForumThreadPage() {
           <CardHeader>
             <CardTitle>Detalles de la pregunta</CardTitle>
             <CardDescription>
-              Mientras mas contexto compartas, mas facil sera aprobar la pregunta y obtener una respuesta util de la comunidad.
+              Mientras más contexto compartas, más fácil será aprobar la pregunta y obtener una respuesta útil de la comunidad.
             </CardDescription>
           </CardHeader>
           <CardContent className="pb-8 sm:pb-10">
             <form action={createForumThreadAction} className="space-y-5">
               <div className="space-y-2">
                 <label htmlFor="title" className="text-sm font-medium text-foreground">
-                  Titulo
+                  Título
                 </label>
                 <input
                   id="title"
@@ -91,7 +91,7 @@ export default async function NewForumThreadPage() {
                   name="content"
                   required
                   minLength={30}
-                  placeholder="Explica el modelo exacto, los sintomas, el tiempo de uso y cualquier prueba que ya hiciste"
+                  placeholder="Explica el modelo exacto, los síntomas, el tiempo de uso y cualquier prueba que ya hiciste"
                   className="min-h-44 w-full rounded-2xl border border-input bg-background px-3 py-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 />
               </div>
@@ -100,7 +100,7 @@ export default async function NewForumThreadPage() {
                 <Button asChild variant="outline">
                   <Link href="/forum">Cancelar</Link>
                 </Button>
-                <Button type="submit">Enviar a revision</Button>
+                <Button type="submit">Enviar a revisión</Button>
               </div>
             </form>
           </CardContent>

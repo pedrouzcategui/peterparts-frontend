@@ -170,7 +170,7 @@ export default async function AccountPage() {
 
               <div className="rounded-[1.5rem] border border-border/70 bg-muted/25 p-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  Metodos de acceso
+                  Métodos de acceso
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {authMethods.map((method) => (
@@ -178,7 +178,7 @@ export default async function AccountPage() {
                       key={method}
                       className="rounded-full border border-primary/15 bg-primary/8 px-3 py-1.5 text-sm font-medium text-primary"
                     >
-                      {method === "credentials" ? "Correo y contrasena" : "Google"}
+                      {method === "credentials" ? "Correo y contraseña" : "Google"}
                     </span>
                   ))}
                 </div>
@@ -224,7 +224,7 @@ export default async function AccountPage() {
                 Mis pedidos
               </CardTitle>
               <CardDescription>
-                Aqui aparece el historial real de los pedidos creados con tu cuenta o con tu correo.
+                Aquí aparece el historial real de los pedidos creados con tu cuenta o con tu correo.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -257,7 +257,7 @@ export default async function AccountPage() {
                       </div>
                       <div>
                         <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                          Articulos
+                          Artículos
                         </p>
                         <p className="mt-2 font-semibold text-foreground">
                           {order.itemCount}
@@ -295,7 +295,7 @@ export default async function AccountPage() {
                       ))}
                       {order.items.length > 3 ? (
                         <p className="text-sm text-muted-foreground">
-                          Y {order.items.length - 3} articulo{order.items.length - 3 === 1 ? "" : "s"} mas.
+                          Y {order.items.length - 3} artículo{order.items.length - 3 === 1 ? "" : "s"} más.
                         </p>
                       ) : null}
                     </div>
@@ -315,7 +315,7 @@ export default async function AccountPage() {
               ) : (
                 <div className="rounded-[1.5rem] border border-dashed border-border/80 bg-muted/20 px-5 py-8 text-center">
                   <p className="text-sm text-muted-foreground">
-                    Todavia no tienes pedidos registrados. Cuando crees uno desde el checkout, aparecera aqui automaticamente.
+                    Todavía no tienes pedidos registrados. Cuando crees uno desde el checkout, aparecerá aquí automáticamente.
                   </p>
                   <Button asChild className="mt-4">
                     <Link href="/products">Explorar productos</Link>
@@ -331,7 +331,7 @@ export default async function AccountPage() {
             <CardHeader>
               <CardTitle className="text-xl">Mi actividad</CardTitle>
               <CardDescription>
-                Accesos rapidos para revisar tus compras y tus preguntas en el foro.
+                Accesos rápidos para revisar tus compras y tus preguntas en el foro.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -343,11 +343,11 @@ export default async function AccountPage() {
                       Mis Compras
                     </p>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      {customerOrders.length > 0
-                        ? latestOrder
-                          ? `Tienes ${customerOrders.length} pedido${customerOrders.length === 1 ? "" : "s"} registrado${customerOrders.length === 1 ? "" : "s"}. El mas reciente es ${latestOrder.orderNumber}.`
-                          : `Tienes ${customerOrders.length} pedido${customerOrders.length === 1 ? "" : "s"} registrado${customerOrders.length === 1 ? "" : "s"}.`
-                        : "Aun no has creado pedidos desde esta cuenta."}
+                        {customerOrders.length > 0
+                          ? latestOrder
+                            ? `Tienes ${customerOrders.length} pedido${customerOrders.length === 1 ? "" : "s"} registrado${customerOrders.length === 1 ? "" : "s"}. El más reciente es ${latestOrder.orderNumber}.`
+                            : `Tienes ${customerOrders.length} pedido${customerOrders.length === 1 ? "" : "s"} registrado${customerOrders.length === 1 ? "" : "s"}.`
+                          : "Aún no has creado pedidos desde esta cuenta."}
                     </p>
                   </div>
                   <span className="rounded-full bg-muted px-3 py-1 text-sm font-semibold text-foreground">
@@ -382,7 +382,7 @@ export default async function AccountPage() {
                       Favoritos
                     </p>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      Tus productos guardados para revisarlos o comprarlos despues.
+                      Tus productos guardados para revisarlos o comprarlos después.
                     </p>
                   </div>
                   <span className="rounded-full bg-muted px-3 py-1 text-sm font-semibold text-foreground">
@@ -427,7 +427,7 @@ export default async function AccountPage() {
                   </div>
                 ) : (
                   <p className="mt-4 text-sm text-muted-foreground">
-                    Todavia no has publicado preguntas. Puedes crear la primera desde el foro.
+                    Todavía no has publicado preguntas. Puedes crear la primera desde el foro.
                   </p>
                 )}
 
@@ -447,10 +447,10 @@ export default async function AccountPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
                 <ShieldCheck className="h-5 w-5 text-primary" />
-                Sesion activa
+                Sesión activa
               </CardTitle>
               <CardDescription>
-                Este espacio hace visible tu estado de autenticacion y te permite salir de forma segura.
+                Este espacio hace visible tu estado de autenticación y te permite salir de forma segura.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -468,7 +468,7 @@ export default async function AccountPage() {
               <form action={signOutAction}>
                 <Button type="submit" variant="outline" className="h-11 w-full">
                   <LogOut className="h-4 w-4" />
-                  Cerrar sesion
+                  Cerrar sesión
                 </Button>
               </form>
             </CardContent>

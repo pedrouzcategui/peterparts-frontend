@@ -96,7 +96,7 @@ export default function CheckoutPageClient() {
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                Articulos
+                Artículos
               </p>
               <p className="mt-2 text-lg font-semibold">
                 {submittedOrder.itemCount}
@@ -135,7 +135,7 @@ export default function CheckoutPageClient() {
             Finalizar compra
           </p>
           <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">
-            Tu carrito esta vacio
+            Tu carrito está vacío
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
             Agrega primero productos a tu carrito para que el resumen de compra tenga algo que procesar.
@@ -222,10 +222,10 @@ export default function CheckoutPageClient() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="text-3xl font-semibold sm:text-4xl">
-              Revision del pedido y datos de entrega
+              Revisión del pedido y datos de entrega
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
-              Revisa tus articulos, completa tus datos y genera el pedido. El pago y la coordinacion final se resolveran por WhatsApp despues de crear la orden.
+              Revisa tus artículos, completa tus datos y genera el pedido. El pago y la coordinación final se resolverán por WhatsApp después de crear la orden.
             </p>
           </div>
           <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
@@ -255,7 +255,7 @@ export default function CheckoutPageClient() {
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="email">Correo electronico</Label>
+                <Label htmlFor="email">Correo electrónico</Label>
                 <Input
                   id="email"
                   name="email"
@@ -273,7 +273,7 @@ export default function CheckoutPageClient() {
                 <Input id="last-name" name="lastName" placeholder="Silva" required />
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="phone">Numero de telefono</Label>
+                <Label htmlFor="phone">Número de teléfono</Label>
                 <Input
                   id="phone"
                   name="phone"
@@ -287,14 +287,14 @@ export default function CheckoutPageClient() {
 
           <Card className="rounded-[1.75rem]">
             <CardHeader>
-              <CardTitle>Envio</CardTitle>
+              <CardTitle>Envío</CardTitle>
               <CardDescription>
-                Revisa a donde se entregaria el pedido.
+                Revisa adónde se entregaría el pedido.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="address">Direccion</Label>
+                <Label htmlFor="address">Dirección</Label>
                 <Input id="address" name="address" placeholder="Av. Principal 123" required />
               </div>
               <div className="space-y-2">
@@ -306,11 +306,11 @@ export default function CheckoutPageClient() {
                 <Input id="state" name="state" placeholder="Distrito Capital" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="zip">Codigo postal</Label>
+                <Label htmlFor="zip">Código postal</Label>
                 <Input id="zip" name="zip" inputMode="numeric" placeholder="1010" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="country">Pais</Label>
+                <Label htmlFor="country">País</Label>
                 <Input id="country" name="country" defaultValue="Venezuela" required />
               </div>
             </CardContent>
@@ -320,7 +320,7 @@ export default function CheckoutPageClient() {
             <CardHeader>
               <CardTitle>Observaciones</CardTitle>
               <CardDescription>
-                Agrega alguna referencia util para el equipo si lo necesitas. Es opcional.
+                Agrega alguna referencia útil para el equipo si lo necesitas. Es opcional.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -340,9 +340,9 @@ export default function CheckoutPageClient() {
 
         <Card className="h-fit rounded-[1.75rem] lg:sticky lg:top-28">
           <CardHeader>
-            <CardTitle>Revision del pedido</CardTitle>
+            <CardTitle>Revisión del pedido</CardTitle>
             <CardDescription>
-              {itemCount} articulo{itemCount === 1 ? "" : "s"} en tu carrito
+              {itemCount} artículo{itemCount === 1 ? "" : "s"} en tu carrito
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
@@ -366,7 +366,7 @@ export default function CheckoutPageClient() {
                     </p>
                     {item.variantLabel ? (
                       <p className="mt-1 text-xs text-muted-foreground">
-                        Seleccion: {item.variantLabel}
+                        Selección: {item.variantLabel}
                       </p>
                     ) : null}
                     <p className="mt-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
@@ -388,7 +388,7 @@ export default function CheckoutPageClient() {
                 <span>{formatCurrency(subtotal)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Envio</span>
+                <span className="text-muted-foreground">Envío</span>
                 <span>{shipping === 0 ? "Gratis" : formatCurrency(shipping)}</span>
               </div>
               <div className="flex items-center justify-between">

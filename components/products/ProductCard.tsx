@@ -49,12 +49,17 @@ export default function ProductCard({
     activeCurrency === "ves"
       ? formattedOriginalVesPrice
       : formattedOriginalUsdPrice;
+  const isBolivarCurrency = activeCurrency === "ves";
+  const discountPercentage =
+    typeof originalPriceUsd === "number" && originalPriceUsd > priceUsd
+      ? Math.round(((originalPriceUsd - priceUsd) / originalPriceUsd) * 100)
+      : null;
   const alternatePrice =
     activeCurrency === "ves" ? formattedUsdPrice : formattedVesPrice;
   const alternatePriceLabel =
     activeCurrency === "ves"
-      ? "Tambien disponible en USD"
-      : "Precio en bolivares";
+      ? "También disponible en USD"
+      : "Precio en bolívares";
 
   const shortDescription = product.description.slice(0, 120).trim();
   const showEllipsis = product.description.length > 120;
@@ -121,9 +126,9 @@ export default function ProductCard({
     product.badge === "Sale"
       ? "Oferta"
       : product.badge === "Just In"
-        ? "Recien llegado"
+        ? "Recién llegado"
         : product.badge === "Best Seller"
-          ? "Mas vendido"
+          ? "Más vendido"
           : product.badge;
 
   return (
@@ -139,16 +144,22 @@ export default function ProductCard({
         {/* Image container */}
         <div className="relative aspect-[1.02] overflow-hidden border-b border-[#ebe7e0] bg-white px-6 pb-5 pt-16 dark:border-border dark:bg-white">
           {badgeLabel ? (
-            <div className="absolute left-4 top-4 z-10 flex items-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-black/5 dark:bg-card">
-              <span className="bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white">
-                {originalPriceUsd
-                  ? `-${Math.round(((originalPriceUsd - priceUsd) / originalPriceUsd) * 100)}%`
-                  : badgeLabel}
-              </span>
-              <span className="px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary dark:text-primary">
-                {badgeLabel}
-              </span>
-            </div>
+            discountPercentage !== null ? (
+              <div className="absolute left-4 top-4 z-10 flex max-w-[calc(100%-2rem)] items-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-black/5 dark:bg-card">
+                <span className="whitespace-nowrap bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white">
+                  -{discountPercentage}%
+                </span>
+                <span className="truncate whitespace-nowrap px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary dark:text-primary">
+                  {badgeLabel}
+                </span>
+              </div>
+            ) : (
+              <div className="absolute left-4 top-4 z-10 max-w-[calc(100%-2rem)] rounded-full bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white shadow-sm ring-1 ring-black/5 dark:bg-primary">
+                <span className="block truncate whitespace-nowrap">
+                  {badgeLabel}
+                </span>
+              </div>
+            )
           ) : null}
 
           <ProductImageWithFallback
@@ -177,7 +188,7 @@ export default function ProductCard({
                 variant="secondary"
                 className="shrink-0 bg-white text-[#630E19] dark:bg-muted dark:text-foreground"
               >
-                {product.badge}
+                {badgeLabel}
               </Badge>
             ) : null}
           </div>
@@ -233,25 +244,43 @@ export default function ProductCard({
           ) : null}
 
           <div className="mt-auto flex items-end justify-between gap-4 pt-6">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[1.7rem] font-semibold tracking-tight text-[#1A1714] dark:text-foreground">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <span
+                  className={
+                    isBolivarCurrency
+                      ? "text-[1.35rem] font-semibold leading-tight tracking-tight text-[#1A1714] dark:text-foreground sm:text-[1.5rem]"
+                      : "text-[1.7rem] font-semibold tracking-tight text-[#1A1714] dark:text-foreground"
+                  }
+                >
                   {formattedPrice}
                 </span>
                 {formattedOriginalPrice ? (
-                  <span className="text-sm text-muted-foreground line-through">
+                  <span className="text-xs text-muted-foreground line-through sm:text-sm">
                     {formattedOriginalPrice}
                   </span>
                 ) : null}
               </div>
               {alternatePrice ? (
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p
+                  className={
+                    isBolivarCurrency
+                      ? "mt-1 text-xs text-muted-foreground sm:text-sm"
+                      : "mt-1 text-sm text-muted-foreground"
+                  }
+                >
                   {alternatePriceLabel}: {alternatePrice}
                 </p>
               ) : null}
 
               {savings ? (
-                <p className="mt-1 text-sm font-medium text-[#2f8a42] dark:text-green-400">
+                <p
+                  className={
+                    isBolivarCurrency
+                      ? "mt-1 text-xs font-medium text-[#2f8a42] dark:text-green-400 sm:text-sm"
+                      : "mt-1 text-sm font-medium text-[#2f8a42] dark:text-green-400"
+                  }
+                >
                   Ahorra {savings}
                 </p>
               ) : (
@@ -264,7 +293,7 @@ export default function ProductCard({
             </div>
 
             {product.inStock ? (
-              <div className="relative z-20">
+              <div className="relative z-20 shrink-0">
                 <ProductCardQuickAdd product={product} />
               </div>
             ) : null}

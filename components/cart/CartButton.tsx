@@ -21,7 +21,7 @@ export default function CartButton({
   const { itemCount } = useCart();
   const cartLabel =
     itemCount > 0
-      ? `Carrito de compras con ${itemCount} articulo${itemCount === 1 ? "" : "s"}`
+      ? `Carrito de compras con ${itemCount} artículo${itemCount === 1 ? "" : "s"}`
       : "Carrito de compras";
   const tooltipLabel = title ?? cartLabel;
 

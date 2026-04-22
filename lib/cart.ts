@@ -26,6 +26,7 @@ export interface CartItem {
   style: string;
   shippingInfo: string;
   inStock: boolean;
+  stockQuantity: number;
 }
 
 interface StoredCart {
@@ -57,9 +58,32 @@ export function isCartItem(value: unknown): value is CartItem {
     typeof item.style === "string" &&
     typeof item.shippingInfo === "string" &&
     typeof item.inStock === "boolean" &&
+    (item.stockQuantity === undefined || typeof item.stockQuantity === "number") &&
     typeof item.image?.src === "string" &&
     typeof item.image?.alt === "string"
   );
+}
+
+function normalizeStockQuantity(item: Pick<CartItem, "inStock"> & { stockQuantity?: number }): number {
+  if (!item.inStock) {
+    return 0;
+  }
+
+  if (typeof item.stockQuantity !== "number" || !Number.isFinite(item.stockQuantity)) {
+    return Number.MAX_SAFE_INTEGER;
+  }
+
+  return Math.max(0, Math.floor(item.stockQuantity));
+}
+
+function normalizeCartQuantity(item: Pick<CartItem, "inStock" | "quantity"> & { stockQuantity?: number }): number {
+  const stockQuantity = normalizeStockQuantity(item);
+
+  if (stockQuantity === 0) {
+    return 1;
+  }
+
+  return Math.min(stockQuantity, Math.max(1, Math.floor(item.quantity)));
 }
 
 export function parseCartItems(value: unknown): CartItem[] {
@@ -69,7 +93,8 @@ export function parseCartItems(value: unknown): CartItem[] {
 
   return value.filter(isCartItem).map((item) => ({
     ...item,
-    quantity: Math.max(1, Math.floor(item.quantity)),
+    stockQuantity: normalizeStockQuantity(item),
+    quantity: normalizeCartQuantity(item),
   }));
 }
 
@@ -102,6 +127,7 @@ export function createCartItem(
     style: product.style,
     shippingInfo: product.shippingInfo,
     inStock: product.inStock,
+    stockQuantity: Math.max(0, Math.floor(product.stockQuantity)),
   };
 }
 

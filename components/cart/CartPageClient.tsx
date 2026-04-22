@@ -24,14 +24,14 @@ export default function CartPageClient() {
             <ShoppingBag className="h-7 w-7" />
           </div>
           <p className="mt-6 text-sm uppercase tracking-[0.24em] text-muted-foreground">
-            Tu carrito esta vacio
+            Tu carrito está vacío
           </p>
           <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">Arma tu pedido de repuestos</h1>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
             Agrega repuestos, engranajes o batidoras a tu carrito y revisa precios, cantidades y detalles de entrega antes de finalizar la compra.
           </p>
           <Button asChild size="lg" className="mt-8">
-            <Link href="/products">Explorar catalogo</Link>
+            <Link href="/products">Explorar catálogo</Link>
           </Button>
         </div>
       </section>
@@ -52,7 +52,7 @@ export default function CartPageClient() {
             Revisa tus productos seleccionados
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Ajusta cantidades, elimina productos y continua a un checkout de muestra cuando estes listo.
+            Ajusta cantidades, elimina productos y continúa a un checkout de muestra cuando estés listo.
           </p>
         </div>
         <Button variant="outline" onClick={clearCart}>
@@ -62,85 +62,92 @@ export default function CartPageClient() {
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="space-y-4">
-          {items.map((item) => (
-            <article
-              key={item.id}
-              className="grid gap-4 rounded-[1.75rem] border bg-card p-4 shadow-sm sm:grid-cols-[7rem_minmax(0,1fr)_auto] sm:items-center"
-            >
-              <Link
-                href={`/products/${item.slug}`}
-                className="relative aspect-square overflow-hidden rounded-2xl bg-muted"
-              >
-                <Image
-                  src={item.image.src}
-                  alt={item.image.alt}
-                  fill
-                  sizes="112px"
-                  className="object-cover"
-                  unoptimized={isBlobProductImageUrl(item.image.src)}
-                />
-              </Link>
+          {items.map((item) => {
+            const hasInventoryLimit = item.stockQuantity < Number.MAX_SAFE_INTEGER;
+            const hasReachedInventoryLimit = hasInventoryLimit && item.quantity >= item.stockQuantity;
 
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                  <span>{item.brand}</span>
-                  <span className="h-1 w-1 rounded-full bg-border" />
-                  <span>{item.subcategory}</span>
-                </div>
-                <Link href={`/products/${item.slug}`} className="mt-2 block text-lg font-semibold leading-tight hover:text-primary">
-                  {item.name}
+            return (
+              <article
+                key={item.id}
+                className="grid gap-4 rounded-[1.75rem] border bg-card p-4 shadow-sm sm:grid-cols-[7rem_minmax(0,1fr)_auto] sm:items-center"
+              >
+                <Link
+                  href={`/products/${item.slug}`}
+                  className="relative aspect-square overflow-hidden rounded-2xl bg-muted"
+                >
+                  <Image
+                    src={item.image.src}
+                    alt={item.image.alt}
+                    fill
+                    sizes="112px"
+                    className="object-cover"
+                    unoptimized={isBlobProductImageUrl(item.image.src)}
+                  />
                 </Link>
-                <div className="mt-3 space-y-1 text-sm text-muted-foreground">
-                  <p>Modelo: {item.style || "Articulo del catalogo"}</p>
-                  {item.variantLabel ? <p>Seleccion: {item.variantLabel}</p> : null}
-                </div>
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <div className="inline-flex items-center rounded-full border bg-background">
+
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                    <span>{item.brand}</span>
+                    <span className="h-1 w-1 rounded-full bg-border" />
+                    <span>{item.subcategory}</span>
+                  </div>
+                  <Link href={`/products/${item.slug}`} className="mt-2 block text-lg font-semibold leading-tight hover:text-primary">
+                    {item.name}
+                  </Link>
+                  <div className="mt-3 space-y-1 text-sm text-muted-foreground">
+                    <p>Modelo: {item.style || "Artículo del catálogo"}</p>
+                    {item.variantLabel ? <p>Selección: {item.variantLabel}</p> : null}
+                    {hasInventoryLimit ? <p>Disponibles: {item.stockQuantity}</p> : null}
+                  </div>
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <div className="inline-flex items-center rounded-full border bg-background">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Reducir cantidad de ${item.name}`}
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="min-w-10 text-center text-sm font-medium">{item.quantity}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Aumentar cantidad de ${item.name}`}
+                        disabled={hasReachedInventoryLimit}
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <Button
                       variant="ghost"
-                      size="icon-sm"
-                      aria-label={`Reducir cantidad de ${item.name}`}
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      size="sm"
+                      className="text-muted-foreground"
+                      onClick={() => removeItem(item.id)}
                     >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <span className="min-w-10 text-center text-sm font-medium">{item.quantity}</span>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={`Aumentar cantidad de ${item.name}`}
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    >
-                      <Plus className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" />
+                      Eliminar
                     </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground"
-                    onClick={() => removeItem(item.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Eliminar
-                  </Button>
                 </div>
-              </div>
 
-              <div className="flex items-center justify-between gap-3 sm:block sm:text-right">
-                <div>
-                  <p className="text-lg font-semibold">{formatCurrency(item.price * item.quantity)}</p>
-                  {item.originalPrice ? (
-                    <p className="text-sm text-muted-foreground line-through">
-                      {formatCurrency(item.originalPrice * item.quantity)}
-                    </p>
-                  ) : null}
+                <div className="flex items-center justify-between gap-3 sm:block sm:text-right">
+                  <div>
+                    <p className="text-lg font-semibold">{formatCurrency(item.price * item.quantity)}</p>
+                    {item.originalPrice ? (
+                      <p className="text-sm text-muted-foreground line-through">
+                        {formatCurrency(item.originalPrice * item.quantity)}
+                      </p>
+                    ) : null}
+                  </div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground sm:mt-3">
+                    {item.inStock ? "Listo para enviar" : "Disponible bajo pedido"}
+                  </p>
                 </div>
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground sm:mt-3">
-                  {item.inStock ? "Listo para enviar" : "Disponible bajo pedido"}
-                </p>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
 
         <Card className="h-fit rounded-[1.75rem] lg:sticky lg:top-28">
@@ -154,7 +161,7 @@ export default function CartPageClient() {
                 <span>{formatCurrency(subtotal)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Envio estimado</span>
+                <span className="text-muted-foreground">Envío estimado</span>
                 <span>{shipping === 0 ? "Gratis" : formatCurrency(shipping)}</span>
               </div>
             </div>
@@ -167,7 +174,7 @@ export default function CartPageClient() {
             </div>
 
             <p className="rounded-2xl bg-primary/6 px-4 py-3 text-sm leading-6 text-muted-foreground">
-              Los pedidos superiores a {formatCurrency(FREE_SHIPPING_THRESHOLD)} califican para envio estandar gratis.
+              Los pedidos superiores a {formatCurrency(FREE_SHIPPING_THRESHOLD)} califican para envío estándar gratis.
             </p>
 
             <Button asChild size="lg" className="w-full">

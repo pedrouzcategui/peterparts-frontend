@@ -48,7 +48,7 @@ export default async function FavouritesPage() {
                 Los guardados de {displayName}
               </h1>
               <p className="mt-3 max-w-xl text-sm text-white/85 sm:text-base">
-                Reune aqui los repuestos y accesorios que quieres revisar mas
+                Reúne aquí los repuestos y accesorios que quieres revisar más
                 tarde, comparar o comprar cuando tengas todo listo.
               </p>
             </div>
@@ -75,11 +75,11 @@ export default async function FavouritesPage() {
               </div>
               <div className="space-y-2">
                 <h2 className="text-2xl font-semibold text-[#1A1714] dark:text-foreground">
-                  Aun no has guardado productos
+                  Aún no has guardado productos
                 </h2>
                 <p className="text-sm leading-6 text-muted-foreground sm:text-base">
-                  Usa el boton Guardar desde cualquier producto para crear tu
-                  lista de favoritos y volver rapido cuando quieras comprar.
+                  Usa el botón Guardar desde cualquier producto para crear tu
+                  lista de favoritos y volver rápido cuando quieras comprar.
                 </p>
               </div>
               <Button asChild size="lg" className="mt-2">
@@ -149,7 +149,7 @@ export default async function FavouritesPage() {
                           </p>
                           {priceVes ? (
                             <p className="mt-1 text-sm text-muted-foreground">
-                              Precio en bolivares: {priceVes}
+                              Precio en bolívares: {priceVes}
                             </p>
                           ) : null}
                         </div>

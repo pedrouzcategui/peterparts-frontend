@@ -64,10 +64,10 @@ export default function ProductPurchaseDetails({
           Compra, entrega y soporte
         </p>
         <h2 className="text-3xl font-semibold tracking-tight text-[#1A1714] dark:text-foreground sm:text-4xl">
-          Informacion util antes de coordinar tu pedido
+          Información útil antes de coordinar tu pedido
         </h2>
         <p className="text-sm leading-7 text-[#5b5248] dark:text-muted-foreground sm:text-base">
-          Esta informacion aplica a cualquier producto del catalogo. Asi puedes
+          Esta información aplica a cualquier producto del catálogo. Así puedes
           revisar puntos de entrega, horario de trabajo, medios de pago y
           opciones de despacho antes de escribirnos.
         </p>
@@ -76,7 +76,7 @@ export default function ProductPurchaseDetails({
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(21rem,0.95fr)]">
         <div className="space-y-6">
           <DetailCard
-            eyebrow="Ubicacion"
+            eyebrow="Ubicación"
             title="Entregas personales y despachos coordinados"
             description={settings.locationIntro}
             icon={MapPin}
@@ -127,7 +127,7 @@ export default function ProductPurchaseDetails({
 
             <DetailCard
               eyebrow="Despacho"
-              title="Metodos de despacho"
+              title="Métodos de despacho"
               description="Escoge la modalidad que mejor se ajuste a tu urgencia o ciudad. Siempre confirmamos costo y disponibilidad antes de cerrar la entrega."
               icon={Truck}
             >
@@ -152,8 +152,8 @@ export default function ProductPurchaseDetails({
         <div className="space-y-6">
           <DetailCard
             eyebrow="Pago"
-            title="Metodos de pago"
-            description="Aceptamos pagos en divisas y bolivar digital. Si necesitas confirmar disponibilidad de una cuenta antes de pagar, te la compartimos al momento de coordinar."
+            title="Métodos de pago"
+            description="Aceptamos pagos en divisas y bolívar digital. Si necesitas confirmar disponibilidad de una cuenta antes de pagar, te la compartimos al momento de coordinar."
             icon={CreditCard}
           >
             <div className="space-y-4">
@@ -169,10 +169,10 @@ export default function ProductPurchaseDetails({
               </div>
               <div className="rounded-2xl bg-[#f5f0e9] p-4 dark:bg-muted/40">
                 <p className="text-sm font-semibold text-[#1A1714] dark:text-foreground">
-                  Bolivar digital
+                  Bolívar digital
                 </p>
                 <p className="mt-2 text-sm text-[#5b5248] dark:text-muted-foreground">
-                  Transferencias y pago movil disponibles en:
+                  Transferencias y pago móvil disponibles en:
                 </p>
                 <ul className="mt-3 grid gap-2 text-sm text-[#5b5248] dark:text-muted-foreground sm:grid-cols-2">
                   {settings.paymentMethodsBolivar.map((method) => (

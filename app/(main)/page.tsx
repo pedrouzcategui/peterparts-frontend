@@ -17,7 +17,7 @@ const HOMEPAGE_BRANDS = [
   },
   {
     name: "Whirlpool",
-    tagline: "Repuestos confiables para mantenimiento y reparacion",
+    tagline: "Repuestos confiables para mantenimiento y reparación",
     href: "/products?brand=Whirlpool",
     logoLightSrc: "/images/whirlpool-logo.png",
     logoDarkSrc: "/images/whirlpool-logo-dark.png",
@@ -64,11 +64,11 @@ export default async function HomePage() {
             <p className="mt-5 max-w-2xl text-base leading-7 text-white/85 sm:text-lg">
               Encuentra piezas compatibles para reparar y mantener tus equipos,
               junto con batidoras seleccionadas de KitchenAid, Cuisinart y
-              Whirlpool. PeterParts no vende electrodomesticos completos.
+              Whirlpool. PeterParts no vende electrodomésticos completos.
             </p>
             <div className="mt-8 flex items-center gap-4">
               <Button asChild size="lg">
-                <Link href="/products">Explorar catalogo</Link>
+                <Link href="/products">Explorar catálogo</Link>
               </Button>
             </div>
           </div>

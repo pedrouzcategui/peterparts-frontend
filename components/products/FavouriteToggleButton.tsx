@@ -46,7 +46,7 @@ export default function FavouriteToggleButton({
 
         if (result.status === "unauthenticated") {
           setIsFavourited(previousValue);
-          toast.message("Inicia sesion para guardar favoritos.");
+          toast.message("Inicia sesión para guardar favoritos.");
           router.push(result.redirectTo);
           return;
         }
@@ -60,8 +60,8 @@ export default function FavouriteToggleButton({
         setIsFavourited(result.status === "added");
         toast.success(
           result.status === "added"
-            ? `${result.productName} se guardo en favoritos.`
-            : `${result.productName} se elimino de favoritos.`,
+            ? `${result.productName} se guardó en favoritos.`
+            : `${result.productName} se eliminó de favoritos.`,
         );
         router.refresh();
       } catch {

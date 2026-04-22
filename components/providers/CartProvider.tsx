@@ -40,6 +40,18 @@ const CART_STORAGE_EVENT = "peterparts-cart-updated";
 
 const emptyCart: CartItem[] = [];
 
+function getAvailableCartQuantity(item: Pick<CartItem, "inStock" | "stockQuantity">): number {
+  if (!item.inStock) {
+    return 0;
+  }
+
+  if (!Number.isFinite(item.stockQuantity)) {
+    return Number.MAX_SAFE_INTEGER;
+  }
+
+  return Math.max(0, Math.floor(item.stockQuantity));
+}
+
 function getAddedToCartDescription(item: CartItem, totalQuantity: number): string {
   const details = [item.variantLabel, `Cantidad: ${totalQuantity}`].filter(Boolean);
 
@@ -116,30 +128,57 @@ export function CartProvider({ children }: CartProviderProps) {
   };
 
   const addItem = (item: CartItem, quantity = 1) => {
-    const normalizedQuantity = Math.max(1, quantity);
-    let totalQuantity = normalizedQuantity;
+    const normalizedQuantity = Math.max(1, Math.floor(quantity));
+    const maxAvailableQuantity = getAvailableCartQuantity(item);
+    let totalQuantity = 0;
+    let didAddItem = false;
+    let reachedInventoryLimit = false;
+
+    if (maxAvailableQuantity === 0) {
+      toast.error(`${item.name} no tiene inventario disponible.`);
+      return;
+    }
 
     mutateCart((currentItems) => {
       const existingItem = currentItems.find((currentItem) => currentItem.id === item.id);
+      const currentQuantity = existingItem?.quantity ?? 0;
+      const requestedQuantity = currentQuantity + normalizedQuantity;
+      const nextQuantity = Math.min(requestedQuantity, maxAvailableQuantity);
 
-      if (!existingItem) {
-        return [...currentItems, { ...item, quantity: normalizedQuantity }];
+      totalQuantity = nextQuantity;
+      reachedInventoryLimit = nextQuantity < requestedQuantity;
+
+      if (nextQuantity === currentQuantity) {
+        return currentItems;
       }
 
-      totalQuantity = existingItem.quantity + normalizedQuantity;
+      didAddItem = true;
+
+      if (!existingItem) {
+        return [...currentItems, { ...item, quantity: nextQuantity }];
+      }
 
       return currentItems.map((currentItem) =>
         currentItem.id === item.id
           ? {
               ...currentItem,
-              quantity: currentItem.quantity + normalizedQuantity,
+              quantity: nextQuantity,
             }
           : currentItem,
       );
     });
 
+    if (!didAddItem) {
+      toast.info(`Ya alcanzaste el inventario disponible de ${item.name}.`, {
+        description: `Máximo disponible: ${maxAvailableQuantity}.`,
+      });
+      return;
+    }
+
     toast.success(`${item.name} agregado al carrito`, {
-      description: getAddedToCartDescription(item, totalQuantity),
+      description: reachedInventoryLimit
+        ? `Cantidad ajustada al inventario disponible: ${totalQuantity}.`
+        : getAddedToCartDescription(item, totalQuantity),
     });
   };
 
@@ -153,6 +192,9 @@ export function CartProvider({ children }: CartProviderProps) {
   };
 
   const updateQuantity = (itemId: string, quantity: number) => {
+    let reachedInventoryLimit = false;
+    let inventoryLimit = 0;
+
     mutateCart((currentItems) => {
       if (quantity <= 0) {
         return currentItems.filter((item) => item.id !== itemId);
@@ -160,13 +202,27 @@ export function CartProvider({ children }: CartProviderProps) {
 
       return currentItems.map((item) =>
         item.id === itemId
-          ? {
-              ...item,
-              quantity,
-            }
+          ? (() => {
+              inventoryLimit = getAvailableCartQuantity(item);
+              const nextQuantity = Math.min(
+                Math.max(1, Math.floor(quantity)),
+                inventoryLimit || 1,
+              );
+
+              reachedInventoryLimit = nextQuantity < quantity;
+
+              return {
+                ...item,
+                quantity: nextQuantity,
+              };
+            })()
           : item,
       );
     });
+
+    if (reachedInventoryLimit) {
+      toast.info(`Solo hay ${inventoryLimit} unidades disponibles para este producto.`);
+    }
   };
 
   const removeItem = (itemId: string) => {

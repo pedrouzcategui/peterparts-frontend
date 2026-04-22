@@ -159,7 +159,7 @@ export default function SignUpPageClient({
           size="icon"
           className="mb-2"
           onClick={() => router.push("/login")}
-          aria-label="Volver al inicio de sesion"
+          aria-label="Volver al inicio de sesión"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -170,10 +170,10 @@ export default function SignUpPageClient({
           </div>
           <h1 className="text-3xl font-bold tracking-tight">Confirma tu correo</h1>
           <p className="text-muted-foreground">
-            Enviamos un enlace de confirmacion a
+            Enviamos un enlace de confirmación a
             {" "}
             <span className="font-medium text-foreground">{signUpState.email}</span>.
-            Debes activarlo antes de iniciar sesion.
+            Debes activarlo antes de iniciar sesión.
           </p>
         </div>
 
@@ -197,7 +197,7 @@ export default function SignUpPageClient({
           <form action={resendAction}>
             <input type="hidden" name="email" value={signUpState.email} />
             <Button type="submit" variant="outline" className="h-11 w-full" disabled={isLoading}>
-              {isResending ? "Reenviando correo..." : "Reenviar correo de confirmacion"}
+              {isResending ? "Reenviando correo..." : "Reenviar correo de confirmación"}
             </Button>
           </form>
         </div>
@@ -226,7 +226,7 @@ export default function SignUpPageClient({
             href="/login"
             className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
           >
-            Inicia sesion
+            Inicia sesión
           </Link>
         </p>
       </div>
@@ -265,7 +265,7 @@ export default function SignUpPageClient({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Correo electronico</Label>
+          <Label htmlFor="email">Correo electrónico</Label>
           <Input
             id="email"
             name="email"
@@ -323,7 +323,7 @@ export default function SignUpPageClient({
               href="/terms"
               className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
             >
-              Terminos y condiciones
+              Términos y condiciones
             </Link>
           </label>
         </div>

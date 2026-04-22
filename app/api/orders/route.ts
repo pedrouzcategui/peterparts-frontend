@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 
   if (!email || !isValidEmail(email)) {
     return NextResponse.json(
-      { message: "Ingresa un correo electronico valido." },
+      { message: "Ingresa un correo electrónico válido." },
       { status: 400 },
     );
   }
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
 
   if (items.length === 0) {
     return NextResponse.json(
-      { message: "Tu carrito esta vacio. Agrega productos antes de crear el pedido." },
+      { message: "Tu carrito está vacío. Agrega productos antes de crear el pedido." },
       { status: 400 },
     );
   }
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
         ? error.message
         : "No pudimos guardar tu pedido en este momento. Intenta nuevamente.";
     const status =
-      message === "Uno de los productos ya no esta disponible." ||
+      message === "Uno de los productos ya no está disponible." ||
       message.startsWith("No hay inventario suficiente para")
         ? 409
         : 500;

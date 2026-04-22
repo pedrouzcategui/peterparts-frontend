@@ -82,7 +82,11 @@ export default function ProductsContent({ allProducts }: ProductsContentProps) {
               p.originalPrice !== undefined
             );
           if (filter === "new") {
-            return p.badge === "Just In" || p.badge === "Recien llegado";
+            return (
+              p.badge === "Just In" ||
+              p.badge === "Recien llegado" ||
+              p.badge === "Recién llegado"
+            );
           }
           return true;
         });
@@ -116,8 +120,18 @@ export default function ProductsContent({ allProducts }: ProductsContentProps) {
       result.sort((a, b) => b.reviews.rating - a.reviews.rating);
     } else if (sort === "newest") {
       result.sort((a, b) => {
-        const aNew = a.badge === "Just In" || a.badge === "Recien llegado" ? 1 : 0;
-        const bNew = b.badge === "Just In" || b.badge === "Recien llegado" ? 1 : 0;
+        const aNew =
+          a.badge === "Just In" ||
+          a.badge === "Recien llegado" ||
+          a.badge === "Recién llegado"
+            ? 1
+            : 0;
+        const bNew =
+          b.badge === "Just In" ||
+          b.badge === "Recien llegado" ||
+          b.badge === "Recién llegado"
+            ? 1
+            : 0;
         return bNew - aNew;
       });
     }
@@ -135,7 +149,7 @@ export default function ProductsContent({ allProducts }: ProductsContentProps) {
   );
 
   return (
-    <div>
+    <div id="products-results" className="scroll-mt-24">
       {/* Results count */}
       <p className="mb-4 text-sm text-muted-foreground">
         Mostrando {paginatedProducts.length} de {filteredProducts.length} productos

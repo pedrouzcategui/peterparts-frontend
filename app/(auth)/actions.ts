@@ -41,7 +41,7 @@ export async function loginWithPasswordAction(
           email,
           requiresEmailVerification: true,
           message:
-            "Debes confirmar tu correo antes de iniciar sesion. Revisa tu bandeja o reenvia el correo.",
+            "Debes confirmar tu correo antes de iniciar sesión. Revisa tu bandeja o reenvía el correo.",
         };
       case "google_only":
         return {
@@ -74,7 +74,7 @@ export async function signInWithGoogleAction(formData: FormData): Promise<void> 
   );
 
   if (!isGoogleAuthEnabled) {
-    throw new Error("Google Auth no esta configurado todavia.");
+    throw new Error("Google Auth no está configurado todavía.");
   }
 
   await signIn("google", { redirectTo });
@@ -90,7 +90,7 @@ export async function requestMagicLinkAction(
     return {
       status: "error",
       email,
-      message: "El acceso con enlace no esta configurado todavia.",
+      message: "El acceso con enlace no está configurado todavía.",
     };
   }
 

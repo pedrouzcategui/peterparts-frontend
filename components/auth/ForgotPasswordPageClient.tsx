@@ -53,7 +53,7 @@ export default function ForgotPasswordPageClient() {
           size="icon"
           className="mb-2"
           onClick={() => router.push("/login")}
-          aria-label="Volver al inicio de sesion"
+          aria-label="Volver al inicio de sesión"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -86,7 +86,7 @@ export default function ForgotPasswordPageClient() {
             className="h-11 w-full"
             onClick={() => router.push("/login")}
           >
-            Volver a iniciar sesion
+            Volver a iniciar sesión
           </Button>
           <p className="text-center text-sm text-muted-foreground">
             ¿Necesitas intentar con otro correo?{" "}
@@ -129,7 +129,7 @@ export default function ForgotPasswordPageClient() {
 
       <form action={formAction} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">Correo electronico</Label>
+          <Label htmlFor="email">Correo electrónico</Label>
           <Input
             id="email"
             name="email"
@@ -143,7 +143,7 @@ export default function ForgotPasswordPageClient() {
         </div>
 
         <Button type="submit" className="h-11 w-full" disabled={isPending}>
-          {isPending ? "Enviando..." : "Enviar enlace de recuperacion"}
+          {isPending ? "Enviando..." : "Enviar enlace de recuperación"}
         </Button>
       </form>
 
@@ -153,7 +153,7 @@ export default function ForgotPasswordPageClient() {
           href="/login"
           className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
         >
-          Volver a iniciar sesion
+          Volver a iniciar sesión
         </Link>
       </p>
     </div>

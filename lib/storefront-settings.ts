@@ -28,7 +28,7 @@ export const STOREFRONT_SETTINGS_KEY = "default";
 export const DEFAULT_STOREFRONT_SETTINGS: StorefrontSettings = {
   key: STOREFRONT_SETTINGS_KEY,
   locationIntro:
-    "Trabajamos con entregas personales en Caracas y Los Altos Mirandinos. Tambien coordinamos delivery en Caracas segun la zona y la disponibilidad del dia.",
+    "Trabajamos con entregas personales en Caracas y Los Altos Mirandinos. También coordinamos delivery en Caracas según la zona y la disponibilidad del día.",
   deliveryNote:
     "Podemos coordinar delivery en Caracas. El costo depende del lugar de entrega y del horario acordado.",
   scheduleWeekdaysLabel: "Lunes a viernes",
@@ -46,25 +46,25 @@ export const DEFAULT_STOREFRONT_SETTINGS: StorefrontSettings = {
   dispatchMethods: [
     "Retiro personalmente en nuestra oficina",
     "Servicio motorizado (favor consultar costo)",
-    "Envios cobro en destino a nivel nacional",
+    "Envíos cobro en destino a nivel nacional",
   ],
   nationalCarriers: ["MRW", "Zoom", "Tealca"],
-  supportTitle: "Asesoria tecnica gratuita por WhatsApp",
+  supportTitle: "Asesoría técnica gratuita por WhatsApp",
   supportDescription:
-    "Le brindamos asesoria tecnica gratuita via telefonica y por WhatsApp. Respondemos sus dudas para ayudarle con la reparacion de su batidora, la compatibilidad del repuesto y la seleccion correcta de engranajes o piezas.",
+    "Le brindamos asesoría técnica gratuita vía telefónica y por WhatsApp. Respondemos sus dudas para ayudarle con la reparación de su batidora, la compatibilidad del repuesto y la selección correcta de engranajes o piezas.",
   supportHighlight:
     "Antes de comprar, puede escribirnos con el modelo del equipo o una foto de la pieza para validar compatibilidad y reducir errores en el pedido.",
   pickupLocations: [
     {
       name: "San Bernardino, Caracas",
       description:
-        "Entregas personales muy cerca del Instituto Diagnostico - Caracas.",
+        "Entregas personales muy cerca del Instituto Diagnóstico - Caracas.",
       latitude: 10.5025,
       longitude: -66.8944,
     },
     {
-      name: "Montana Alta, Carrizal",
-      description: "Punto de entrega coordinado en Montana Alta, Carrizal.",
+      name: "Montaña Alta, Carrizal",
+      description: "Punto de entrega coordinado en Montaña Alta, Carrizal.",
       latitude: 10.3471,
       longitude: -66.9246,
     },

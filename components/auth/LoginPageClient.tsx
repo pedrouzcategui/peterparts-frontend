@@ -93,7 +93,7 @@ export default function LoginPageClient({
             href="/signup"
             className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
           >
-            Registrate
+            Regístrate
           </Link>
         </p>
       </div>
@@ -109,7 +109,7 @@ export default function LoginPageClient({
         <input type="hidden" name="redirectTo" value={redirectTo} />
 
         <div className="space-y-2">
-          <Label htmlFor="email">Correo electronico</Label>
+          <Label htmlFor="email">Correo electrónico</Label>
           <Input
             id="email"
             name="email"
@@ -143,7 +143,7 @@ export default function LoginPageClient({
         </div>
 
         <Button type="submit" className="h-11 w-full" disabled={isLoading}>
-          {isLoginPending ? "Iniciando sesion..." : "Iniciar sesion"}
+          {isLoginPending ? "Iniciando sesión..." : "Iniciar sesión"}
         </Button>
       </form>
 
@@ -154,7 +154,7 @@ export default function LoginPageClient({
               <Mail className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1 space-y-1">
-              <h2 className="text-base font-semibold">Entrar con enlace magico</h2>
+              <h2 className="text-base font-semibold">Entrar con enlace mágico</h2>
               <p className="text-sm text-muted-foreground">
                 Recibe un enlace seguro en tu correo y entra sin escribir tu contraseña.
               </p>
@@ -165,7 +165,7 @@ export default function LoginPageClient({
             <input type="hidden" name="redirectTo" value={redirectTo} />
 
             <div className="space-y-2">
-              <Label htmlFor="magic-link-email">Correo electronico</Label>
+              <Label htmlFor="magic-link-email">Correo electrónico</Label>
               <Input
                 id="magic-link-email"
                 name="email"
@@ -185,7 +185,7 @@ export default function LoginPageClient({
         </div>
       ) : (
         <p className="rounded-2xl border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
-          El acceso con enlace estara disponible cuando configures
+          El acceso con enlace estará disponible cuando configures
           {" "}
           RESEND_API_KEY
           {" "}
@@ -199,7 +199,7 @@ export default function LoginPageClient({
         <form action={resendAction} className="rounded-2xl border border-border bg-muted/30 p-4">
           <input type="hidden" name="email" value={loginState.email} />
           <p className="text-sm text-muted-foreground">
-            Si no encuentras el mensaje original, puedes pedir otro correo de confirmacion.
+            Si no encuentras el mensaje original, puedes pedir otro correo de confirmación.
           </p>
           <Button
             type="submit"
@@ -209,7 +209,7 @@ export default function LoginPageClient({
           >
             {isResendPending
               ? "Reenviando correo..."
-              : "Reenviar correo de confirmacion"}
+              : "Reenviar correo de confirmación"}
           </Button>
         </form>
       ) : null}

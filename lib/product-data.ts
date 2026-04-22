@@ -47,7 +47,7 @@ const PRICE_FILTERS = [
     matches: (price: number) => price >= 500 && price < 1000,
   },
   {
-    label: "Mas de $1000",
+    label: "Más de $1000",
     value: "1000-up",
     matches: (price: number) => price >= 1000,
   },
@@ -75,8 +75,8 @@ const TERM_TRANSLATIONS: Record<string, string> = {
 
 const SHIPPING_TRANSLATIONS: Record<string, string> = {
   "Free shipping on orders over $50":
-    "Envio gratis en pedidos superiores a $50",
-  "Free delivery & installation": "Entrega e instalacion gratis",
+    "Envío gratis en pedidos superiores a $50",
+  "Free delivery & installation": "Entrega e instalación gratis",
 };
 
 const PRODUCT_TRANSLATIONS: Record<
@@ -88,10 +88,10 @@ const PRODUCT_TRANSLATIONS: Record<
 > = {
   "cuisinart-14-cup-food-processor": {
     description:
-      "El Cuisinart de 14 tazas es un aliado potente para la cocina diaria. Su motor de 720 watts y sus controles intuitivos facilitan desde picar vegetales hasta amasar, mientras el tazon Tritan libre de BPA se limpia facilmente en el lavavajillas.",
+      "El Cuisinart de 14 tazas es un aliado potente para la cocina diaria. Su motor de 720 watts y sus controles intuitivos facilitan desde picar vegetales hasta amasar, mientras el tazón Tritan libre de BPA se limpia fácilmente en el lavavajillas.",
     features: [
       "Motor de 720 watts para un rendimiento potente",
-      "Tazon Tritan libre de BPA con capacidad de 14 tazas",
+      "Tazón Tritan libre de BPA con capacidad de 14 tazas",
       "Cuchillas de acero inoxidable",
       "Controles intuitivos de encendido, apagado y pulso",
       "Piezas aptas para lavavajillas",
@@ -100,19 +100,19 @@ const PRODUCT_TRANSLATIONS: Record<
   },
   "cuisinart-perfectemp-coffee-maker": {
     description:
-      "Prepara cafe mas caliente y con mejor sabor con la Cuisinart PerfecTemp de 14 tazas. Su tecnologia de infusion avanzada, junto con los modos intenso y regular, ofrece una taza consistente para toda la familia.",
+      "Prepara café más caliente y con mejor sabor con la Cuisinart PerfecTemp de 14 tazas. Su tecnología de infusión avanzada, junto con los modos intenso y regular, ofrece una taza consistente para toda la familia.",
     features: [
       "Jarra de vidrio con capacidad de 14 tazas",
       "Control de intensidad: regular o intenso",
-      "Programacion automatica de 24 horas",
-      "Funcion de autolimpieza",
+      "Programación automática de 24 horas",
+      "Función de autolimpieza",
       "Control ajustable para mantener caliente",
       "Incluye filtros de carbon y tono dorado",
     ],
   },
   "cuisinart-griddler-five": {
     description:
-      "La Cuisinart Griddler FIVE ofrece cinco modos de coccion en un solo equipo compacto. Funciona como parrilla de contacto, prensa para paninis, parrilla completa, plancha completa o combinacion de ambas para una cocina mas versatil.",
+      "La Cuisinart Griddler FIVE ofrece cinco modos de cocción en un solo equipo compacto. Funciona como parrilla de contacto, prensa para paninis, parrilla completa, plancha completa o combinación de ambas para una cocina más versátil.",
     features: [
       "Funcionalidad 5 en 1",
       "Placas antiadherentes removibles y reversibles",
@@ -124,10 +124,10 @@ const PRODUCT_TRANSLATIONS: Record<
   },
   "cuisinart-smartpower-blender": {
     description:
-      "La Cuisinart SmartPower Duet combina licuadora y procesador de alimentos en un solo aparato. Su motor de 500 watts, la jarra de vidrio y el accesorio procesador la convierten en una opcion practica para preparar bebidas, salsas y mezclas.",
+      "La Cuisinart SmartPower Duet combina licuadora y procesador de alimentos en un solo aparato. Su motor de 500 watts, la jarra de vidrio y el accesorio procesador la convierten en una opción práctica para preparar bebidas, salsas y mezclas.",
     features: [
       "Motor de 500 watts",
-      "Panel tactil de 7 velocidades con indicadores LED",
+      "Panel táctil de 7 velocidades con indicadores LED",
       "Jarra de vidrio de 48 onzas",
       "Accesorio procesador de alimentos de 3 tazas",
       "Cuchillas de acero inoxidable",
@@ -136,22 +136,22 @@ const PRODUCT_TRANSLATIONS: Record<
   },
   "whirlpool-french-door-refrigerator": {
     description:
-      "Este refrigerador Whirlpool French Door ofrece 25 pies cubicos de capacidad con una distribucion inspirada en despensa para organizar mejor los alimentos. El sistema de descongelacion adaptativa optimiza el rendimiento y la iluminacion LED facilita encontrar todo rapidamente.",
+      "Este refrigerador Whirlpool French Door ofrece 25 pies cúbicos de capacidad con una distribución inspirada en despensa para organizar mejor los alimentos. El sistema de descongelación adaptativa optimiza el rendimiento y la iluminación LED facilita encontrar todo rápidamente.",
     features: [
-      "Capacidad de 25 pies cubicos",
+      "Capacidad de 25 pies cúbicos",
       "Almacenamiento de ancho completo estilo despensa",
-      "Descongelacion adaptativa para mayor eficiencia",
-      "Iluminacion interior LED",
+      "Descongelación adaptativa para mayor eficiencia",
+      "Iluminación interior LED",
       "Cajones con control de humedad",
       "Dispensador externo de agua y hielo con filtracion EveryDrop",
     ],
   },
   "whirlpool-electric-range": {
     description:
-      "Cocina para toda la familia con esta cocina electrica Whirlpool de 5.3 pies cubicos. La tecnologia Frozen Bake permite omitir el precalentado para preparar alimentos congelados mas rapido, mientras los elementos FlexHeat funcionan como uno o dos quemadores segun lo necesites.",
+      "Cocina para toda la familia con esta cocina eléctrica Whirlpool de 5.3 pies cúbicos. La tecnología Frozen Bake permite omitir el precalentado para preparar alimentos congelados más rápido, mientras los elementos FlexHeat funcionan como uno o dos quemadores según lo necesites.",
     features: [
-      "Capacidad de horno de 5.3 pies cubicos",
-      "Tecnologia Frozen Bake para omitir el precalentado",
+      "Capacidad de horno de 5.3 pies cúbicos",
+      "Tecnología Frozen Bake para omitir el precalentado",
       "Elemento radiante doble FlexHeat",
       "Funcion Keep Warm",
       "Horno autolimpiante",
@@ -172,55 +172,55 @@ const PRODUCT_TRANSLATIONS: Record<
   },
   "whirlpool-microwave-hood": {
     description:
-      "Este microondas Whirlpool para sobre la cocina ofrece 1.9 pies cubicos de capacidad y coccion con sensor que ajusta tiempo y potencia automaticamente. La funcion de vapor ayuda a preparar comidas practicas y saludables en menos tiempo.",
+      "Este microondas Whirlpool para sobre la cocina ofrece 1.9 pies cúbicos de capacidad y cocción con sensor que ajusta tiempo y potencia automáticamente. La función de vapor ayuda a preparar comidas prácticas y saludables en menos tiempo.",
     features: [
-      "Capacidad de 1.9 pies cubicos",
-      "Coccion con sensor y 6 opciones",
-      "Funcion de coccion al vapor",
-      "Sistema de ventilacion de 300 CFM",
+      "Capacidad de 1.9 pies cúbicos",
+      "Cocción con sensor y 6 opciones",
+      "Función de cocción al vapor",
+      "Sistema de ventilación de 300 CFM",
       "Interior antiadherente CleanRelease",
-      "Opcion para activar o desactivar el plato giratorio",
+      "Opción para activar o desactivar el plato giratorio",
     ],
   },
   "kitchenaid-artisan-stand-mixer": {
     description:
-      "La KitchenAid Artisan de 5 cuartos es una pieza iconica para cualquier cocina. Sus 10 velocidades optimizadas y su potente motor trabajan desde masas densas hasta merengues ligeros, y su cabezal inclinable facilita el cambio de accesorios.",
+      "La KitchenAid Artisan de 5 cuartos es una pieza icónica para cualquier cocina. Sus 10 velocidades optimizadas y su potente motor trabajan desde masas densas hasta merengues ligeros, y su cabezal inclinable facilita el cambio de accesorios.",
     features: [
       "Motor de 325 watts",
-      "Tazon de acero inoxidable de 5 cuartos",
+      "Tazón de acero inoxidable de 5 cuartos",
       "10 velocidades optimizadas",
       "Cabezal inclinable para acceso sencillo",
       "Incluye batidor plano, gancho amasador y batidor de globo",
-      "Puerto de potencia para mas de 10 accesorios opcionales",
+      "Puerto de potencia para más de 10 accesorios opcionales",
     ],
   },
   "kitchenaid-pro-line-blender": {
     description:
-      "Descubre la potencia de la KitchenAid Pro Line Series Blender con su cuchilla asimetrica exclusiva y jarra Thermal Control. Entrega resultados de nivel profesional en smoothies, cremas y sopas gracias a su motor de 3.5 HP pico.",
+      "Descubre la potencia de la KitchenAid Pro Line Series Blender con su cuchilla asimétrica exclusiva y jarra Thermal Control. Entrega resultados de nivel profesional en smoothies, cremas y sopas gracias a su motor de 3.5 HP pico.",
     features: [
       "Motor de 3.5 HP pico",
-      "Diseno exclusivo de cuchilla asimetrica",
-      "Base metalica de doble pared",
-      "Jarra Thermal Control resistente al choque termico",
+      "Diseño exclusivo de cuchilla asimétrica",
+      "Base metálica de doble pared",
+      "Jarra Thermal Control resistente al choque térmico",
       "Perilla de velocidad variable con programas preestablecidos",
       "Ciclo de autolimpieza",
     ],
   },
   "kitchenaid-convection-toaster-oven": {
     description:
-      "El horno digital KitchenAid para encimera con Air Fry ofrece 9 funciones de coccion, incluyendo freir con aire, hornear, asar, tostar, recalentar y deshidratar. Su interior amplio permite hornear una pizza de 12 pulgadas o hasta 6 rebanadas de pan.",
+      "El horno digital KitchenAid para encimera con Air Fry ofrece 9 funciones de cocción, incluyendo freír con aire, hornear, asar, tostar, recalentar y deshidratar. Su interior amplio permite hornear una pizza de 12 pulgadas o hasta 6 rebanadas de pan.",
     features: [
-      "9 funciones de coccion preestablecidas",
-      "Funcion Air Fry",
+      "9 funciones de cocción preestablecidas",
+      "Función Air Fry",
       "Capacidad para pizza de 12 pulgadas",
-      "Tecnologia de calor uniforme",
+      "Tecnología de calor uniforme",
       "Interior antiadherente",
-      "Temporizador de 120 minutos con apagado automatico",
+      "Temporizador de 120 minutos con apagado automático",
     ],
   },
   "kitchenaid-hand-mixer": {
     description:
-      "La batidora de mano KitchenAid de 7 velocidades esta pensada para mezclas de todo tipo, desde masas espesas hasta crema batida ligera. Su mango de agarre suave mejora el control y el cable giratorio con bloqueo ayuda a trabajar con comodidad.",
+      "La batidora de mano KitchenAid de 7 velocidades está pensada para mezclas de todo tipo, desde masas espesas hasta crema batida ligera. Su mango de agarre suave mejora el control y el cable giratorio con bloqueo ayuda a trabajar con comodidad.",
     features: [
       "7 velocidades de mezclado",
       "Inicio suave para evitar salpicaduras",
@@ -310,7 +310,7 @@ function translateImageAlt(value: string): string {
     .replace(" controls", " controles")
     .replace(" accessories", " accesorios")
     .replace(" in use", " en uso")
-    .replace(" with bowl", " con tazon")
+    .replace(" with bowl", " con tazón")
     .replace(" attachments", " accesorios")
     .replace(" cooking", " cocinando")
     .replace(" front", " frontal");
@@ -321,9 +321,9 @@ function mapBadge(badge: ProductBadge | null): Product["badge"] {
     case ProductBadge.SALE:
       return "Oferta";
     case ProductBadge.JUST_IN:
-      return "Recien llegado";
+      return "Recién llegado";
     case ProductBadge.BEST_SELLER:
-      return "Mas vendido";
+      return "Más vendido";
     default:
       return undefined;
   }
@@ -334,9 +334,9 @@ function mapStaticBadge(badge?: string): Product["badge"] {
     case "Sale":
       return "Oferta";
     case "Just In":
-      return "Recien llegado";
+      return "Recién llegado";
     case "Best Seller":
-      return "Mas vendido";
+      return "Más vendido";
     default:
       return undefined;
   }
@@ -452,6 +452,7 @@ export function mapProduct(
     },
     badge: mapBadge(product.badge),
     inStock: product.stockQuantity > 0,
+    stockQuantity: Math.max(0, product.stockQuantity),
     shippingInfo: translateShippingInfo(product.shippingInfo),
   };
 }
@@ -504,6 +505,7 @@ function mapStaticProduct(
     },
     badge: mapStaticBadge(product.badge),
     inStock: product.inStock,
+    stockQuantity: product.inStock ? Number.MAX_SAFE_INTEGER : 0,
     shippingInfo: translateShippingInfo(product.shippingInfo),
   };
 }
@@ -818,10 +820,12 @@ export const getFilterGroups = cache(async (): Promise<FilterGroup[]> => {
           ).length,
         },
         {
-          label: "Recien llegados",
+          label: "Recién llegados",
           value: "new",
           count: products.filter(
-            (product) => product.badge === "Recien llegado",
+            (product) =>
+              product.badge === "Recien llegado" ||
+              product.badge === "Recién llegado",
           ).length,
         },
       ],

@@ -167,7 +167,7 @@ export default function FilterSidebar({ filterGroups }: FilterSidebarProps) {
                           </span>
                           <span
                             className={cn(
-                              "h-6 w-6 rounded-full border border-black/10 shadow-sm",
+                              "h-6 w-6 rounded-full border border-black/10 shadow-sm dark:border-white/70",
                               isChecked && "ring-2 ring-primary/60 ring-offset-2",
                             )}
                             style={{

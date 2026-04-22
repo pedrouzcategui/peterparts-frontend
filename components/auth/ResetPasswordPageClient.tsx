@@ -70,7 +70,7 @@ export default function ResetPasswordPageClient({
           </div>
           <h1 className="text-3xl font-bold tracking-tight">Enlace no valido</h1>
           <p className="text-muted-foreground">
-            Necesitas un enlace valido para restablecer tu contraseña.
+            Necesitas un enlace válido para restablecer tu contraseña.
           </p>
         </div>
 
@@ -90,7 +90,7 @@ export default function ResetPasswordPageClient({
           size="icon"
           className="mb-2"
           onClick={() => router.push("/login")}
-          aria-label="Volver al inicio de sesion"
+          aria-label="Volver al inicio de sesión"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -101,7 +101,7 @@ export default function ResetPasswordPageClient({
           </div>
           <h1 className="text-3xl font-bold tracking-tight">Contraseña actualizada</h1>
           <p className="text-muted-foreground">
-            Ya puedes iniciar sesion con tu nueva contraseña.
+            Ya puedes iniciar sesión con tu nueva contraseña.
           </p>
         </div>
 
@@ -148,7 +148,7 @@ export default function ResetPasswordPageClient({
           <PasswordInput
             id="password"
             name="password"
-            placeholder="Minimo 8 caracteres"
+            placeholder="Mínimo 8 caracteres"
             autoComplete="new-password"
             required
             disabled={isPending}

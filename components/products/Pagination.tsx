@@ -22,19 +22,32 @@ export default function Pagination({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const goToPage = useCallback(
+  const buildPaginationHref = useCallback(
     (page: number) => {
       const params = new URLSearchParams(searchParams.toString());
+
       if (page === 1) {
         params.delete("page");
       } else {
         params.set("page", page.toString());
       }
+
+      const queryString = params.toString();
+
+      return queryString
+        ? `/products?${queryString}#products-results`
+        : "/products#products-results";
+    },
+    [searchParams],
+  );
+
+  const goToPage = useCallback(
+    (page: number) => {
       startTransition(() => {
-        router.push(`/products?${params.toString()}`, { scroll: false });
+        router.push(buildPaginationHref(page));
       });
     },
-    [router, searchParams],
+    [buildPaginationHref, router],
   );
 
   if (totalPages <= 1) {

@@ -5,18 +5,18 @@ import { getBrandQueryValue } from "@/lib/brand-slugs";
 
 const FOOTER_LINKS = [
   {
-    title: "Atencion al cliente",
+    title: "Atención al cliente",
     links: [
-      { label: "Contactanos", href: "#" },
+      { label: "Contáctanos", href: "#" },
       { label: "Estado del pedido", href: "#" },
       { label: "Devoluciones y cambios", href: "#" },
-      { label: "Informacion de envio", href: "#" },
+      { label: "Información de envío", href: "#" },
     ],
   },
   {
     title: "Sobre PeterParts",
     links: [
-      { label: "Quienes somos", href: "#" },
+      { label: "Quiénes somos", href: "/about" },
       { label: "Empleo", href: "#" },
       { label: "Prensa", href: "#" },
       { label: "Sostenibilidad", href: "#" },
@@ -77,13 +77,13 @@ export default function SiteFooter() {
           </p>
           <div className="flex gap-6 text-xs text-muted-foreground">
             <Link href="#" className="hover:text-foreground transition-colors">
-              Politica de privacidad
+              Política de privacidad
             </Link>
             <Link href="#" className="hover:text-foreground transition-colors">
-              Terminos del servicio
+              Términos del servicio
             </Link>
             <Link href="#" className="hover:text-foreground transition-colors">
-              Configuracion de cookies
+              Configuración de cookies
             </Link>
           </div>
         </div>

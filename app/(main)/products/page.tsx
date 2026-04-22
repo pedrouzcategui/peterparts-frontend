@@ -39,13 +39,13 @@ export default async function ProductsPage() {
       <div className="flex flex-col gap-5 border-b border-[#ebe7e0] pb-6 sm:flex-row sm:items-end sm:justify-between dark:border-border">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
-            Catalogo PeterParts
+            Catálogo PeterParts
           </p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-[#1A1714] dark:text-foreground">
             Repuestos, engranajes y batidoras ({totalProducts})
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Explora piezas compatibles, engranajes y batidoras de marcas confiables, con filtros por categoria, precio y ofertas vigentes. No vendemos electrodomesticos completos.
+            Explora piezas compatibles, engranajes y batidoras de marcas confiables, con filtros por categoría, precio y ofertas vigentes. No vendemos electrodomésticos completos.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3 sm:justify-end">
