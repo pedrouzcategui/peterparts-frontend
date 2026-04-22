@@ -22,6 +22,8 @@ AUTH_GOOGLE_SECRET="your-google-oauth-client-secret"
 
 RESEND_API_KEY="re_..."
 RESEND_FROM_EMAIL="PeterParts <no-reply@your-domain.com>"
+
+BLOB_READ_WRITE_TOKEN="vercel_blob_rw_..."
 ```
 
 3. Apply migrations and generate Prisma.
@@ -61,6 +63,7 @@ Notes:
 - Google auth is only enabled when both `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` are present.
 - The app also accepts `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` as fallbacks.
 - Email verification and password reset require both `RESEND_API_KEY` and `RESEND_FROM_EMAIL`.
+- Admin product image uploads use Vercel Blob and require `BLOB_READ_WRITE_TOKEN`. On local machines, pull it from Vercel with `vercel env pull` or define it manually in your `.env.local`.
 - `NEXT_PUBLIC_APP_URL` is used to generate confirmation and reset links.
 - The app also accepts `AUTH_URL`, `NEXTAUTH_URL`, and `APP_URL` as fallbacks for production email links.
 - `.env*` files are gitignored. On Vercel or any managed host, configure the production env vars in the hosting dashboard or on the server itself; a local `.env.production` file is not deployed automatically.

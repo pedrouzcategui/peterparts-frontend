@@ -5,6 +5,7 @@ import { useId, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, ImagePlus, Trash2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PRODUCT_IMAGE_CONTENT_TYPES } from "@/lib/product-image-storage";
 import { cn } from "@/lib/utils";
 
 export interface AdminProductFormImage {
@@ -36,8 +37,9 @@ interface AdminProductImageUploaderProps {
     imageId: string,
     colorId: string,
     checked: boolean,
-  ) => void;
-  onClear: () => void;
+  ) => void | Promise<void>;
+  onClear: () => void | Promise<void>;
+  isSyncing?: boolean;
   disabled?: boolean;
 }
 
@@ -54,6 +56,7 @@ export default function AdminProductImageUploader({
   onImageVisibilityModeChange,
   onImageColorAssignmentChange,
   onClear,
+  isSyncing = false,
   disabled = false,
 }: AdminProductImageUploaderProps) {
   const inputId = useId();
@@ -171,7 +174,7 @@ export default function AdminProductImageUploader({
         ref={inputRef}
         id={inputId}
         type="file"
-        accept="image/png,image/jpeg,image/webp,image/gif"
+        accept={PRODUCT_IMAGE_CONTENT_TYPES.join(",")}
         multiple
         className="sr-only"
         onChange={handleInputChange}
@@ -225,9 +228,11 @@ export default function AdminProductImageUploader({
 
       <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground">
-          {images.length > 0
-            ? "Las imagenes se guardaran en public/products/uploads al crear el producto."
-            : "Todavia no has agregado imagenes."}
+          {isSyncing
+            ? "Sincronizando imagenes con Vercel Blob..."
+            : images.length > 0
+              ? "Las imagenes nuevas se suben a Vercel Blob en cuanto las agregas."
+              : "Todavia no has agregado imagenes."}
         </p>
         <p className="font-semibold text-foreground">
           {images.length === 1

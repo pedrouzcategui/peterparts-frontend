@@ -1,5 +1,6 @@
 "use client";
 
+import { upload } from "@vercel/blob/client";
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -41,6 +42,11 @@ import {
   PREDEFINED_PRODUCT_COLORS,
   resolveProductColorValue,
 } from "@/lib/product-colors";
+import {
+  buildProductImageUploadPath,
+  getProductImageExtension,
+  validateProductImageFile,
+} from "@/lib/product-image-storage";
 
 type ProductStatus = "active" | "draft" | "archived";
 
@@ -219,9 +225,64 @@ function buildImageId(file: File) {
 }
 
 function revokeImagePreview(image: AdminProductFormImage) {
-  if (image.kind === "new") {
+  if (image.previewUrl.startsWith("blob:")) {
     URL.revokeObjectURL(image.previewUrl);
   }
+}
+
+function isUploadedNewImage(
+  image: AdminProductFormImage,
+): image is AdminProductFormImage & { kind: "new"; sourceUrl: string } {
+  return (
+    image.kind === "new" &&
+    typeof image.sourceUrl === "string" &&
+    image.sourceUrl.length > 0
+  );
+}
+
+async function uploadProductImage(file: File, imageId: string) {
+  const validationError = validateProductImageFile(file);
+
+  if (validationError) {
+    throw new Error(validationError);
+  }
+
+  const extension = getProductImageExtension(file.type);
+
+  if (!extension) {
+    throw new Error(`El archivo ${file.name} no es una imagen compatible.`);
+  }
+
+  return upload(buildProductImageUploadPath(imageId, file.name, extension), file, {
+    access: "public",
+    contentType: file.type,
+    handleUploadUrl: "/api/admin/product-images",
+    multipart: file.size > 4 * 1024 * 1024,
+  });
+}
+
+async function deleteTemporaryProductImages(urls: string[]) {
+  if (urls.length === 0) {
+    return;
+  }
+
+  const response = await fetch("/api/admin/product-images", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ urls }),
+  });
+
+  if (response.ok) {
+    return;
+  }
+
+  const result = (await response.json().catch(() => null)) as {
+    message?: string;
+  } | null;
+
+  throw new Error(result?.message ?? "No se pudieron eliminar las imagenes.");
 }
 
 function createInitialFormState(
@@ -339,6 +400,7 @@ export default function AdminProductForm({
   const [isCreatingBrand, setIsCreatingBrand] = useState(false);
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSyncingImages, setIsSyncingImages] = useState(false);
   const [hasManualVesPrice, setHasManualVesPrice] = useState(
     Boolean(initialProduct?.priceVes),
   );
@@ -431,7 +493,11 @@ export default function AdminProductForm({
   }, [productColors]);
 
   const isBusy =
-    isSubmitting || isNavigating || isCreatingBrand || isCreatingCategory;
+    isSubmitting ||
+    isNavigating ||
+    isCreatingBrand ||
+    isCreatingCategory ||
+    isSyncingImages;
   const isFeaturedProduct = formValues.featuredRank.trim().length > 0;
   const categorySuggestions = categoryLabelSuggestions;
   const selectedPrimaryColor = productColors.find(
@@ -559,37 +625,56 @@ export default function AdminProductForm({
     }));
   };
 
-  const handleAddImages = (files: File[]) => {
+  const handleAddImages = async (files: File[]) => {
     if (files.length === 0) {
       return;
     }
 
-    setSelectedImages((currentImages) => {
-      const existingIds = new Set(currentImages.map((image) => image.id));
-      const nextImages = [...currentImages];
+    const existingIds = new Set(
+      selectedImagesRef.current.map((image) => image.id),
+    );
+    const filesToUpload = files
+      .map((file) => ({ file, imageId: buildImageId(file) }))
+      .filter(({ imageId }) => !existingIds.has(imageId));
 
-      for (const file of files) {
-        const imageId = buildImageId(file);
+    if (filesToUpload.length === 0) {
+      toast.info("Esas imagenes ya estaban agregadas.");
+      return;
+    }
 
-        if (existingIds.has(imageId)) {
-          continue;
-        }
+    const uploadedUrls: string[] = [];
+    const nextImages: AdminProductFormImage[] = [];
 
-        existingIds.add(imageId);
+    try {
+      setIsSyncingImages(true);
+
+      for (const { file, imageId } of filesToUpload) {
+        const uploadedImage = await uploadProductImage(file, imageId);
+
+        uploadedUrls.push(uploadedImage.url);
         nextImages.push({
           id: imageId,
           kind: "new",
-          file,
-          previewUrl: URL.createObjectURL(file),
+          previewUrl: uploadedImage.url,
           name: file.name,
           sizeBytes: file.size,
+          sourceUrl: uploadedImage.url,
           appliesToAllColors: true,
           assignedColorIds: [],
         });
       }
 
-      return nextImages;
-    });
+      setSelectedImages((currentImages) => [...currentImages, ...nextImages]);
+    } catch (error) {
+      await deleteTemporaryProductImages(uploadedUrls).catch(() => undefined);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "No se pudieron subir las imagenes.",
+      );
+    } finally {
+      setIsSyncingImages(false);
+    }
   };
 
   const handleMoveImage = (
@@ -609,25 +694,58 @@ export default function AdminProductForm({
     });
   };
 
-  const handleRemoveImage = (imageId: string) => {
-    setSelectedImages((currentImages) => {
-      const imageToRemove = currentImages.find((image) => image.id === imageId);
+  const handleRemoveImage = async (imageId: string) => {
+    const imageToRemove = selectedImagesRef.current.find(
+      (image) => image.id === imageId,
+    );
 
-      if (!imageToRemove) {
-        return currentImages;
+    if (!imageToRemove) {
+      return;
+    }
+
+    try {
+      setIsSyncingImages(true);
+
+      if (isUploadedNewImage(imageToRemove)) {
+        await deleteTemporaryProductImages([imageToRemove.sourceUrl]);
       }
 
       revokeImagePreview(imageToRemove);
-
-      return currentImages.filter((image) => image.id !== imageId);
-    });
+      setSelectedImages((currentImages) =>
+        currentImages.filter((image) => image.id !== imageId),
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "No se pudo eliminar la imagen.",
+      );
+    } finally {
+      setIsSyncingImages(false);
+    }
   };
 
-  const clearSelectedImages = () => {
-    setSelectedImages((currentImages) => {
+  const clearSelectedImages = async () => {
+    const currentImages = selectedImagesRef.current;
+    const uploadedImageUrls = currentImages
+      .filter(isUploadedNewImage)
+      .map((image) => image.sourceUrl);
+
+    try {
+      setIsSyncingImages(true);
+      await deleteTemporaryProductImages(uploadedImageUrls);
+
       currentImages.forEach(revokeImagePreview);
-      return [];
-    });
+      setSelectedImages([]);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "No se pudieron limpiar las imagenes.",
+      );
+    } finally {
+      setIsSyncingImages(false);
+    }
   };
 
   const handleBrandSelect = (value: string) => {
@@ -926,7 +1044,24 @@ export default function AdminProductForm({
     );
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
+    const uploadedImageUrls = selectedImagesRef.current
+      .filter(isUploadedNewImage)
+      .map((image) => image.sourceUrl);
+
+    try {
+      setIsSyncingImages(true);
+      await deleteTemporaryProductImages(uploadedImageUrls);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "No se pudieron limpiar las imagenes temporales.",
+      );
+    } finally {
+      setIsSyncingImages(false);
+    }
+
     startTransition(() => {
       router.push("/admin/products");
     });
@@ -934,6 +1069,11 @@ export default function AdminProductForm({
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (isSyncingImages) {
+      toast.info("Espera a que terminen de sincronizarse las imagenes.");
+      return;
+    }
 
     if (!formValues.primaryCategoryId) {
       toast.error("Debes seleccionar una categoria principal.");
@@ -1054,24 +1194,23 @@ export default function AdminProductForm({
         selectedImages.map((image) => ({
           id: image.id,
           kind: image.kind,
-          ...(image.kind === "existing" && image.sourceUrl
+          ...(image.sourceUrl
             ? { sourceUrl: image.sourceUrl }
             : {}),
         })),
       ),
     );
-
-    const newImageIds = selectedImages
-      .filter((image): image is AdminProductFormImage & { kind: "new" } => image.kind === "new")
-      .map((image) => image.id);
-
-    payload.append("newImageIds", JSON.stringify(newImageIds));
-
-    selectedImages.forEach((image) => {
-      if (image.kind === "new" && image.file) {
-        payload.append("images", image.file);
-      }
-    });
+    payload.append(
+      "uploadedImages",
+      JSON.stringify(
+        selectedImages
+          .filter(isUploadedNewImage)
+          .map((image) => ({
+            id: image.id,
+            url: image.sourceUrl,
+          })),
+      ),
+    );
 
     try {
       setIsSubmitting(true);
@@ -1089,9 +1228,26 @@ export default function AdminProductForm({
 
       const result = (await response.json().catch(() => null)) as {
         message?: string;
+        resetUploadedImages?: boolean;
       } | null;
 
       if (!response.ok) {
+        if (result?.resetUploadedImages) {
+          setSelectedImages((currentImages) =>
+            currentImages.filter((image) => {
+              if (image.kind === "existing") {
+                return true;
+              }
+
+              revokeImagePreview(image);
+              return false;
+            }),
+          );
+          toast.info(
+            "Las imagenes nuevas se limpiaron despues del error. Debes subirlas otra vez.",
+          );
+        }
+
         throw new Error(result?.message ?? "No se pudo guardar el producto.");
       }
 
@@ -1568,6 +1724,7 @@ export default function AdminProductForm({
                   onImageVisibilityModeChange={handleImageVisibilityModeChange}
                   onImageColorAssignmentChange={handleImageColorAssignmentChange}
                   onClear={clearSelectedImages}
+                  isSyncing={isSyncingImages}
                   disabled={isBusy}
                 />
               </div>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "@/components/providers/CartProvider";
 import { formatCurrency } from "@/lib/cart";
+import { isBlobProductImageUrl } from "@/lib/product-image-storage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -76,6 +77,7 @@ export default function CartPageClient() {
                   fill
                   sizes="112px"
                   className="object-cover"
+                  unoptimized={isBlobProductImageUrl(item.image.src)}
                 />
               </Link>
 

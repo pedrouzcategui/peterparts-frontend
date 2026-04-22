@@ -27,6 +27,7 @@ import {
   getCartSummary,
   type CartItem,
 } from "@/lib/cart";
+import { isBlobProductImageUrl } from "@/lib/product-image-storage";
 
 interface SubmittedOrderSnapshot {
   orderNumber: string;
@@ -355,6 +356,7 @@ export default function CheckoutPageClient() {
                       fill
                       sizes="80px"
                       className="object-cover"
+                      unoptimized={isBlobProductImageUrl(item.image.src)}
                     />
                   </div>
                   <div className="min-w-0 flex-1">

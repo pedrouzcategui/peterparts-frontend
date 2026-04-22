@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { isBlobProductImageUrl } from "@/lib/product-image-storage";
 
 const REMOTE_PRODUCT_PLACEHOLDER_SRC =
   "https://m.media-amazon.com/images/I/615kwOY9+3L._AC_UF894,1000_QL80_.jpg";
@@ -23,6 +24,7 @@ export default function ProductImageWithFallback({
   priority = false,
 }: ProductImageWithFallbackProps) {
   const [imageSrc, setImageSrc] = useState(src || REMOTE_PRODUCT_PLACEHOLDER_SRC);
+  const unoptimized = isBlobProductImageUrl(imageSrc);
 
   useEffect(() => {
     setImageSrc(src || REMOTE_PRODUCT_PLACEHOLDER_SRC);
@@ -36,6 +38,7 @@ export default function ProductImageWithFallback({
       sizes={sizes}
       className={className}
       priority={priority}
+      unoptimized={unoptimized}
       onError={() => {
         if (imageSrc !== REMOTE_PRODUCT_PLACEHOLDER_SRC) {
           setImageSrc(REMOTE_PRODUCT_PLACEHOLDER_SRC);

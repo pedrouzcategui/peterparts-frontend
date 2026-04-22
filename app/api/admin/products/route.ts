@@ -1,6 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, unlink, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { requireAdminApiAccess } from "@/lib/auth/admin";
@@ -12,19 +10,12 @@ import {
 import { normalizeCategoryLabels } from "@/lib/category-labels";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { ProductStatus } from "@/lib/generated/prisma/enums";
+import { deleteProductImageAssets } from "@/lib/product-image-storage.server";
 import {
   normalizeProductColorLabel,
   resolveProductColorValue,
 } from "@/lib/product-colors";
 import { prisma } from "@/lib/prisma";
-
-const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
-const IMAGE_EXTENSIONS = new Map([
-  ["image/jpeg", "jpg"],
-  ["image/png", "png"],
-  ["image/webp", "webp"],
-  ["image/gif", "gif"],
-]);
 
 const STATUS_MAP: Record<string, ProductStatus> = {
   active: ProductStatus.ACTIVE,
@@ -51,6 +42,11 @@ interface ImageColorAssignmentInput {
   imageId: string;
   appliesToAllColors: boolean;
   colorIds: string[];
+}
+
+interface UploadedImageInput {
+  id: string;
+  url: string;
 }
 
 interface FinalImageInput {
@@ -198,6 +194,35 @@ function getImageColorAssignments(formData: FormData): ImageColorAssignmentInput
           : [],
       }))
       .filter((value) => value.imageId.length > 0);
+  } catch {
+    return [];
+  }
+}
+
+function getUploadedImages(formData: FormData): UploadedImageInput[] {
+  const rawValue = getStringField(formData, "uploadedImages");
+
+  if (!rawValue) {
+    return [];
+  }
+
+  try {
+    const parsedValue = JSON.parse(rawValue) as unknown;
+
+    if (!Array.isArray(parsedValue)) {
+      return [];
+    }
+
+    return parsedValue
+      .filter(
+        (value): value is { id?: unknown; url?: unknown } =>
+          Boolean(value) && typeof value === "object",
+      )
+      .map((value) => ({
+        id: typeof value.id === "string" ? value.id.trim() : "",
+        url: typeof value.url === "string" ? value.url.trim() : "",
+      }))
+      .filter((value) => value.id.length > 0 && value.url.length > 0);
   } catch {
     return [];
   }
@@ -389,60 +414,6 @@ function resolvePrimaryColor(
   return firstAvailableColor ?? colors[0] ?? null;
 }
 
-function getImageFiles(formData: FormData) {
-  return formData
-    .getAll("images")
-    .filter((value): value is File => value instanceof File && value.size > 0);
-}
-
-async function saveImages(
-  files: File[],
-  productSlug: string,
-  imageIds: string[],
-) {
-  const uploadDirectory = path.join(
-    process.cwd(),
-    "public",
-    "products",
-    "uploads",
-  );
-
-  await mkdir(uploadDirectory, { recursive: true });
-
-  const uploads = await Promise.all(
-    files.map(async (file, index) => {
-      const imageId = imageIds[index];
-      const extension = IMAGE_EXTENSIONS.get(file.type);
-
-      if (!imageId) {
-        throw new Error("No pudimos identificar una de las imagenes cargadas.");
-      }
-
-      if (!extension) {
-        throw new Error(`El archivo ${file.name} no es una imagen compatible.`);
-      }
-
-      if (file.size > MAX_IMAGE_SIZE_BYTES) {
-        throw new Error(`La imagen ${file.name} supera el limite de 5 MB.`);
-      }
-
-      const fileName = `${productSlug}-${index + 1}-${randomUUID().slice(0, 8)}.${extension}`;
-      const filePath = path.join(uploadDirectory, fileName);
-      const fileBuffer = Buffer.from(await file.arrayBuffer());
-
-      await writeFile(filePath, fileBuffer);
-
-      return {
-        id: imageId,
-        filePath,
-        url: `/products/uploads/${fileName}`,
-      };
-    }),
-  );
-
-  return uploads;
-}
-
 export async function POST(request: Request) {
   const access = await requireAdminApiAccess("/admin/products");
 
@@ -463,11 +434,10 @@ export async function POST(request: Request) {
     getStringField(formData, "priceUsd") || getStringField(formData, "price");
   const priceVesValue = getStringField(formData, "priceVes");
   const stockValue = getStringField(formData, "stock");
-  const imageFiles = getImageFiles(formData);
+  const uploadedImages = getUploadedImages(formData);
   const imageOrder = getImageOrder(formData);
   const requestedPrimaryColor = getStringField(formData, "primaryColor");
   const productColors = getProductColors(formData);
-  const newImageIds = getStringArrayField(formData, "newImageIds");
   const rawImageColorAssignments = getImageColorAssignments(formData);
 
   if (!name) {
@@ -498,7 +468,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (imageFiles.length === 0) {
+  if (uploadedImages.length === 0) {
     return NextResponse.json(
       { message: "Debes subir al menos una imagen del producto." },
       { status: 400 },
@@ -570,40 +540,31 @@ export async function POST(request: Request) {
     return Boolean(product);
   });
 
-  const uploadedFiles: Awaited<ReturnType<typeof saveImages>> = [];
-
   try {
     const [brandRecord, sku] = await Promise.all([
       getOrCreateBrand(brand),
       createUniqueSku(),
     ]);
 
-    const effectiveNewImageIds =
-      newImageIds.length === imageFiles.length
-        ? newImageIds
-        : imageFiles.map((_, index) => `new-image-${index}`);
-
-    uploadedFiles.push(...(await saveImages(imageFiles, productSlug, effectiveNewImageIds)));
-
-    const uploadedFilesById = new Map(
-      uploadedFiles.map((file) => [file.id, file]),
+    const uploadedImagesById = new Map(
+      uploadedImages.map((image) => [image.id, image]),
     );
     const orderedUploadedFiles =
       imageOrder.length > 0
         ? imageOrder
             .filter((item) => item.kind === "new")
-            .map((item) => uploadedFilesById.get(item.id))
-            .filter((file): file is (typeof uploadedFiles)[number] => Boolean(file))
+            .map((item) => uploadedImagesById.get(item.id))
+            .filter((image): image is UploadedImageInput => Boolean(image))
         : [];
-    const usedUploadedIds = new Set(orderedUploadedFiles.map((file) => file.id));
+    const usedUploadedIds = new Set(orderedUploadedFiles.map((image) => image.id));
     const finalUploadedFiles = [
       ...orderedUploadedFiles,
-      ...uploadedFiles.filter((file) => !usedUploadedIds.has(file.id)),
+      ...uploadedImages.filter((image) => !usedUploadedIds.has(image.id)),
     ];
     const primaryColor = resolvePrimaryColor(productColors, requestedPrimaryColor);
-    const finalImages: FinalImageInput[] = finalUploadedFiles.map((file, index) => ({
-      clientId: file.id,
-      url: file.url,
+    const finalImages: FinalImageInput[] = finalUploadedFiles.map((image, index) => ({
+      clientId: image.id,
+      url: image.url,
       altText: `${name} imagen ${index + 1}`,
     }));
     const resolvedAssignments = resolveImageColorAssignments(
@@ -713,15 +674,19 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
-    await Promise.all(
-      uploadedFiles.map(async (file) => {
-        await unlink(file.filePath).catch(() => undefined);
-      }),
-    );
+    await deleteProductImageAssets(
+      uploadedImages.map((image) => image.url),
+    ).catch(() => undefined);
 
     const message =
       error instanceof Error ? error.message : "No se pudo crear el producto.";
 
-    return NextResponse.json({ message }, { status: 500 });
+    return NextResponse.json(
+      {
+        message,
+        resetUploadedImages: uploadedImages.length > 0,
+      },
+      { status: 500 },
+    );
   }
 }
