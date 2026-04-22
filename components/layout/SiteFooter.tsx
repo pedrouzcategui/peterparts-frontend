@@ -75,13 +75,22 @@ export default function SiteFooter() {
             &copy; {new Date().getFullYear()} PeterParts. Todos los derechos reservados.
           </p>
           <div className="flex gap-6 text-xs text-muted-foreground">
-            <Link href="#" className="hover:text-foreground transition-colors">
+            <Link
+              href="/politica-de-privacidad"
+              className="hover:text-foreground transition-colors"
+            >
               Política de privacidad
             </Link>
-            <Link href="#" className="hover:text-foreground transition-colors">
+            <Link
+              href="/terminos-del-servicio"
+              className="hover:text-foreground transition-colors"
+            >
               Términos del servicio
             </Link>
-            <Link href="#" className="hover:text-foreground transition-colors">
+            <Link
+              href="/configuracion-de-cookies"
+              className="hover:text-foreground transition-colors"
+            >
               Configuración de cookies
             </Link>
           </div>
