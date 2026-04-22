@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ArrowLeftRight,
-  LayoutDashboard,
   MessageSquareText,
   ShoppingCart,
   Package,
@@ -17,7 +16,6 @@ import { BrandLogo } from "@/components/layout/BrandLogo";
 import { cn } from "@/lib/utils";
 
 const mainNavItems = [
-  { href: "/admin", label: "Panel", icon: LayoutDashboard },
   { href: "/admin/orders", label: "Pedidos", icon: ShoppingCart },
   { href: "/admin/forum", label: "Foro", icon: MessageSquareText },
   { href: "/admin/products", label: "Productos", icon: Package },

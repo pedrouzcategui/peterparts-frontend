@@ -58,6 +58,14 @@ function getAddedToCartDescription(item: CartItem, totalQuantity: number): strin
   return details.join(" · ");
 }
 
+function isSameCartLine(left: CartItem, right: CartItem): boolean {
+  return (
+    left.id === right.id ||
+    (left.slug === right.slug &&
+      (left.variantLabel ?? null) === (right.variantLabel ?? null))
+  );
+}
+
 let cachedStorageValue: string | null = null;
 let cachedCartItems: CartItem[] = emptyCart;
 
@@ -140,7 +148,9 @@ export function CartProvider({ children }: CartProviderProps) {
     }
 
     mutateCart((currentItems) => {
-      const existingItem = currentItems.find((currentItem) => currentItem.id === item.id);
+      const existingItem = currentItems.find((currentItem) =>
+        isSameCartLine(currentItem, item),
+      );
       const currentQuantity = existingItem?.quantity ?? 0;
       const requestedQuantity = currentQuantity + normalizedQuantity;
       const nextQuantity = Math.min(requestedQuantity, maxAvailableQuantity);
@@ -159,7 +169,7 @@ export function CartProvider({ children }: CartProviderProps) {
       }
 
       return currentItems.map((currentItem) =>
-        currentItem.id === item.id
+        isSameCartLine(currentItem, item)
           ? {
               ...currentItem,
               quantity: nextQuantity,
@@ -257,4 +267,8 @@ export function useCart(): CartContextValue {
   }
 
   return context;
+}
+
+export function useOptionalCart(): CartContextValue | null {
+  return useContext(CartContext) ?? null;
 }

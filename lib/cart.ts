@@ -108,10 +108,11 @@ export function createCartItem(
   selectedImage?: Product["images"][number],
 ): CartItem {
   const image = selectedImage ?? getPrimaryProductImage(product, variantLabel);
+  const canonicalProductId = product.databaseId;
 
   return {
-    id: getCartLineId(product.id, variantLabel),
-    productId: product.id,
+    id: getCartLineId(canonicalProductId, variantLabel),
+    productId: canonicalProductId,
     slug: product.slug,
     name: product.name,
     brand: product.brand,

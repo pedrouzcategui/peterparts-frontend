@@ -7,19 +7,18 @@ const FOOTER_LINKS = [
   {
     title: "Atención al cliente",
     links: [
-      { label: "Contáctanos", href: "#" },
-      { label: "Estado del pedido", href: "#" },
-      { label: "Devoluciones y cambios", href: "#" },
-      { label: "Información de envío", href: "#" },
+      { label: "Contáctanos", href: "/contacto" },
+      { label: "Estado del pedido", href: "/estado-del-pedido" },
+      { label: "Devoluciones y cambios", href: "/devoluciones-y-cambios" },
+      { label: "Información de envío", href: "/informacion-de-envio" },
     ],
   },
   {
     title: "Sobre PeterParts",
     links: [
       { label: "Quiénes somos", href: "/about" },
-      { label: "Empleo", href: "#" },
-      { label: "Prensa", href: "#" },
-      { label: "Sostenibilidad", href: "#" },
+      { label: "Empleo", href: "/empleo" },
+      { label: "Prensa", href: "/prensa" },
     ],
   },
   {

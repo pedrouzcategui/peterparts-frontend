@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Save, Search } from "lucide-react";
+import { Loader2, Save, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -141,6 +141,49 @@ export default function AdminOrdersClient({
     });
   }
 
+  function handleDelete(order: AdminOrderSummary) {
+    if (order.status !== "cancelled") {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Eliminar el pedido ${order.orderNumber}? Esta accion no se puede deshacer.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setActiveOrderId(order.id);
+
+    startTransition(() => {
+      void (async () => {
+        try {
+          const response = await fetch(`/api/admin/orders/${order.id}`, {
+            method: "DELETE",
+          });
+          const responseBody = (await response.json().catch(() => null)) as
+            | { message?: string }
+            | null;
+
+          if (!response.ok) {
+            toast.error(responseBody?.message ?? "No pudimos eliminar el pedido.");
+            return;
+          }
+
+          toast.success(
+            responseBody?.message ?? "Pedido eliminado correctamente.",
+          );
+          router.refresh();
+        } catch {
+          toast.error("No pudimos eliminar el pedido.");
+        } finally {
+          setActiveOrderId(null);
+        }
+      })();
+    });
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -242,6 +285,7 @@ export default function AdminOrdersClient({
               {filteredOrders.map((order) => {
                 const selectedStatus = pendingStatuses[order.id] ?? order.status;
                 const isSaving = isPending && activeOrderId === order.id;
+                const canDelete = order.status === "cancelled";
 
                 return (
                   <TableRow key={order.id}>
@@ -307,6 +351,21 @@ export default function AdminOrdersClient({
                             Guardar
                           </Button>
                         </div>
+                      ) : canDelete ? (
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDelete(order)}
+                          disabled={isSaving}
+                        >
+                          {isSaving ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                          Eliminar
+                        </Button>
                       ) : (
                         <span className="text-sm text-muted-foreground">Cerrado</span>
                       )}

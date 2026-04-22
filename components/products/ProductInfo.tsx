@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Star } from "lucide-react";
-import { useCart } from "@/components/providers/CartProvider";
+import { useOptionalCart } from "@/components/providers/CartProvider";
 import FavouriteToggleButton from "@/components/products/FavouriteToggleButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,13 +32,19 @@ export default function ProductInfo({
   onSelectedVariantChange,
   selectedImage,
 }: ProductInfoProps) {
-  const { addProduct, itemCount, items } = useCart();
+  const cart = useOptionalCart();
+  const itemCount = cart?.itemCount ?? 0;
+  const items = cart?.items ?? [];
 
   const activeVariant = product.variants.find(
     (variant) => variant.label === selectedVariant,
   );
-  const cartLineId = getCartLineId(product.id, selectedVariant ?? undefined);
-  const quantityInCart = items.find((item) => item.id === cartLineId)?.quantity ?? 0;
+  const cartLineIds = [
+    getCartLineId(product.databaseId, selectedVariant ?? undefined),
+    getCartLineId(product.id, selectedVariant ?? undefined),
+  ];
+  const quantityInCart =
+    items.find((item) => cartLineIds.includes(item.id))?.quantity ?? 0;
   const remainingInventory = Math.max(0, product.stockQuantity - quantityInCart);
   const canAddToBag =
     product.inStock &&
@@ -64,7 +70,12 @@ export default function ProductInfo({
   const roundedReviewRating = Math.round(product.reviews.rating);
 
   const handleAddToBag = () => {
-    addProduct(product, selectedVariant ?? undefined, 1, selectedImage ?? undefined);
+    cart?.addProduct(
+      product,
+      selectedVariant ?? undefined,
+      1,
+      selectedImage ?? undefined,
+    );
   };
 
   return (

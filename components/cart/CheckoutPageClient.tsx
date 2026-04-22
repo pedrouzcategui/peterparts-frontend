@@ -54,6 +54,18 @@ interface CreateOrderResponse {
   order: SubmittedOrderSnapshot;
 }
 
+export interface CheckoutFormDefaults {
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+}
+
 function getFormValue(
   formData: FormData,
   key: keyof Omit<CreateOrderPayload, "items">,
@@ -62,7 +74,13 @@ function getFormValue(
   return typeof value === "string" ? value.trim() : "";
 }
 
-export default function CheckoutPageClient() {
+interface CheckoutPageClientProps {
+  initialFormDefaults?: CheckoutFormDefaults;
+}
+
+export default function CheckoutPageClient({
+  initialFormDefaults,
+}: CheckoutPageClientProps) {
   const { clearCart, items } = useCart();
   const [submittedOrder, setSubmittedOrder] =
     useState<SubmittedOrderSnapshot | null>(null);
@@ -261,16 +279,29 @@ export default function CheckoutPageClient() {
                   name="email"
                   type="email"
                   placeholder="pedro@example.com"
+                  defaultValue={initialFormDefaults?.email}
                   required
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="first-name">Nombre</Label>
-                <Input id="first-name" name="firstName" placeholder="Pedro" required />
+                <Input
+                  id="first-name"
+                  name="firstName"
+                  placeholder="Pedro"
+                  defaultValue={initialFormDefaults?.firstName}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="last-name">Apellido</Label>
-                <Input id="last-name" name="lastName" placeholder="Silva" required />
+                <Input
+                  id="last-name"
+                  name="lastName"
+                  placeholder="Silva"
+                  defaultValue={initialFormDefaults?.lastName}
+                  required
+                />
               </div>
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="phone">Número de teléfono</Label>
@@ -279,6 +310,7 @@ export default function CheckoutPageClient() {
                   name="phone"
                   type="tel"
                   placeholder="(0424) 123-4567"
+                  defaultValue={initialFormDefaults?.phone}
                   required
                 />
               </div>
@@ -295,23 +327,53 @@ export default function CheckoutPageClient() {
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="address">Dirección</Label>
-                <Input id="address" name="address" placeholder="Av. Principal 123" required />
+                <Input
+                  id="address"
+                  name="address"
+                  placeholder="Av. Principal 123"
+                  defaultValue={initialFormDefaults?.address}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="city">Ciudad</Label>
-                <Input id="city" name="city" placeholder="Caracas" required />
+                <Input
+                  id="city"
+                  name="city"
+                  placeholder="Caracas"
+                  defaultValue={initialFormDefaults?.city}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="state">Estado</Label>
-                <Input id="state" name="state" placeholder="Distrito Capital" required />
+                <Input
+                  id="state"
+                  name="state"
+                  placeholder="Distrito Capital"
+                  defaultValue={initialFormDefaults?.state}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="zip">Código postal</Label>
-                <Input id="zip" name="zip" inputMode="numeric" placeholder="1010" required />
+                <Input
+                  id="zip"
+                  name="zip"
+                  inputMode="numeric"
+                  placeholder="1010"
+                  defaultValue={initialFormDefaults?.zip}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="country">País</Label>
-                <Input id="country" name="country" defaultValue="Venezuela" required />
+                <Input
+                  id="country"
+                  name="country"
+                  defaultValue={initialFormDefaults?.country || "Venezuela"}
+                  required
+                />
               </div>
             </CardContent>
           </Card>

@@ -180,6 +180,66 @@ function getRequestedProductQuantities(items: CartItem[]): Map<string, number> {
   return quantities;
 }
 
+function resolveCartItemProducts(
+  items: CartItem[],
+  products: Array<{ id: string; sku: string; name: string }>,
+): {
+  normalizedItems: CartItem[];
+  quantitiesByDatabaseId: Map<string, number>;
+  productNamesByDatabaseId: Map<string, string>;
+} {
+  const requestedIdentifiers = new Set(items.map((item) => item.productId));
+  const productsByIdentifier = new Map<string, { id: string; name: string }>();
+
+  for (const product of products) {
+    if (requestedIdentifiers.has(product.id)) {
+      productsByIdentifier.set(product.id, {
+        id: product.id,
+        name: product.name,
+      });
+    }
+
+    if (requestedIdentifiers.has(product.sku)) {
+      productsByIdentifier.set(product.sku, {
+        id: product.id,
+        name: product.name,
+      });
+    }
+  }
+
+  if (productsByIdentifier.size !== requestedIdentifiers.size) {
+    throw new Error("Uno de los productos ya no esta disponible.");
+  }
+
+  const quantitiesByDatabaseId = new Map<string, number>();
+  const productNamesByDatabaseId = new Map<string, string>();
+
+  const normalizedItems = items.map((item) => {
+    const resolvedProduct = productsByIdentifier.get(item.productId);
+
+    if (!resolvedProduct) {
+      throw new Error("Uno de los productos ya no esta disponible.");
+    }
+
+    quantitiesByDatabaseId.set(
+      resolvedProduct.id,
+      (quantitiesByDatabaseId.get(resolvedProduct.id) ?? 0) + item.quantity,
+    );
+    productNamesByDatabaseId.set(resolvedProduct.id, resolvedProduct.name);
+
+    return {
+      ...item,
+      productId: resolvedProduct.id,
+    };
+  });
+
+  return {
+    normalizedItems,
+    quantitiesByDatabaseId,
+    productNamesByDatabaseId,
+  };
+}
+
 async function createUniqueOrderNumber(
   client: OrderNumberLookupClient,
 ): Promise<string> {
@@ -372,22 +432,32 @@ export async function createOrderWithReservedInventory(
     const productIds = Array.from(requestedQuantities.keys());
     const products = await transaction.product.findMany({
       where: {
-        id: {
-          in: productIds,
-        },
+        OR: [
+          {
+            id: {
+              in: productIds,
+            },
+          },
+          {
+            sku: {
+              in: productIds,
+            },
+          },
+        ],
       },
       select: {
         id: true,
+        sku: true,
         name: true,
       },
     });
-    const productNamesById = new Map(products.map((product) => [product.id, product.name]));
+    const {
+      normalizedItems,
+      quantitiesByDatabaseId,
+      productNamesByDatabaseId,
+    } = resolveCartItemProducts(input.items, products);
 
-    if (products.length !== productIds.length) {
-      throw new Error("Uno de los productos ya no esta disponible.");
-    }
-
-    for (const [productId, quantity] of requestedQuantities) {
+    for (const [productId, quantity] of quantitiesByDatabaseId) {
       const updateResult = await transaction.product.updateMany({
         where: {
           id: productId,
@@ -403,7 +473,8 @@ export async function createOrderWithReservedInventory(
       });
 
       if (updateResult.count !== 1) {
-        const productName = productNamesById.get(productId) ?? "uno de los productos";
+        const productName =
+          productNamesByDatabaseId.get(productId) ?? "uno de los productos";
         throw new Error(`No hay inventario suficiente para ${productName}.`);
       }
     }
@@ -431,7 +502,7 @@ export async function createOrderWithReservedInventory(
         taxAmount: summary.tax.toFixed(2),
         total: summary.total.toFixed(2),
         items: {
-          create: input.items.map((item) => ({
+          create: normalizedItems.map((item) => ({
             productId: item.productId,
             slug: item.slug,
             name: item.name,
@@ -698,5 +769,40 @@ export async function updateOrderStatusAsAdmin(
       order: mapAdminOrder(updatedOrder),
       inventoryRestored: false,
     };
+  });
+}
+
+export async function deleteCancelledOrderAsAdmin(orderId: string): Promise<void> {
+  await prisma.$transaction(async (transaction) => {
+    const existingOrder = await transaction.order.findUnique({
+      where: {
+        id: orderId,
+      },
+      select: {
+        id: true,
+        userId: true,
+        customerEmail: true,
+        status: true,
+      },
+    });
+
+    if (!existingOrder) {
+      throw new Error("Pedido no encontrado.");
+    }
+
+    if (normalizeOrderStatus(existingOrder.status) !== "cancelled") {
+      throw new Error("Solo puedes eliminar pedidos cancelados.");
+    }
+
+    await transaction.order.delete({
+      where: {
+        id: orderId,
+      },
+    });
+
+    await syncUserRoleFromOrderHistory(transaction, {
+      userId: existingOrder.userId,
+      email: existingOrder.customerEmail,
+    });
   });
 }

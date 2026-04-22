@@ -99,13 +99,13 @@ export default function MobileNavMenu({
       <SheetContent
         side="right"
         showCloseButton={false}
-        className="w-full overflow-y-auto border-l-0 p-0 text-[#1A1714] sm:max-w-sm dark:border-l dark:text-foreground"
+        className="h-[100dvh] w-full overflow-hidden border-l-0 p-0 text-[#1A1714] sm:max-w-sm dark:border-l dark:text-foreground"
       >
-        <div className="relative min-h-full overflow-hidden bg-[radial-gradient(circle_at_top_right,rgba(217,30,54,0.12),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(141,19,33,0.12),transparent_34%),linear-gradient(180deg,#f7f0e7_0%,#f2e8dc_100%)] dark:bg-[linear-gradient(180deg,#16110f_0%,#221715_100%)]">
-          <div className="absolute inset-x-6 top-40 h-56 rounded-full bg-primary/8 blur-3xl dark:bg-primary/15" />
+        <div className="relative h-full overflow-y-auto overscroll-y-contain [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch] bg-[radial-gradient(circle_at_top_right,rgba(217,30,54,0.12),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(141,19,33,0.12),transparent_34%),linear-gradient(180deg,#f7f0e7_0%,#f2e8dc_100%)] dark:bg-[linear-gradient(180deg,#16110f_0%,#221715_100%)]">
+          <div className="pointer-events-none absolute inset-x-6 top-40 h-56 rounded-full bg-primary/8 blur-3xl dark:bg-primary/15" />
 
           <div className="relative bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_38%),linear-gradient(155deg,#d91e36_0%,#8d1321_100%)] px-5 pb-7 pt-7 text-white">
-            <div className="absolute -left-10 top-6 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
+            <div className="pointer-events-none absolute -left-10 top-6 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
             <div className="absolute right-6 top-6 z-10">
               <button
                 type="button"
@@ -127,7 +127,7 @@ export default function MobileNavMenu({
             </SheetHeader>
           </div>
 
-          <div className="relative space-y-5 px-4 py-5">
+          <div className="relative min-h-[calc(100dvh+10rem)] space-y-5 px-4 py-5 pb-40">
             <section className="rounded-[2rem] border border-white/60 bg-white/88 p-3 shadow-[0_18px_50px_rgba(26,23,20,0.08)] backdrop-blur-sm dark:border-border/70 dark:bg-[#221917]/85">
               <div className="space-y-3">
                 {MOBILE_NAV_LINKS.map((link) => {
@@ -208,6 +208,8 @@ export default function MobileNavMenu({
                 })}
               </div>
             </section>
+
+            <div aria-hidden="true" className="h-24" />
           </div>
         </div>
       </SheetContent>

@@ -1,6 +1,9 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
-import { updateOrderStatusAsAdmin } from "@/lib/order-data";
+import {
+  deleteCancelledOrderAsAdmin,
+  updateOrderStatusAsAdmin,
+} from "@/lib/order-data";
 import { ORDER_STATUS_OPTIONS, type OrderDisplayStatus } from "@/lib/orders";
 import { requireAdminApiAccess } from "@/lib/auth/admin";
 
@@ -68,6 +71,42 @@ export async function PATCH(
       error instanceof Error && error.message
         ? error.message
         : "No pudimos actualizar el pedido.";
+    const status = message === "Pedido no encontrado." ? 404 : 400;
+
+    return NextResponse.json({ message }, { status });
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ orderId: string }> },
+) {
+  const access = await requireAdminApiAccess("/admin/orders");
+
+  if (!access.ok) {
+    return access.response;
+  }
+
+  const { orderId } = await params;
+
+  try {
+    await deleteCancelledOrderAsAdmin(orderId);
+
+    revalidatePath("/admin/orders");
+    revalidatePath("/admin/users");
+    revalidatePath("/account");
+
+    return NextResponse.json(
+      {
+        message: "Pedido cancelado eliminado correctamente.",
+      },
+      { status: 200 },
+    );
+  } catch (error) {
+    const message =
+      error instanceof Error && error.message
+        ? error.message
+        : "No pudimos eliminar el pedido.";
     const status = message === "Pedido no encontrado." ? 404 : 400;
 
     return NextResponse.json({ message }, { status });
